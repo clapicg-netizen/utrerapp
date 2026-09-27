@@ -1,0 +1,23 @@
+{
+  "summary": "First-finish smoke test for Utrerapp MVP. Backend endpoints (traffic, pharmacies, theater, transit, events, news, tv), admin auth flow, protected CRUD on /traffic, chat SSE streaming (Claude Sonnet 4.6) and history persistence all pass. Frontend Home, Conso streaming chat, module pages (Farmacias, Teatro, Transporte, Eventos, UtreraTV, Noticias) and Admin CRUD (login/wrong pw stays, add+delete traffic, logout) all work end-to-end.",
+  "tested_scope": ["backend", "frontend", "auth", "integration"],
+  "passed": [
+    "GET /api/traffic returns 3 seeded zones (Trianilla, Salesianos, Centro Historico)",
+    "GET /api/pharmacies returns 4 items with 1 on_duty_today=true",
+    "GET /api/theater=3, /api/transit=4, /api/events=5, /api/news=5, /api/tv=2 (all non-empty)",
+    "POST /api/admin/login admin123 -> 200 with token; wrong pw -> 401",
+    "POST /api/traffic without Bearer -> 401; with Bearer -> 200 created; DELETE /api/traffic/{id} -> {deleted:true}",
+    "POST /api/chat/stream returns 77 SSE 'data: ' chunks in Spanish and ends with 'data: [DONE]'",
+    "GET /api/chat/history/sess-test returns persisted user + assistant messages",
+    "Home / renders home-page + traffic-alerts-banner + conso-ai-card + 6 module-card-* testids",
+    "Conso streaming shows assistant reply bubble after send (SSE working in browser)",
+    "/farmacias shows pharmacy-duty-card, /teatro shows 3 show-item-*, /transporte has tab-bus, /noticias shows 5 news-item-*",
+    "Admin: wrong password keeps user on login; admin123 -> admin-panel; add traffic (TestUI) appears in admin-list-traffic; delete removes it; logout returns to login"
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Traffic model uses fields zone/status/message/detail (not area/title/description/severity as stated in the review request). Backend accepts and validates properly; specs description was slightly inaccurate but implementation is consistent."
+}
