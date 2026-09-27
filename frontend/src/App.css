@@ -1,0 +1,12 @@
+/* App-level layout tokens */
+.app-shell {
+    max-width: 28rem;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding: 0 1rem 6rem 1rem;
+    position: relative;
+}
+
+@media (min-width: 640px) {
+    .app-shell { padding-left: 1.5rem; padding-right: 1.5rem; }
+}

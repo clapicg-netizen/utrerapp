@@ -1,0 +1,12 @@
+{
+  "short_name": "Utrerapp",
+  "name": "Utrerapp · Servicios locales de Utrera",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#C84B31",
+  "background_color": "#FAF8F5",
+  "lang": "es",
+  "description": "Servicios locales de Utrera: tráfico, farmacias, teatro, buses, agenda, TV y noticias con el asistente Conso.",
+  "icons": []
+}

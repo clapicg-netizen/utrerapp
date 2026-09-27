@@ -1,0 +1,180 @@
+{
+  "project_name": "Utrerapp - PWA Hyperlocal City Services",
+  "target_audience": "Citizens, residents, and visitors of Utrera (Sevilla, Spain) seeking fast, real-time local city information, traffic updates, local TV, events, transit, and AI municipal assistance.",
+  "app_type": "mobile_web_app",
+  "theme_strategy": {
+    "default_theme": "light",
+    "support_dark_mode": true,
+    "inspiration": "Andalusian Terracotta & Albero Sunlit Modern Utility. Inspired by Utrera's warm architecture, Plaza del Altozano, and clean modern PWA design principles.",
+    "forbid_generic_purple": true
+  },
+  "typography": {
+    "heading_font": "Plus Jakarta Sans, sans-serif",
+    "body_font": "DM Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "heading_weights": "font-bold font-extrabold tracking-tight",
+    "font_urls": [
+      "https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;600&display=swap"
+    ],
+    "scale": {
+      "h1": "text-2xl sm:text-3xl font-extrabold tracking-tight",
+      "h2": "text-xl sm:text-2xl font-bold tracking-tight",
+      "h3": "text-lg sm:text-xl font-semibold",
+      "body": "text-sm sm:text-base leading-relaxed",
+      "caption": "text-xs font-medium uppercase tracking-wider text-muted-foreground"
+    }
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#C84B31",
+      "light": "#DF6449",
+      "dark": "#9E321C",
+      "foreground": "#FFFFFF",
+      "name": "Terracotta Utrerano"
+    },
+    "secondary": {
+      "DEFAULT": "#E6A817",
+      "light": "#F2BF42",
+      "dark": "#B8820B",
+      "foreground": "#1C1917",
+      "name": "Albero Golden Sand"
+    },
+    "accents": {
+      "pharmacy_green": "#2E7D32",
+      "transit_blue": "#1E6091",
+      "theater_velvet": "#8B1E3F",
+      "alert_orange": "#D97706",
+      "alert_red": "#DC2626",
+      "traffic_bg": "#FEF3C7"
+    },
+    "neutrals_light": {
+      "background": "#FAF8F5",
+      "surface": "#FFFFFF",
+      "surface_elevated": "#F4F0EA",
+      "border": "#E5DEC9",
+      "foreground": "#1C1917",
+      "muted": "#78716C"
+    },
+    "neutrals_dark": {
+      "background": "#121417",
+      "surface": "#1C2026",
+      "surface_elevated": "#272C35",
+      "border": "#2E3642",
+      "foreground": "#F5F5F4",
+      "muted": "#A8A29E"
+    }
+  },
+  "layout_and_spacing": {
+    "mobile_container": "max-w-md mx-auto min-h-screen pb-24 px-4 sm:px-6 pt-2 relative",
+    "grid_bento": "grid grid-cols-2 gap-3.5 sm:gap-4",
+    "card_padding": "p-4 sm:p-5",
+    "border_radius": "rounded-2xl",
+    "shadow_style": "shadow-sm hover:shadow-md transition-shadow duration-200 border border-border/60"
+  },
+  "key_components": {
+    "traffic_header_alert": {
+      "description": "Top horizontal ticker/badge array showing real-time traffic updates for Utrera bottlenecks (Trianilla, Salesianos, Centro). Features pulsating status indicators (Green/Yellow/Red) and clickable detail popovers.",
+      "test_id": "traffic-alerts-banner"
+    },
+    "conso_ai_card": {
+      "description": "Prominent, elevated hero card on Home screen for 'Conso' AI assistant. Includes dynamic animated greeting bubble, search/ask quick prompt tags (e.g., '¿Qué farmacia está de guardia hoy?', '¿Cómo va el tráfico en Trianilla?'), and a fast input trigger.",
+      "test_id": "conso-ai-card"
+    },
+    "modules_grid": {
+      "shortcuts": [
+        {
+          "id": "farmacias",
+          "title": "Farmacias de Guardia",
+          "subtitle": "Turno actual y 24h",
+          "badge": "Abierta Ahora",
+          "icon": "Cross",
+          "color": "emerald",
+          "test_id": "module-card-farmacias"
+        },
+        {
+          "id": "teatro",
+          "title": "Teatro Enrique de la Cuadra",
+          "subtitle": "Cartelera y entradas",
+          "badge": "Próximo Show",
+          "icon": "Ticket",
+          "color": "rose",
+          "test_id": "module-card-teatro"
+        },
+        {
+          "id": "transporte",
+          "title": "Autobuses y Cercanías",
+          "subtitle": "Líneas urbanas y Renfe",
+          "badge": "Horarios en vivo",
+          "icon": "Bus",
+          "color": "sky",
+          "test_id": "module-card-transporte"
+        },
+        {
+          "id": "eventos",
+          "title": "Agenda & Fiestas",
+          "subtitle": "Feria, cultura y deportes",
+          "badge": "3 Destacados",
+          "icon": "Calendar",
+          "color": "amber",
+          "test_id": "module-card-eventos"
+        },
+        {
+          "id": "utrera_tv",
+          "title": "Utrera TV en Directo",
+          "subtitle": "Emisión local 24/7",
+          "badge": "EN DIRECTO",
+          "icon": "Tv",
+          "color": "red",
+          "test_id": "module-card-utreratv"
+        },
+        {
+          "id": "noticias",
+          "title": "Titulares de Utrera",
+          "subtitle": "Prensa y noticias locales",
+          "badge": "Última Hora",
+          "icon": "Newspaper",
+          "color": "indigo",
+          "test_id": "module-card-noticias"
+        }
+      ]
+    },
+    "conso_chat_modal": {
+      "description": "Full interactive chat window with assistant Conso. Includes streaming response simulator, voice audio pulse animation, category buttons, instant resolution for municipal queries, emergency contact triggers, and map links.",
+      "test_id": "conso-chat-modal"
+    },
+    "admin_panel": {
+      "description": "Protected municipal management dashboard accessible via secret button or footer key (default PIN: 1234 / password: admin). Allows adding traffic alerts, updating pharmacy shifts, editing theater plays, and publishing local headlines.",
+      "test_id": "admin-panel-toggle"
+    },
+    "bottom_navigation_bar": {
+      "description": "Sticky bottom tab bar optimized for thumb reach on mobile viewports. Tabs: Inicio (Home), Conso AI (Chat), Noticias (News), Admin.",
+      "test_id": "bottom-nav"
+    }
+  },
+  "image_urls": {
+    "town_hero": "https://images.unsplash.com/photo-1549643276-fdf2fab574f5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwyfHxzcGFuaXNoJTIwdG93biUyMHN0cmVldHxlbnwwfHx8fDE3OTA1MDU0MzV8MA&ixlib=rb-4.1.0&q=85",
+    "town_street_plants": "https://images.unsplash.com/photo-1693835826680-82abb277bf7e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHxfHxzcGFuaXNoJTIwdG93biUyMHN0cmVldHxlbnwwfHx8fDE3OTA1MDU0MzV8MA&ixlib=rb-4.1.0&q=85",
+    "plaza_arch": "https://images.unsplash.com/photo-1748437324585-4d8775e346df?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Njl8MHwxfHNlYXJjaHw0fHxtZWRpdGVycmFuZWFuJTIwcGxhemF8ZW58MHx8fHwxNzkwNTA1NDM1fDA&ixlib=rb-4.1.0&q=85",
+    "pharmacy_storefront": "https://images.unsplash.com/photo-1603706580932-6befcf7d8521?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MjJ8MHwxfHNlYXJjaHwxfHxwaGFybWFjeSUyMHN0b3JlZnJvbnR8ZW58MHx8fHwxNzkwNTA1NDM1fDA&ixlib=rb-4.1.0&q=85",
+    "theater_stage": "https://images.unsplash.com/photo-1761359841098-8e84b7cf3661?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwzfHx0aGVhdGVyJTIwaW50ZXJpb3IlMjBzdGFnZXxlbnwwfHx8fDE3OTA1MDU0MzV8MA&ixlib=rb-4.1.0&q=85",
+    "theater_auditorium": "https://images.unsplash.com/photo-1715322608224-a9efaeeffaf7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwyfHx0aGVhdGVyJTIwaW50ZXJpb3IlMjBzdGFnZXxlbnwwfHx8fDE3OTA1MDU0MzV8MA&ixlib=rb-4.1.0&q=85"
+  },
+  "instructions_to_main_agent": [
+    "Build Utrerapp as a responsive, mobile-first PWA experience centered on an iPhone/Android portrait viewport frame when on desktop, but filling screen gracefully on mobile.",
+    "Ensure Header Traffic Alert Bar continuously scrolls or toggles breaking alerts for key Utrera spots: 'Trianilla (Obras en marcha - Retenciones cortas)', 'Salesianos (Tráfico fluido en rotonda)', 'Centro Histórico (Acceso restringido solo a residentes)'. Allow clicking alerts for details.",
+    "Make Conso AI hero card feel intelligent and welcoming with animated avatar indicator, quick prompts, and seamless transition into full Chat view.",
+    "Provide interactive drawer/dialog views for all 6 modules: 1) Farmacias (shows current duty pharmacy, map directions, call button, shift schedule); 2) Teatro (shows active play schedule, ticket purchase simulator, seats preview); 3) Transit (shows Linea 1, Linea 2 urban buses + Renfe C1 station departure live counter); 4) Events (Feria de Utrera, Mostachón cultural awards, Flamenco festival, add to calendar feature); 5) Utrera TV (live stream simulation with video controls, stream switcher, programming grid); 6) Noticias (RSS style local news cards with read full story modal).",
+    "Include an easy-to-use Admin Panel (Access pin: 1234 or toggle in footer) where users can add/edit traffic alerts, farmacias de guardia, upcoming events, and news posts stored in localStorage for full persistence.",
+    "All interactive elements MUST include data-testid attributes for testing.",
+    "Implement PWA features: Install PWA prompt banner, offline status simulation badge, theme switcher (Light/Dark mode), and local push notification mock trigger."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for sticky headers and bottom nav.",
+    "You MUST NOT apply universal transition (transition: all). Always add transitions for specific interactive properties like hover:scale, bg-color, border-color.",
+    "You MUST NOT center align the app container text globally.",
+    "NEVER use generic emoji characters for key navigation icons; use Lucide-react icons instead.",
+    "All interactive elements MUST have data-testid attributes in kebab-case."
+  ]
+}

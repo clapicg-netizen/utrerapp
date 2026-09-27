@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    /* Utrerapp — Andalusian Terracotta & Albero */
+    --background: 36 33% 97%;        /* #FAF8F5 */
+    --foreground: 24 10% 10%;        /* #1C1917 */
+    --card: 0 0% 100%;
+    --card-foreground: 24 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 10% 10%;
+
+    --primary: 11 61% 49%;           /* Terracotta Utrerano #C84B31 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 42 85% 50%;         /* Albero Golden Sand #E6A817 */
+    --secondary-foreground: 24 10% 10%;
+
+    --muted: 39 27% 93%;             /* #F4F0EA */
+    --muted-foreground: 25 6% 45%;
+
+    --accent: 39 27% 93%;
+    --accent-foreground: 24 10% 10%;
+
+    --destructive: 0 74% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 45 34% 84%;            /* #E5DEC9 */
+    --input: 45 34% 84%;
+    --ring: 11 61% 49%;
+    --radius: 1rem;
+
+    --terracotta: #C84B31;
+    --terracotta-light: #DF6449;
+    --terracotta-dark: #9E321C;
+    --albero: #E6A817;
+    --pharmacy: #2E7D32;
+    --transit: #1E6091;
+    --theater: #8B1E3F;
+    --alert-red: #DC2626;
+    --alert-orange: #D97706;
+    --traffic-bg: #FEF3C7;
+}
+
+.dark {
+    --background: 220 12% 8%;
+    --foreground: 45 15% 96%;
+    --card: 218 12% 13%;
+    --card-foreground: 45 15% 96%;
+    --popover: 218 12% 13%;
+    --popover-foreground: 45 15% 96%;
+    --primary: 11 65% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 42 85% 55%;
+    --secondary-foreground: 24 10% 10%;
+    --muted: 220 8% 18%;
+    --muted-foreground: 30 6% 65%;
+    --accent: 220 8% 18%;
+    --accent-foreground: 45 15% 96%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 8% 22%;
+    --input: 220 8% 22%;
+    --ring: 11 65% 55%;
+}
+
+* { border-color: hsl(var(--border)); }
+html, body, #root { height: 100%; }
+body {
+    margin: 0;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-image:
+      radial-gradient(1200px 300px at 90% -100px, rgba(230, 168, 23, 0.10), transparent 60%),
+      radial-gradient(900px 260px at -10% 120%, rgba(200, 75, 49, 0.08), transparent 60%);
+    background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, .font-display {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    letter-spacing: -0.01em;
+}
+
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Marquee traffic ticker */
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+}
+.marquee-track { animation: marquee 32s linear infinite; }
+.marquee-track:hover { animation-play-state: paused; }
+
+/* Pulse dot for live badges */
+@keyframes softPulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%     { opacity: 0.55; transform: scale(1.25); }
+}
+.live-dot { animation: softPulse 1.6s ease-in-out infinite; }
+
+/* Card hover — never transition-all */
+.tile {
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+.tile:active { transform: scale(0.97); }
+.tile:hover  { transform: translateY(-2px); }
+
+/* Glass topbar */
+.glass {
+    backdrop-filter: blur(18px) saturate(1.2);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    background-color: rgba(250, 248, 245, 0.72);
+}
+.dark .glass { background-color: rgba(18, 20, 23, 0.72); }
+
+/* Subtle grain */
+.grain::after {
+    content: "";
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.6 0 0 0 0 0.35 0 0 0 0 0.2 0 0 0 0.08 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    mix-blend-mode: multiply;
+    opacity: 0.55; pointer-events: none;
+}
+
+/* Chat typing dots */
+@keyframes bounceDot { 0%,80%,100% { transform: translateY(0); opacity: .4 } 40% { transform: translateY(-4px); opacity: 1 } }
+.dot { animation: bounceDot 1.2s infinite ease-in-out; }
+.dot:nth-child(2) { animation-delay: .15s; }
+.dot:nth-child(3) { animation-delay: .3s; }
+
+/* Custom selection */
+::selection { background: hsl(var(--secondary) / 0.5); color: hsl(var(--foreground)); }
