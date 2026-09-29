@@ -324,10 +324,15 @@ CONSO_SYSTEM = (
     "emergencia vital: en ese caso, 112).\n"
     "   • Policía Local de Utrera: 955 860 808 · Bomberos Utrera: 955 861 992.\n"
     "4) FARMACIAS DE GUARDIA:\n"
-    "   • El turno rota cada día. Indica al usuario que consulte la sección "
-    "'Farmacias de Guardia' de la propia Utrerapp o el listado oficial del "
-    "Colegio Oficial de Farmacéuticos de Sevilla. NO inventes qué farmacia "
-    "está de guardia hoy.\n\n"
+    "   • Al INICIO de cada conversación recibirás un bloque '== FARMACIA DE "
+    "GUARDIA HOY (DATO EN VIVO) ==' con el registro activo leído de la base "
+    "de datos oficial del Colegio de Farmacéuticos vía Utrerapp.\n"
+    "   • Cuando el usuario pregunte por la farmacia de guardia, RESPONDE "
+    "SIEMPRE con los datos exactos de ese bloque (nombre, dirección, teléfono "
+    "y horario) — no inventes ni digas que no lo sabes.\n"
+    "   • Si el bloque indica que NO hay farmacia de guardia activa, entonces "
+    "sí remite al usuario a la sección 'Farmacias de Guardia' de la app o al "
+    "Colegio Oficial de Farmacéuticos de Sevilla.\n\n"
     "== REGLA OBLIGATORIA PARA CONSULTAS DE URGENCIAS / SALUD / MÉDICO ==\n"
     "Cuando el usuario pregunte por urgencias, médico, hospital, ambulancia, "
     "centro de salud, cita médica o farmacia de guardia: (1) si describe un "
@@ -339,14 +344,44 @@ CONSO_SYSTEM = (
 )
 
 
+async def build_live_context() -> str:
+    """Live data injected into Conso system prompt on every chat request."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    duty = await db.pharmacies.find_one(
+        {"on_duty_today": True}, {"_id": 0}
+    )
+    if duty:
+        farmacia_block = (
+            f"== FARMACIA DE GUARDIA HOY (DATO EN VIVO · {today}) ==\n"
+            f"Nombre: {duty.get('name', 'N/D')}\n"
+            f"Dirección: {duty.get('address', 'N/D')} (Utrera)\n"
+            f"Teléfono: {duty.get('phone', 'N/D')}\n"
+            f"Horario: {duty.get('hours', 'N/D')}\n"
+            f"Estado 24h: {'sí' if duty.get('is_24h') else 'no'}\n"
+            "Usa estos datos EXACTOS cuando el usuario pregunte por la "
+            "farmacia de guardia. No los inventes ni los alteres.\n"
+        )
+    else:
+        farmacia_block = (
+            f"== FARMACIA DE GUARDIA HOY (DATO EN VIVO · {today}) ==\n"
+            "No hay ninguna farmacia marcada como de guardia en la base de "
+            "datos. Remite al usuario a la sección 'Farmacias de Guardia' de "
+            "Utrerapp o al Colegio Oficial de Farmacéuticos de Sevilla.\n"
+        )
+    return farmacia_block
+
+
 @api.post("/chat/stream")
 async def chat_stream(body: ChatBody):
+    live_ctx = await build_live_context()
+    system_full = CONSO_SYSTEM + "\n\n" + live_ctx
+
     async def gen():
         try:
             chat = LlmChat(
                 api_key=EMERGENT_LLM_KEY,
                 session_id=body.session_id,
-                system_message=CONSO_SYSTEM,
+                system_message=system_full,
             ).with_model("anthropic", "claude-sonnet-4-6")
 
             # persist user message
