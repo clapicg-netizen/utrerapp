@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { API, getSessionId } from "@/lib/api";
-import { Send, Sparkles } from "lucide-react";
+import { Send, Sparkles, Train, ExternalLink } from "lucide-react";
 
 const SUGGESTIONS = [
   "¿Qué farmacia está de guardia hoy?",
@@ -11,6 +11,34 @@ const SUGGESTIONS = [
   "¿Qué obra hay en el Teatro esta semana?",
   "¿Cuándo es la Feria de la Manzanilla?",
 ];
+
+const RENFE_URL = "https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios";
+// Match https?://renfe.com... variants and any residual //www.renfe.com/... tails,
+// optionally preceded by common introducers (aquí:, enlace:, →, [, ()) and whitespace.
+const RENFE_TAIL_RE =
+  /[\s\n]*[\[(]?\s*(aquí[:.]|enlace[:.]|link[:.]|url[:.]|→\s*|:\s*)?\s*(https?:)?\/\/(www\.)?renfe\.com\/[^\s)\]]*\)?\]?\.?\s*$/i;
+
+function AssistantContent({ text }) {
+  const hasRenfe = /renfe\.com/i.test(text);
+  const clean = hasRenfe ? text.replace(RENFE_TAIL_RE, "").trimEnd() : text;
+  return (
+    <>
+      <span>{clean}</span>
+      {hasRenfe && (
+        <a
+          href={RENFE_URL}
+          target="_blank"
+          rel="noreferrer"
+          data-testid="conso-renfe-cta"
+          className="mt-3 -mb-0.5 w-full py-2.5 rounded-xl bg-[color:var(--transit)] hover:opacity-90 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 no-underline"
+        >
+          <Train size={14} /> Ver horarios oficiales de Renfe Cercanías Sevilla
+          <ExternalLink size={12} />
+        </a>
+      )}
+    </>
+  );
+}
 
 export default function Conso() {
   const [msgs, setMsgs] = useState([
@@ -115,10 +143,12 @@ export default function Conso() {
               className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
                 m.role === "user"
                   ? "bg-[color:var(--terracotta)] text-white rounded-br-md"
-                  : "bg-muted text-foreground rounded-bl-md border border-border/60"
+                  : "bg-muted text-foreground rounded-bl-md border border-border/60 flex flex-col"
               }`}
             >
-              {m.content || (busy && i === msgs.length - 1 ? (
+              {m.role === "assistant" && m.content ? (
+                <AssistantContent text={m.content} />
+              ) : m.content || (busy && i === msgs.length - 1 ? (
                 <span className="inline-flex gap-1 py-1">
                   <span className="dot w-1.5 h-1.5 bg-current rounded-full inline-block" />
                   <span className="dot w-1.5 h-1.5 bg-current rounded-full inline-block" />
