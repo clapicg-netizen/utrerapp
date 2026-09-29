@@ -13,6 +13,7 @@ import Urgencias from "@/pages/Urgencias";
 import Market from "@/pages/Market";
 import Vivienda from "@/pages/Vivienda";
 import Tablon from "@/pages/Tablon";
+import Bares from "@/pages/Bares";
 import Admin from "@/pages/Admin";
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
           <Route path="/market" element={<Market />} />
           <Route path="/vivienda" element={<Vivienda />} />
           <Route path="/tablon" element={<Tablon />} />
+          <Route path="/bares" element={<Bares />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </BrowserRouter>
