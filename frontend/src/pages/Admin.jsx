@@ -58,7 +58,7 @@ export default function Admin() {
           >
             Entrar
           </button>
-          <p className="text-[11px] text-muted-foreground mt-3 font-mono">Pista demo: admin123</p>
+          <p className="text-[11px] text-muted-foreground mt-3 font-mono">Contraseña facilitada por el Ayuntamiento de Utrera.</p>
         </form>
         <BottomNav />
       </div>
