@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { API, getSessionId } from "@/lib/api";
-import { Send, Sparkles, Train, ExternalLink } from "lucide-react";
+import { Send, Sparkles, Train, ExternalLink, ArrowRight, Search } from "lucide-react";
 
 const SUGGESTIONS = [
   "¿Qué farmacia está de guardia hoy?",
@@ -13,29 +13,118 @@ const SUGGESTIONS = [
 ];
 
 const RENFE_URL = "https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios";
-// Match https?://renfe.com... variants and any residual //www.renfe.com/... tails,
-// optionally preceded by common introducers (aquí:, enlace:, →, [, ()) and whitespace.
-const RENFE_TAIL_RE =
-  /[\s\n]*[\[(]?\s*(aquí[:.]|enlace[:.]|link[:.]|url[:.]|→\s*|:\s*)?\s*(https?:)?\/\/(www\.)?renfe\.com\/[^\s)\]]*\)?\]?\.?\s*$/i;
+const DESTINATIONS = [
+  { id: "santa-justa", label: "Sevilla Santa Justa", travel: "~35 min", code: "71801" },
+  { id: "lora", label: "Lora del Río", travel: "~55 min", code: "71000" },
+];
+// Renfe Cercanías Sevilla search URL builder — uses their public horarios page.
+// Falls back to the main horarios page if the deep-link fails on the user's end.
+const buildRenfeSearch = (destId) => {
+  const dst = DESTINATIONS.find((d) => d.id === destId);
+  // Public search page pre-filtering Sevilla nucleus (51).
+  const base = "https://horarios.renfe.com/cer/hjcer310.jsp";
+  const params = new URLSearchParams({
+    nucleo: "51",
+    i: "s",
+    cp: "NO",
+    o: "71801", // Utrera (Cercanías Sevilla)
+    d: dst?.code || "71801",
+  });
+  return `${base}?${params.toString()}`;
+};
+
+function RenfeWidget() {
+  const [dest, setDest] = useState("santa-justa");
+  const active = DESTINATIONS.find((d) => d.id === dest);
+  return (
+    <div
+      data-testid="conso-renfe-widget"
+      className="mt-3 -mb-0.5 rounded-2xl border border-[color:var(--transit)]/25 bg-gradient-to-br from-[#0F2A3F] to-[#1E6091] text-white overflow-hidden shadow-inner"
+    >
+      <div className="px-3 pt-3 pb-2 flex items-center gap-2">
+        <div className="w-8 h-8 rounded-lg bg-white/15 grid place-items-center border border-white/20">
+          <Train size={16} />
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-white/70">
+            Cercanías · Línea C-1
+          </p>
+          <p className="font-display font-bold text-[13px] leading-tight">
+            Buscador oficial de Renfe
+          </p>
+        </div>
+      </div>
+
+      <div className="px-3 pb-3">
+        <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2 border border-white/15">
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] uppercase tracking-widest text-white/60">Origen</p>
+            <p className="font-display font-bold text-sm">Utrera</p>
+          </div>
+          <ArrowRight size={14} className="text-white/70 shrink-0" />
+          <div className="flex-1 min-w-0 text-right">
+            <p className="text-[9px] uppercase tracking-widest text-white/60">Destino</p>
+            <p className="font-display font-bold text-sm truncate">{active?.label}</p>
+          </div>
+        </div>
+
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          {DESTINATIONS.map((d) => (
+            <button
+              key={d.id}
+              onClick={() => setDest(d.id)}
+              data-testid={`conso-renfe-dest-${d.id}`}
+              className={`py-2 rounded-lg text-[11px] font-semibold border ${
+                dest === d.id
+                  ? "bg-white text-[color:var(--transit)] border-white"
+                  : "bg-white/10 text-white/85 border-white/20 hover:bg-white/15"
+              }`}
+            >
+              {d.label}
+              <span className="block text-[9px] font-normal opacity-70">{d.travel}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-2 flex gap-1.5">
+          <a
+            href={buildRenfeSearch(dest)}
+            target="_blank"
+            rel="noreferrer"
+            data-testid="conso-renfe-search"
+            className="flex-1 py-2.5 rounded-xl bg-[color:var(--secondary)] hover:opacity-90 text-[#1C1917] text-xs font-extrabold inline-flex items-center justify-center gap-1.5"
+          >
+            <Search size={13} /> Ver próximos trenes
+          </a>
+          <a
+            href={RENFE_URL}
+            target="_blank"
+            rel="noreferrer"
+            data-testid="conso-renfe-official"
+            className="px-3 py-2.5 rounded-xl bg-white/15 border border-white/25 text-xs font-semibold inline-flex items-center gap-1"
+            title="Página oficial Renfe"
+          >
+            <ExternalLink size={12} />
+          </a>
+        </div>
+        <p className="mt-1.5 text-[10px] text-white/60 leading-snug">
+          Datos oficiales en tiempo real · Cercanías Sevilla
+        </p>
+      </div>
+    </div>
+  );
+}
+
+const RENFE_TRIGGER_RE = /(l[ií]nea\s*c-?1|renfe|cercan[íi]as|buscador\s+directo|santa\s+justa|lora\s+del\s+r[ií]o)/i;
 
 function AssistantContent({ text }) {
-  const hasRenfe = /renfe\.com/i.test(text);
-  const clean = hasRenfe ? text.replace(RENFE_TAIL_RE, "").trimEnd() : text;
+  const isRenfe = RENFE_TRIGGER_RE.test(text);
+  // Belt-and-braces: also strip any stray renfe.com URL the model might slip in.
+  const clean = text.replace(/https?:\/\/(www\.)?renfe\.com\/[^\s)]*/gi, "").trimEnd();
   return (
     <>
       <span>{clean}</span>
-      {hasRenfe && (
-        <a
-          href={RENFE_URL}
-          target="_blank"
-          rel="noreferrer"
-          data-testid="conso-renfe-cta"
-          className="mt-3 -mb-0.5 w-full py-2.5 rounded-xl bg-[color:var(--transit)] hover:opacity-90 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5 no-underline"
-        >
-          <Train size={14} /> Ver horarios oficiales de Renfe Cercanías Sevilla
-          <ExternalLink size={12} />
-        </a>
-      )}
+      {isRenfe && <RenfeWidget />}
     </>
   );
 }
