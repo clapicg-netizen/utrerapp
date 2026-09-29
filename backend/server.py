@@ -95,6 +95,19 @@ class NewsItem(BaseModel):
     url: str = "#"
 
 
+class Anuncio(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    municipio: str = "utrera"
+    categoria: Literal['compra', 'venta', 'servicio'] = 'venta'
+    titulo: str
+    precio: str
+    descripcion: str
+    whatsapp: str
+    autor: str = "Vecino/a"
+    es_activo: bool = True
+    creado: str = Field(default_factory=now_iso)
+
+
 class TvChannel(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
@@ -238,6 +251,29 @@ async def del_news(id: str, _=Depends(require_admin)):
 @api.get("/tv", response_model=List[TvChannel])
 async def get_tv():
     return await list_docs("tv")
+
+
+# ---------- Anuncios locales (Tablón) ----------
+@api.get("/anuncios", response_model=List[Anuncio])
+async def get_anuncios(categoria: Optional[str] = None):
+    q = {"municipio": "utrera", "es_activo": True}
+    if categoria:
+        q["categoria"] = categoria
+    docs = await db.anuncios_locales.find(q, {"_id": 0}).sort("creado", -1).to_list(200)
+    return docs
+
+
+@api.post("/anuncios", response_model=Anuncio)
+async def create_anuncio(item: Anuncio):
+    item.municipio = "utrera"
+    item.creado = now_iso()
+    return await upsert_doc("anuncios_locales", item.model_dump())
+
+
+@api.delete("/anuncios/{id}")
+async def del_anuncio(id: str, _=Depends(require_admin)):
+    return {"deleted": await delete_doc("anuncios_locales", id)}
+
 
 
 # ---------- Conso Chat (streaming) ----------
@@ -407,6 +443,33 @@ SEED_TV = [
      "stream_url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8", "live": True},
 ]
 
+SEED_ANUNCIOS = [
+    {"id": "a-1", "municipio": "utrera", "categoria": "venta",
+     "titulo": "Bicicleta de montaña Orbea 27,5\"",
+     "precio": "180€", "descripcion": "Usada un año, cambio Shimano 21v, en muy buen estado. Recoger en Trianilla.",
+     "whatsapp": "34655123456", "autor": "Manolo R.", "es_activo": True, "creado": now_iso()},
+    {"id": "a-2", "municipio": "utrera", "categoria": "servicio",
+     "titulo": "Clases particulares de matemáticas ESO y Bach.",
+     "precio": "12€/h", "descripcion": "Profesora titulada, zona Salesianos. Refuerzo y preparación de exámenes.",
+     "whatsapp": "34677234567", "autor": "Rocío M.", "es_activo": True, "creado": now_iso()},
+    {"id": "a-3", "municipio": "utrera", "categoria": "venta",
+     "titulo": "Sofá 3 plazas gris antracita",
+     "precio": "120€", "descripcion": "Muy cómodo, se entrega en Utrera por 10€ extra. Medidas 210x90.",
+     "whatsapp": "34612345678", "autor": "Carmen S.", "es_activo": True, "creado": now_iso()},
+    {"id": "a-4", "municipio": "utrera", "categoria": "compra",
+     "titulo": "Busco PlayStation 4 en buen estado",
+     "precio": "Hasta 120€", "descripcion": "Interesa con al menos un mando y algún juego. Pago al momento.",
+     "whatsapp": "34699888777", "autor": "David P.", "es_activo": True, "creado": now_iso()},
+    {"id": "a-5", "municipio": "utrera", "categoria": "servicio",
+     "titulo": "Reformas y albañilería · presupuesto sin compromiso",
+     "precio": "Consultar", "descripcion": "Alicatados, pintura, pladur. Trabajos en Utrera y comarca. 20 años de experiencia.",
+     "whatsapp": "34633445566", "autor": "Reformas Alcántara", "es_activo": True, "creado": now_iso()},
+    {"id": "a-6", "municipio": "utrera", "categoria": "venta",
+     "titulo": "Silla de paseo Chicco casi nueva",
+     "precio": "60€", "descripcion": "Con capota y bolso. Solo 4 meses de uso.", 
+     "whatsapp": "34655998877", "autor": "Marta G.", "es_activo": True, "creado": now_iso()},
+]
+
 
 @app.on_event("startup")
 async def seed():
@@ -418,6 +481,7 @@ async def seed():
         ("events", SEED_EVENTS),
         ("news", SEED_NEWS),
         ("tv", SEED_TV),
+        ("anuncios_locales", SEED_ANUNCIOS),
     ]
     for coll, docs in seeders:
         if await db[coll].count_documents({}) == 0:

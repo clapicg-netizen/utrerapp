@@ -9,6 +9,10 @@ import Transporte from "@/pages/Transporte";
 import Eventos from "@/pages/Eventos";
 import UtreraTV from "@/pages/UtreraTV";
 import Noticias from "@/pages/Noticias";
+import Urgencias from "@/pages/Urgencias";
+import Market from "@/pages/Market";
+import Vivienda from "@/pages/Vivienda";
+import Tablon from "@/pages/Tablon";
 import Admin from "@/pages/Admin";
 
 function App() {
@@ -24,6 +28,10 @@ function App() {
           <Route path="/eventos" element={<Eventos />} />
           <Route path="/utreratv" element={<UtreraTV />} />
           <Route path="/noticias" element={<Noticias />} />
+          <Route path="/urgencias" element={<Urgencias />} />
+          <Route path="/market" element={<Market />} />
+          <Route path="/vivienda" element={<Vivienda />} />
+          <Route path="/tablon" element={<Tablon />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </BrowserRouter>

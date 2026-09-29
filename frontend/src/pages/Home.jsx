@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import {
-  Cross, Ticket, Bus, Calendar, Tv, Newspaper, Sparkles, ArrowUpRight,
+  Cross, Ticket, Bus, Calendar, Tv, Newspaper, Sparkles, ArrowUpRight, Siren,
+  ShoppingBag, Home as HomeIcon, Megaphone,
 } from "lucide-react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
@@ -13,6 +14,10 @@ const MODULES = [
   { to: "/eventos",    title: "Agenda & Fiestas", subtitle: "Feria, cultura y deportes", badge: "3 destacados", Icon: Calendar,  tone: "amber",   testId: "module-card-eventos" },
   { to: "/utreratv",   title: "Utrera TV en Directo", subtitle: "Emisión local 24/7", badge: "EN DIRECTO", Icon: Tv,          tone: "red",     testId: "module-card-utreratv" },
   { to: "/noticias",   title: "Titulares de Utrera", subtitle: "Prensa y noticias locales", badge: "Última hora", Icon: Newspaper, tone: "indigo", testId: "module-card-noticias" },
+  { to: "/urgencias",  title: "Urgencias Médicas", subtitle: "112 · Centros de salud · CHARE", badge: "24 horas", Icon: Siren, tone: "red", testId: "module-card-urgencias" },
+  { to: "/market",     title: "Utrera Market", subtitle: "Las tiendas online de tu pueblo", badge: "Comercio local", Icon: ShoppingBag, tone: "amber", testId: "module-card-market" },
+  { to: "/vivienda",   title: "Utrera Vivienda", subtitle: "Inmobiliaria, alquiler y garajes", badge: "Inmuebles", Icon: HomeIcon, tone: "sky", testId: "module-card-vivienda" },
+  { to: "/tablon",     title: "Tablón de Anuncios", subtitle: "Compra, venta y servicios entre vecinos", badge: "Vecinal", Icon: Megaphone, tone: "emerald", testId: "module-card-tablon" },
 ];
 
 const TONES = {
@@ -95,7 +100,7 @@ export default function Home() {
         <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
           Servicios locales
         </p>
-        <p className="text-[11px] text-muted-foreground">6 módulos</p>
+        <p className="text-[11px] text-muted-foreground">10 módulos</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-2" data-testid="modules-grid">
