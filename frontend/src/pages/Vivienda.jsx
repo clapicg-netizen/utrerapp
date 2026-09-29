@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
-import { Home as HomeIcon, KeyRound, Car, Building2, MapPin, BedDouble, Euro, ExternalLink } from "lucide-react";
+import { api } from "@/lib/api";
+import { Home as HomeIcon, KeyRound, Car, Building2, MapPin, BedDouble, Euro, Phone } from "lucide-react";
 
 const CATS = [
   { id: "venta", label: "Venta", Icon: HomeIcon, tone: "rose" },
@@ -9,27 +10,6 @@ const CATS = [
   { id: "garajes", label: "Garajes", Icon: Car, tone: "amber" },
   { id: "locales", label: "Locales", Icon: Building2, tone: "emerald" },
 ];
-
-const LISTINGS = {
-  venta: [
-    { title: "Piso 3 dorm. junto al Altozano", zone: "Centro", price: "148.000€", beds: 3, m2: 92, agency: "Inmobiliaria Utrera Centro", url: "https://google.com/search?q=piso+venta+utrera+altozano" },
-    { title: "Chalet adosado con piscina", zone: "Salesianos", price: "245.000€", beds: 4, m2: 180, agency: "Ficasa Utrera", url: "https://google.com/search?q=chalet+adosado+utrera" },
-    { title: "Casa histórica rehabilitada", zone: "Casco Antiguo", price: "195.000€", beds: 3, m2: 140, agency: "Alcántara Fincas", url: "https://google.com/search?q=casa+historica+utrera" },
-  ],
-  alquiler: [
-    { title: "Ático amueblado con terraza", zone: "Trianilla", price: "650€/mes", beds: 2, m2: 78, agency: "Grupo Consolación", url: "https://google.com/search?q=alquiler+atico+utrera" },
-    { title: "Piso económico cerca de la estación", zone: "Estación", price: "480€/mes", beds: 2, m2: 65, agency: "Inmobiliaria Utrera Centro", url: "https://google.com/search?q=alquiler+piso+utrera+renfe" },
-    { title: "Estudio para estudiantes", zone: "Centro", price: "380€/mes", beds: 1, m2: 40, agency: "Alcántara Fincas", url: "https://google.com/search?q=alquiler+estudio+utrera" },
-  ],
-  garajes: [
-    { title: "Plaza de garaje cubierta", zone: "Trianilla", price: "55€/mes", agency: "Particular · Utrera", url: "https://google.com/search?q=alquiler+garaje+utrera+trianilla" },
-    { title: "Garaje doble en venta", zone: "Salesianos", price: "18.000€", agency: "Ficasa Utrera", url: "https://google.com/search?q=venta+garaje+utrera" },
-  ],
-  locales: [
-    { title: "Local comercial a pie de calle", zone: "C/ Ancha", price: "900€/mes", m2: 90, agency: "Grupo Consolación", url: "https://google.com/search?q=alquiler+local+utrera+ancha" },
-    { title: "Nave industrial polígono El Torno", zone: "Pol. El Torno", price: "1.500€/mes", m2: 400, agency: "Inmobiliaria Utrera Centro", url: "https://google.com/search?q=alquiler+nave+poligono+torno+utrera" },
-  ],
-};
 
 const TONES = {
   rose: "bg-rose-500/12 text-rose-600",
@@ -40,8 +20,12 @@ const TONES = {
 
 export default function Vivienda() {
   const [cat, setCat] = useState("venta");
+  const [items, setItems] = useState([]);
   const active = CATS.find((c) => c.id === cat);
-  const list = LISTINGS[cat] || [];
+
+  useEffect(() => {
+    api.get(`/inmuebles?tipo=${cat}`).then((r) => setItems(r.data));
+  }, [cat]);
 
   return (
     <div className="app-shell" data-testid="vivienda-page">
@@ -85,43 +69,65 @@ export default function Vivienda() {
       </div>
 
       <p className="mt-5 mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold px-1">
-        {active?.label} · {list.length} inmuebles
+        {active?.label} · {items.length} inmuebles
       </p>
 
       <div className="space-y-2.5" data-testid="vivienda-list">
-        {list.map((l, i) => (
-          <a
-            key={i}
-            href={l.url}
-            target="_blank"
-            rel="noreferrer"
-            data-testid={`vivienda-item-${i}`}
-            className="tile rounded-2xl border border-border/70 bg-card p-4 block"
+        {items.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            No hay inmuebles publicados en esta categoría.
+          </div>
+        )}
+        {items.map((l) => (
+          <div
+            key={l.id}
+            data-testid={`vivienda-item-${l.id}`}
+            className="tile rounded-2xl border border-border/70 bg-card overflow-hidden"
           >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted">{l.agency}</span>
-                <h3 className="font-display font-bold text-[14px] mt-1.5 leading-tight">{l.title}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                  <MapPin size={11} /> {l.zone}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="font-display font-extrabold text-[color:var(--terracotta)] text-base leading-none flex items-center gap-0.5 justify-end">
-                  <Euro size={13} /> {l.price.replace("€", "").trim()}
-                </p>
-                <ExternalLink size={14} className="mt-1.5 ml-auto text-muted-foreground" />
-              </div>
-            </div>
-            {(l.beds || l.m2) && (
-              <div className="mt-2.5 flex gap-3 text-xs text-muted-foreground font-mono">
-                {l.beds && (
-                  <span className="inline-flex items-center gap-1"><BedDouble size={11} /> {l.beds} dorm.</span>
-                )}
-                {l.m2 && <span>· {l.m2} m²</span>}
-              </div>
+            {l.foto && (
+              <img src={l.foto} alt={l.titulo} className="w-full h-32 object-cover" />
             )}
-          </a>
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  {l.agencia && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted">
+                      {l.agencia}
+                    </span>
+                  )}
+                  <h3 className="font-display font-bold text-[14px] mt-1.5 leading-tight">{l.titulo}</h3>
+                  {l.zona && (
+                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <MapPin size={11} /> {l.zona}
+                    </p>
+                  )}
+                </div>
+                <p className="font-display font-extrabold text-[color:var(--terracotta)] text-base leading-none flex items-center gap-0.5 shrink-0">
+                  <Euro size={13} /> {l.precio.replace("€", "").trim()}
+                </p>
+              </div>
+              {l.descripcion && (
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{l.descripcion}</p>
+              )}
+              {(l.dorm || l.m2) && (
+                <div className="mt-2.5 flex gap-3 text-xs text-muted-foreground font-mono">
+                  {l.dorm ? (
+                    <span className="inline-flex items-center gap-1"><BedDouble size={11} /> {l.dorm} dorm.</span>
+                  ) : null}
+                  {l.m2 ? <span>· {l.m2} m²</span> : null}
+                </div>
+              )}
+              {l.telefono && (
+                <a
+                  href={`tel:${l.telefono}`}
+                  data-testid={`vivienda-call-${l.id}`}
+                  className="mt-3 w-full py-2 rounded-full bg-[color:var(--transit)] hover:opacity-90 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5"
+                >
+                  <Phone size={13} /> Llamar · {l.telefono}
+                </a>
+              )}
+            </div>
+          </div>
         ))}
       </div>
 

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
+import { api } from "@/lib/api";
 import { Shirt, Utensils, Dumbbell, Sofa, Store, ExternalLink } from "lucide-react";
 
 const CATEGORIES = [
@@ -9,28 +10,6 @@ const CATEGORIES = [
   { id: "deportes", label: "Deportes", Icon: Dumbbell, tone: "sky" },
   { id: "hogar", label: "Hogar", Icon: Sofa, tone: "emerald" },
 ];
-
-const SHOPS = {
-  moda: [
-    { name: "Boutique Trianilla", desc: "Moda mujer y complementos artesanos.", url: "https://google.com/search?q=Boutique+Trianilla+Utrera", tag: "Envío gratis > 30€" },
-    { name: "Zapatería Utrera Kids", desc: "Calzado infantil y comuniones.", url: "https://google.com/search?q=zapateria+utrera+kids", tag: "Novedad" },
-    { name: "El Rincón Flamenco", desc: "Trajes de flamenca y complementos de feria.", url: "https://google.com/search?q=el+rincon+flamenco+utrera" },
-  ],
-  alimentacion: [
-    { name: "Aceite Utrera Verde", desc: "AOVE del Corbones directo del molino.", url: "https://google.com/search?q=aceite+utrera+verde", tag: "Local" },
-    { name: "Mostachones El Altozano", desc: "Mostachones y bollería tradicional envío 24h.", url: "https://google.com/search?q=mostachones+utrera" },
-    { name: "Bodega Salado", desc: "Vinos, manzanilla y jamón ibérico.", url: "https://google.com/search?q=bodega+salado+utrera" },
-  ],
-  deportes: [
-    { name: "Deportes Utrera Sport", desc: "Fútbol, running y padel. Recogida en tienda.", url: "https://google.com/search?q=deportes+utrera+sport" },
-    { name: "Ciclos El Palmar", desc: "Bicis eléctricas y montaña. Servicio taller.", url: "https://google.com/search?q=ciclos+el+palmar+utrera", tag: "Taller propio" },
-  ],
-  hogar: [
-    { name: "Muebles Consolación", desc: "Muebles a medida y decoración.", url: "https://google.com/search?q=muebles+consolacion+utrera" },
-    { name: "Electrodomésticos Vega", desc: "Instalación gratuita en Utrera y comarca.", url: "https://google.com/search?q=electrodomesticos+vega+utrera", tag: "Instalación" },
-    { name: "Ferretería La Manzanilla", desc: "Bricolaje y jardín. Envío al día.", url: "https://google.com/search?q=ferreteria+la+manzanilla+utrera" },
-  ],
-};
 
 const TONES = {
   rose: "bg-rose-500/12 text-rose-600 dark:text-rose-300",
@@ -41,8 +20,12 @@ const TONES = {
 
 export default function Market() {
   const [cat, setCat] = useState("moda");
-  const list = SHOPS[cat] || [];
+  const [shops, setShops] = useState([]);
   const active = CATEGORIES.find((c) => c.id === cat);
+
+  useEffect(() => {
+    api.get(`/comercios?categoria=${cat}`).then((r) => setShops(r.data));
+  }, [cat]);
 
   return (
     <div className="app-shell" data-testid="market-page">
@@ -86,32 +69,41 @@ export default function Market() {
       </div>
 
       <p className="mt-5 mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold px-1">
-        {active?.label} · {list.length} comercios
+        {active?.label} · {shops.length} comercios
       </p>
 
       <div className="space-y-2.5" data-testid="market-list">
-        {list.map((s) => (
+        {shops.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            Aún no hay comercios en esta categoría.
+          </div>
+        )}
+        {shops.map((s) => (
           <a
-            key={s.name}
+            key={s.id}
             href={s.url}
             target="_blank"
             rel="noreferrer"
-            data-testid={`market-shop-${s.name.replace(/\s+/g, "-").toLowerCase()}`}
+            data-testid={`market-shop-${s.id}`}
             className="tile rounded-2xl border border-border/70 bg-card p-4 flex gap-3 items-start"
           >
-            <div className={`w-11 h-11 rounded-xl grid place-items-center ${TONES[active?.tone || "rose"]}`}>
-              <Store size={19} />
-            </div>
+            {s.imagen ? (
+              <img src={s.imagen} alt={s.nombre} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+            ) : (
+              <div className={`w-14 h-14 rounded-xl grid place-items-center shrink-0 ${TONES[active?.tone || "rose"]}`}>
+                <Store size={19} />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h3 className="font-display font-bold text-[14px] truncate">{s.name}</h3>
+                <h3 className="font-display font-bold text-[14px] truncate">{s.nombre}</h3>
                 {s.tag && (
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[color:var(--secondary)]/25 text-[color:var(--terracotta-dark)]">
                     {s.tag}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
+              <p className="text-xs text-muted-foreground mt-1">{s.descripcion}</p>
             </div>
             <ExternalLink size={16} className="text-muted-foreground shrink-0 mt-1" />
           </a>
