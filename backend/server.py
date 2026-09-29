@@ -9,7 +9,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 import asyncio
 import re
@@ -418,6 +418,102 @@ async def renfe_next(destino: str = "sevilla", n: int = 3):
     }
 
 
+@api.get("/renfe-c1")
+async def renfe_c1_full():
+    """Cuadrante horario completo de la Línea C-1 Utrera → Sevilla / Lora del Río."""
+    now = datetime.now(MADRID_TZ)
+    return {
+        "line": "C-1",
+        "route": "Utrera ↔ Sevilla Santa Justa ↔ Lora del Río",
+        "server_time": now.strftime("%Y-%m-%d %H:%M"),
+        "day_type": "laborable" if now.weekday() < 5 else "fin de semana",
+        "timetable": {
+            "weekday": TIMETABLE_C1_WEEKDAY,
+            "weekend_holiday": TIMETABLE_C1_WEEKEND,
+        },
+        "next_from_utrera": next_c1_departures(3)["next"],
+    }
+
+
+# ---------- Teatro / Cultura ----------
+THEATER_INTENT_RE = re.compile(
+    r"\b(teatro|obra|obras|cartelera|espect[aá]culo|espect[aá]culos|"
+    r"evento|eventos|cultura|cultural|feria|fiesta|fiestas|agenda|"
+    r"actividad|actividades|conciert|flamenco|potaje)\b",
+    re.IGNORECASE,
+)
+
+
+def _fmt_date_es(iso_date: str) -> str:
+    """YYYY-MM-DD → 'DD/MM/YYYY (día_semana)'."""
+    try:
+        d = datetime.strptime(iso_date[:10], "%Y-%m-%d")
+    except (ValueError, TypeError):
+        return iso_date
+    dias = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"]
+    return f"{d.strftime('%d/%m/%Y')} ({dias[d.weekday()]})"
+
+
+async def get_upcoming_cultura(limit: int = 6) -> List[dict]:
+    """Combina obras de teatro + eventos culturales futuros ordenados por fecha."""
+    today_iso = datetime.now(MADRID_TZ).strftime("%Y-%m-%d")
+    shows = await db.theater.find(
+        {"date": {"$gte": today_iso}}, {"_id": 0}
+    ).sort("date", 1).to_list(50)
+    events = await db.events.find(
+        {"date": {"$gte": today_iso}}, {"_id": 0}
+    ).sort("date", 1).to_list(50)
+
+    items = []
+    for s in shows:
+        items.append({
+            "kind": "teatro",
+            "title": s.get("title"),
+            "date": s.get("date"),
+            "time": s.get("time", ""),
+            "location": "Teatro Enrique de la Cuadra",
+            "extra": s.get("genre", ""),
+        })
+    for e in events:
+        items.append({
+            "kind": "evento",
+            "title": e.get("title"),
+            "date": e.get("date"),
+            "time": "",
+            "location": e.get("location", ""),
+            "extra": e.get("category", ""),
+        })
+    items.sort(key=lambda x: x["date"])
+    return items[:limit]
+
+
+def format_cultura_text(items: List[dict]) -> str:
+    if not items:
+        return (
+            "Ahora mismo no tengo ninguna obra ni evento cultural registrado "
+            "en la agenda de Utrera. Vuelve a preguntar en unos días."
+        )
+    lines = ["Próximas obras y eventos culturales en Utrera:"]
+    for it in items:
+        date_es = _fmt_date_es(it["date"])
+        hora = f" · {it['time']}" if it["time"] else ""
+        loc = f" — {it['location']}" if it["location"] else ""
+        etiqueta = "🎭" if it["kind"] == "teatro" else "🎉"
+        lines.append(f"{etiqueta} {it['title']} — {date_es}{hora}{loc}")
+    return "\n".join(lines)
+
+
+@api.get("/teatro")
+async def teatro_endpoint(limit: int = 6):
+    items = await get_upcoming_cultura(limit)
+    return {
+        "count": len(items),
+        "server_time": datetime.now(MADRID_TZ).strftime("%Y-%m-%d %H:%M"),
+        "items": items,
+        "text": format_cultura_text(items),
+    }
+
+
 async def build_live_context() -> str:
     """Live data injected into Conso system prompt on every chat request."""
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -471,6 +567,38 @@ async def chat_stream(body: ChatBody):
 
         return StreamingResponse(
             gen_train(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    # Intercept theater / cultural queries — read from DB, respond in plain text,
+    # never redirect the user outside the app.
+    if THEATER_INTENT_RE.search(body.message or ""):
+        items = await get_upcoming_cultura(6)
+        answer = format_cultura_text(items)
+
+        async def gen_cultura():
+            await db.chat_messages.insert_one({
+                "session_id": body.session_id,
+                "role": "user",
+                "content": body.message,
+                "ts": now_iso(),
+            })
+            # Stream line by line for a natural typing effect
+            for line in answer.split("\n"):
+                yield f"data: {line}\n\n"
+                yield "data: \n\n\n"
+                await asyncio.sleep(0.02)
+            await db.chat_messages.insert_one({
+                "session_id": body.session_id,
+                "role": "assistant",
+                "content": answer,
+                "ts": now_iso(),
+            })
+            yield "data: [DONE]\n\n"
+
+        return StreamingResponse(
+            gen_cultura(),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
@@ -673,6 +801,20 @@ async def seed():
     for coll, docs in seeders:
         if await db[coll].count_documents({}) == 0:
             await db[coll].insert_many([{**d} for d in docs])
+
+    # Refresh stale cultura dates so /api/teatro always has future items.
+    today_iso = datetime.now(MADRID_TZ).strftime("%Y-%m-%d")
+    if await db.theater.count_documents({"date": {"$lt": today_iso}}) > 0 \
+       or await db.events.count_documents({"date": {"$lt": today_iso}}) > 0:
+        base = datetime.now(MADRID_TZ)
+        for i, s in enumerate(SEED_THEATER):
+            fut = (base + timedelta(days=10 + i * 12)).strftime("%Y-%m-%d")
+            await db.theater.update_one({"id": s["id"]}, {"$set": {"date": fut}})
+        for i, e in enumerate(SEED_EVENTS):
+            fut = (base + timedelta(days=5 + i * 15)).strftime("%Y-%m-%d")
+            await db.events.update_one({"id": e["id"]}, {"$set": {"date": fut}})
+        logger.info("Utrerapp: cultura dates refreshed forward")
+
     logger.info("Utrerapp seed complete")
 
 
