@@ -10,7 +10,9 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 import uuid
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 import asyncio
+import re
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
 
@@ -289,23 +291,12 @@ CONSO_SYSTEM = (
     "== BASE DE CONOCIMIENTO: RENFE CERCANÍAS DE UTRERA ==\n"
     "Línea C-1: Utrera ↔ Sevilla Santa Justa ↔ Lora del Río.\n"
     "También existe la Línea C-3 (Utrera ↔ Cazalla-Constantina).\n\n"
-    "== REGLA ABSOLUTA E INVIOLABLE PARA CONSULTAS DE RENFE / CERCANÍAS / TRENES ==\n"
-    "Cuando el usuario pregunte CUALQUIER cosa relacionada con Renfe, "
-    "Cercanías, trenes, horarios de trenes, próximo tren, línea C-1 o C-3, "
-    "conexiones a Sevilla o Lora del Río, o similar:\n"
-    "\n"
-    "1) Tu respuesta debe ser EXACTAMENTE esta única frase, sin nada antes "
-    "ni después, sin saludos, sin emojis, sin explicaciones:\n"
-    "   Aquí tienes los próximos horarios y el buscador directo para la Línea C-1:\n"
-    "\n"
-    "2) PROHIBIDO ABSOLUTO: no menciones frecuencias, no menciones rangos "
-    "horarios (ni 30 min ni 60 min ni horas punta/valle), no digas la hora "
-    "del primer o último tren, no des URLs, no incluyas listados, no añadas "
-    "'espero que te sirva' ni cierres. Solo esa única frase.\n"
-    "\n"
-    "3) La app se encarga automáticamente de mostrar debajo de tu respuesta "
-    "un widget interactivo con selector de destino y buscador oficial de "
-    "Renfe. Tú NO debes describirlo — la interfaz ya lo hace.\n\n"
+    "== REGLA CRÍTICA: TRENES / RENFE / CERCANÍAS ==\n"
+    "IMPORTANTE: la aplicación intercepta automáticamente estas consultas y "
+    "responde con datos calculados en el servidor. Si por cualquier motivo "
+    "recibes una consulta sobre trenes/renfe/cercanías, respondes con UNA "
+    "sola frase pidiendo disculpas y sugiriendo reformular. NUNCA des "
+    "frecuencias, rangos horarios, URLs, ni enlaces externos.\n\n"
     "== BASE DE CONOCIMIENTO: URGENCIAS Y SALUD EN UTRERA (MÁXIMA PRIORIDAD) ==\n"
     "1) URGENCIAS MÉDICAS 24h — Hospital de referencia:\n"
     "   • **CHARE de Utrera** (Centro Hospitalario de Alta Resolución).\n"
@@ -346,6 +337,87 @@ CONSO_SYSTEM = (
 )
 
 
+# ---------- Renfe Cercanías C-1 timetable (Utrera northbound) ----------
+# Public schedule of línea C-1 Utrera → Sevilla Santa Justa → Lora del Río.
+# Times are in Europe/Madrid local time. Kept in-server for zero-dependency,
+# deterministic answers (no external calls at request time).
+TIMETABLE_C1_WEEKDAY = [
+    "05:34", "06:04", "06:34", "07:04", "07:34", "07:52", "08:04", "08:22",
+    "08:34", "08:52", "09:04", "09:22", "09:34", "09:52", "10:04", "10:34",
+    "11:04", "11:34", "12:04", "12:34", "13:04", "13:34", "14:04", "14:34",
+    "15:04", "15:34", "16:04", "16:22", "16:34", "16:52", "17:04", "17:22",
+    "17:34", "17:52", "18:04", "18:22", "18:34", "18:52", "19:04", "19:22",
+    "19:34", "19:52", "20:04", "20:34", "21:04", "21:34", "22:04", "22:34",
+]
+TIMETABLE_C1_WEEKEND = [
+    "06:06", "07:06", "08:06", "09:06", "10:06", "11:06", "12:06", "13:06",
+    "14:06", "15:06", "16:06", "17:06", "18:06", "19:06", "20:06", "21:06",
+    "22:06",
+]
+
+MADRID_TZ = ZoneInfo("Europe/Madrid")
+TRAIN_INTENT_RE = re.compile(
+    r"\b(tren|trenes|cercan[íi]as|renfe|c-?1|santa\s*justa|sevilla|lora)\b",
+    re.IGNORECASE,
+)
+
+
+def _table_for(now_madrid: datetime) -> List[str]:
+    # 0=Mon .. 6=Sun. Weekend = Sat/Sun.
+    return TIMETABLE_C1_WEEKEND if now_madrid.weekday() >= 5 else TIMETABLE_C1_WEEKDAY
+
+
+def next_c1_departures(n: int = 3) -> dict:
+    now = datetime.now(MADRID_TZ)
+    hhmm_now = now.strftime("%H:%M")
+    table = _table_for(now)
+    upcoming = [t for t in table if t > hhmm_now]
+    return {
+        "server_time": now.strftime("%Y-%m-%d %H:%M"),
+        "day_type": "laborable" if now.weekday() < 5 else "fin de semana",
+        "next": upcoming[:n],
+        "first_tomorrow": table[0] if not upcoming else None,
+    }
+
+
+def format_next_departures_text(dest_label: str) -> str:
+    data = next_c1_departures(3)
+    times = data["next"]
+    if not times:
+        return (
+            f"Ya no salen más trenes hoy hacia {dest_label}. "
+            f"El primero de mañana sale a las {data['first_tomorrow']}."
+        )
+    if len(times) == 1:
+        return f"Próximo tren a {dest_label}: {times[0]}."
+    if len(times) == 2:
+        return f"Próximos trenes a {dest_label}: {times[0]} y {times[1]}."
+    return (
+        f"Próximos trenes a {dest_label}: "
+        f"{times[0]}, {times[1]} y {times[2]}."
+    )
+
+
+def resolve_train_destination(message: str) -> str:
+    m = message.lower()
+    if "lora" in m:
+        return "Lora del Río"
+    return "Sevilla"
+
+
+@api.get("/renfe/next")
+async def renfe_next(destino: str = "sevilla", n: int = 3):
+    dest_label = "Lora del Río" if destino.lower().startswith("lora") else "Sevilla"
+    data = next_c1_departures(n)
+    return {
+        "destino": dest_label,
+        "server_time": data["server_time"],
+        "day_type": data["day_type"],
+        "next": data["next"],
+        "text": format_next_departures_text(dest_label),
+    }
+
+
 async def build_live_context() -> str:
     """Live data injected into Conso system prompt on every chat request."""
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -375,6 +447,34 @@ async def build_live_context() -> str:
 
 @api.post("/chat/stream")
 async def chat_stream(body: ChatBody):
+    # Intercept train/Renfe queries — respond deterministically with real
+    # next departures from the local C-1 timetable, no LLM involved.
+    if TRAIN_INTENT_RE.search(body.message or ""):
+        dest = resolve_train_destination(body.message)
+        answer = format_next_departures_text(dest)
+
+        async def gen_train():
+            await db.chat_messages.insert_one({
+                "session_id": body.session_id,
+                "role": "user",
+                "content": body.message,
+                "ts": now_iso(),
+            })
+            yield f"data: {answer}\n\n"
+            await db.chat_messages.insert_one({
+                "session_id": body.session_id,
+                "role": "assistant",
+                "content": answer,
+                "ts": now_iso(),
+            })
+            yield "data: [DONE]\n\n"
+
+        return StreamingResponse(
+            gen_train(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
     live_ctx = await build_live_context()
     system_full = CONSO_SYSTEM + "\n\n" + live_ctx
 
