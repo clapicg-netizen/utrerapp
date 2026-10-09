@@ -3,7 +3,7 @@ import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { api } from "@/lib/api";
 import {
-  mergeWithLocal, addLocal, patchLocal, removeLocal, genLocalId, isValidImage,
+  mergeWithLocal, addLocal, patchLocal, removeLocal, genLocalId, isValidImage, preferredImage,
 } from "@/lib/localStore";
 import { toast } from "sonner";
 import {
@@ -265,17 +265,20 @@ export default function Admin() {
                 ],
               },
             ]}
-            renderRow={(c) => (
-              <div className="flex items-center gap-2 min-w-0">
-                {isValidImage(c.imagen) && (
-                  <img src={c.imagen} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-                )}
-                <div className="min-w-0">
-                  <p className="font-display font-bold text-[14px] truncate">{c.nombre}{c._local ? " · 📴" : ""}</p>
-                  <p className="text-xs text-muted-foreground">{c.categoria} · {c.tag || "—"}</p>
+            renderRow={(c) => {
+              const thumb = preferredImage(c);
+              return (
+                <div className="flex items-center gap-2 min-w-0">
+                  {thumb && (
+                    <img src={thumb} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-display font-bold text-[14px] truncate">{c.nombre}{c._local ? " · 📴" : ""}</p>
+                    <p className="text-xs text-muted-foreground">{c.categoria} · {c.tag || "—"}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            }}
             testKey="comercios"
           />
         )}
@@ -331,17 +334,20 @@ export default function Admin() {
                 ],
               },
             ]}
-            renderRow={(h) => (
-              <div className="flex items-center gap-2 min-w-0">
-                {isValidImage(h.foto) && (
-                  <img src={h.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-                )}
-                <div className="min-w-0">
-                  <p className="font-display font-bold text-[14px] truncate">{h.nombre}{h._local ? " · 📴" : ""}</p>
-                  <p className="text-xs text-muted-foreground">{h.tipo} · ★{h.rating} · {h.telefono}</p>
+            renderRow={(h) => {
+              const thumb = preferredImage(h);
+              return (
+                <div className="flex items-center gap-2 min-w-0">
+                  {thumb && (
+                    <img src={thumb} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-display font-bold text-[14px] truncate">{h.nombre}{h._local ? " · 📴" : ""}</p>
+                    <p className="text-xs text-muted-foreground">{h.tipo} · ★{h.rating} · {h.telefono}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            }}
             testKey="hosteleria"
           />
         )}
@@ -377,17 +383,20 @@ export default function Admin() {
                 ],
               },
             ]}
-            renderRow={(v) => (
-              <div className="flex items-center gap-2 min-w-0">
-                {isValidImage(v.foto) && (
-                  <img src={v.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
-                )}
-                <div className="min-w-0">
-                  <p className="font-display font-bold text-[14px] truncate">{v.titulo}{v._local ? " · 📴" : ""}</p>
-                  <p className="text-xs text-muted-foreground">{v.tipo} · {v.precio} · {v.zona}</p>
+            renderRow={(v) => {
+              const thumb = preferredImage(v);
+              return (
+                <div className="flex items-center gap-2 min-w-0">
+                  {thumb && (
+                    <img src={thumb} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                  )}
+                  <div className="min-w-0">
+                    <p className="font-display font-bold text-[14px] truncate">{v.titulo}{v._local ? " · 📴" : ""}</p>
+                    <p className="text-xs text-muted-foreground">{v.tipo} · {v.precio} · {v.zona}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            }}
             testKey="inmuebles"
           />
         )}

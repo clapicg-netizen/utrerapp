@@ -1,392 +1,345 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { api } from "@/lib/api";
 import {
-  mergeWithLocal, safeImg, cleanPhotos, telHref,
-  mapsHref, safeExternal,
-} from "@/lib/localStore";
-import {
-  Shirt, Utensils, Dumbbell, Sofa, Store, ExternalLink, Phone, MapPin,
-  Globe, FileText, Instagram, Facebook, Music2, X, Megaphone, Search, LayoutGrid,
+  MapPin,
+  Phone,
+  Globe,
+  Search,
+  ChevronRight,
+  X,
+  Navigation,
+  FileText,
+  Tag,
 } from "lucide-react";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
 
-const CATEGORIES = [
-  { id: "todos", label: "Todos", Icon: LayoutGrid, tone: "amber" },
-  { id: "moda", label: "Moda", Icon: Shirt, tone: "rose" },
-  { id: "alimentacion", label: "Alimentación", Icon: Utensils, tone: "amber" },
-  { id: "deportes", label: "Deportes", Icon: Dumbbell, tone: "sky" },
-  { id: "hogar", label: "Hogar", Icon: Sofa, tone: "emerald" },
+// BASE DE DATOS INICIAL CON FOTOS E INFORMACIÓN COMPLETA
+const COMERCIOS_OFICIALES = [
+  {
+    id: "c_digital_gm",
+    nombre: "DIGITAL GM",
+    categoria: "hogar",
+    descripcion:
+      "Le ofrecemos los mejores PRECIOS y SERVICIOS. Trabajamos con las principales MARCAS del mercado. Contamos con más de 5000 referencias en stock. Nos encargamos de la gestión de la GARANTÍA. Financiación a medida: Pague hasta en 12 meses sin intereses.",
+    direccion: "Avda. María Auxiliadora, 40, Utrera",
+    telefono: "679612288",
+    url: "https://www.digitalgm.es/",
+    tag: "Servicio Técnico & Electro",
+    oferta: "Financiación a medida: Pague hasta en 12 meses sin intereses.",
+    imagen: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&q=80",
+    imagen_2: "https://images.unsplash.com/photo-1526738549149-8e07eca6c147?w=800&q=80",
+    lat: "37.1861",
+    lng: "-5.7738",
+  },
+  {
+    id: "c_innpresionante",
+    nombre: "Innpresionante",
+    categoria: "moda",
+    descripcion:
+      "Tienda de camisetas personalizadas, sudaderas y ropa con diseños exclusivos. Impresión digital y regalos personalizados en Utrera.",
+    direccion: "Utrera, Sevilla",
+    telefono: "954860000",
+    url: "https://innpresionante.com/",
+    tag: "Moda & Personalización",
+    imagen: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800&q=80",
+    lat: "37.1820",
+    lng: "-5.7811",
+  },
 ];
 
-const TONES = {
-  rose: "bg-rose-500/12 text-rose-600 dark:text-rose-300",
-  amber: "bg-amber-500/15 text-amber-800 dark:text-amber-300",
-  sky: "bg-sky-500/12 text-sky-700 dark:text-sky-300",
-  emerald: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300",
-};
-
-const igHref = (val) => {
-  if (!val) return null;
-  if (val.startsWith("http")) return val;
-  return `https://instagram.com/${val.replace(/^@/, "")}`;
-};
-const tkHref = (val) => {
-  if (!val) return null;
-  if (val.startsWith("http")) return val;
-  return `https://tiktok.com/@${val.replace(/^@/, "")}`;
-};
-const fbHref = (val) => safeExternal(val);
-
 export default function Market() {
-  const [cat, setCat] = useState("todos");
-  const [all, setAll] = useState([]);
-  const [detail, setDetail] = useState(null);
-  const [q, setQ] = useState("");
-  const loadRef = useRef(null);
+  const [comercios, setComercios] = useState(COMERCIOS_OFICIALES);
+  const [busqueda, setBusqueda] = useState("");
+  const [categoria, setCategoria] = useState("todos");
+  const [comercioSel, setComercioSel] = useState(null);
 
-  const load = async () => {
-    try {
-      const r = await api.get(`/comercios`);
-      setAll(mergeWithLocal("/comercios", r.data));
-    } catch {
-      setAll(mergeWithLocal("/comercios", []));
-    }
-  };
-  loadRef.current = load;
-
-  // Live sync: reload whenever Admin writes to localStorage (same tab or
-  // other tab), when the tab regains visibility, or on hash/route change.
   useEffect(() => {
-    load();
-    const onLocal = (e) => {
-      if (!e?.detail || e.detail.endpoint === "/comercios") loadRef.current?.();
+    const cargarComercios = async () => {
+      // 1. Leemos lo que haya guardado localmente
+      const locales = JSON.parse(localStorage.getItem("local_comercios") || "[]");
+
+      try {
+        // 2. Intentamos pedir al servidor
+        const res = await api.get("/comercios");
+        const apiComercios = Array.isArray(res.data) ? res.data : [];
+
+        // 3. Fusionamos todo (Base Oficial + Servidor + Guardado Local)
+        const todos = [...COMERCIOS_OFICIALES, ...apiComercios, ...locales];
+        const mapa = new Map();
+
+        todos.forEach((item) => {
+          const key = (item.nombre || item.titulo || "").toLowerCase().trim();
+          if (key) mapa.set(key, item);
+        });
+
+        setComercios(Array.from(mapa.values()));
+      } catch (error) {
+        // Si no responde la API, fusionamos base oficial + datos locales
+        const todos = [...COMERCIOS_OFICIALES, ...locales];
+        const mapa = new Map();
+        todos.forEach((item) => {
+          const key = (item.nombre || item.titulo || "").toLowerCase().trim();
+          if (key) mapa.set(key, item);
+        });
+        setComercios(Array.from(mapa.values()));
+      }
     };
-    const onStorage = (e) => {
-      if (e.key === "local_comercios") loadRef.current?.();
-    };
-    const onVis = () => {
-      if (document.visibilityState === "visible") loadRef.current?.();
-    };
-    window.addEventListener("utrerapp:local-updated", onLocal);
-    window.addEventListener("storage", onStorage);
-    document.addEventListener("visibilitychange", onVis);
-    window.addEventListener("focus", onVis);
-    return () => {
-      window.removeEventListener("utrerapp:local-updated", onLocal);
-      window.removeEventListener("storage", onStorage);
-      document.removeEventListener("visibilitychange", onVis);
-      window.removeEventListener("focus", onVis);
-    };
+
+    cargarComercios();
   }, []);
 
-  // Filter + search per spec:
-  // - Specific category tabs only match items whose categoria equals the tab id,
-  //   UNLESS the user is typing in the search box: a non-empty search term
-  //   bypasses the category filter so matching items reappear even if their
-  //   categoria is missing or belongs to another tab.
-  // - "Todos" always matches EVERY local item (even if `categoria` is missing).
-  const shops = useMemo(() => {
-    const needle = q.trim().toLowerCase();
-    return all.filter((x) => {
-      if (!needle && cat !== "todos" && x.categoria !== cat) return false;
-      if (!needle) return true;
-      const hay = [
-        x.nombre, x.descripcion, x.tag, x.categoria, x.direccion,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(needle);
-    });
-  }, [all, cat, q]);
+  const filtrados = comercios.filter((c) => {
+    const nombre = c.nombre || c.titulo || "";
+    const texto = busqueda.toLowerCase().trim();
+    const coincideTexto =
+      !texto ||
+      nombre.toLowerCase().includes(texto) ||
+      (c.descripcion || "").toLowerCase().includes(texto) ||
+      (c.direccion || "").toLowerCase().includes(texto);
 
-  const active = CATEGORIES.find((c) => c.id === cat);
+    const catNormalizada = (c.categoria || "").toLowerCase();
+    const coincideCat =
+      categoria === "todos" ||
+      catNormalizada === categoria.toLowerCase() ||
+      (categoria === "hogar" &&
+        (catNormalizada.includes("hogar") || catNormalizada.includes("electro")));
+
+    return coincideTexto && coincideCat;
+  });
+
+  const abrirMapa = (c) => {
+    if (c.lat && c.lng) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}`, "_blank");
+    } else if (c.direccion) {
+      window.open(
+        `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          (c.nombre || c.titulo) + " " + c.direccion + " Utrera"
+        )}`,
+        "_blank"
+      );
+    }
+  };
 
   return (
-    <div className="app-shell" data-testid="market-page">
-      <TopBar title="Utrera Market" back testId="market-topbar" />
+    <div className="app-shell min-h-screen bg-slate-50 text-slate-900 font-sans pb-24">
+      <TopBar title="Utrera Market · Comercio Local" back />
 
-      <div className="mt-4 rounded-3xl bg-gradient-to-br from-[#1C2026] to-[#3B1F14] text-white p-5 relative overflow-hidden shadow-md" data-testid="market-hero">
-        <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10" />
-        <div className="relative flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-[color:var(--terracotta)] grid place-items-center">
-            <Store size={20} />
-          </div>
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-white/70">
-              Comercio local
-            </p>
-            <p className="font-display font-extrabold text-xl leading-tight">
-              Las tiendas online de tu pueblo
-            </p>
-          </div>
+      {/* Buscador */}
+      <div className="p-4 bg-white border-b border-slate-100 space-y-3">
+        <div className="relative">
+          <Search size={16} className="absolute left-3.5 top-3 text-slate-400" />
+          <input
+            type="text"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar comercios en Utrera..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs outline-none focus:bg-white focus:border-slate-400 transition-all"
+          />
+        </div>
+
+        {/* Categorías */}
+        <div className="flex gap-2 overflow-x-auto pb-1 text-xs no-scrollbar">
+          {[
+            { id: "todos", label: "Todos" },
+            { id: "hogar", label: "Hogar & Electro" },
+            { id: "moda", label: "Moda" },
+            { id: "alimentacion", label: "Alimentación" },
+            { id: "deportes", label: "Deportes" },
+            { id: "servicios", label: "Servicios" },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setCategoria(cat.id)}
+              className={`px-3.5 py-1.5 rounded-full font-semibold whitespace-nowrap transition-all ${
+                categoria === cat.id
+                  ? "bg-slate-900 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Search */}
-      <div
-        data-testid="market-search-wrap"
-        className="mt-4 flex items-center gap-2 rounded-full border border-border/70 bg-card px-4 py-2.5"
-      >
-        <Search size={15} className="text-muted-foreground shrink-0" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Buscar comercio por nombre, categoría…"
-          data-testid="market-search-input"
-          className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
-        />
-        {q && (
-          <button
-            data-testid="market-search-clear"
-            onClick={() => setQ("")}
-            className="w-6 h-6 rounded-full bg-muted grid place-items-center"
-            aria-label="Limpiar búsqueda"
-          >
-            <X size={12} />
-          </button>
-        )}
-      </div>
-
-      <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1" data-testid="market-categories">
-        {CATEGORIES.map(({ id, label, Icon, tone }) => (
-          <button
-            key={id}
-            onClick={() => setCat(id)}
-            data-testid={`market-cat-${id}`}
-            className={`shrink-0 rounded-full border px-3 py-2 flex items-center gap-1.5 tile ${
-              cat === id
-                ? "border-[color:var(--terracotta)] bg-[color:var(--terracotta)]/10"
-                : "border-border/70 bg-card"
-            }`}
-          >
-            <div className={`w-6 h-6 rounded-md grid place-items-center ${TONES[tone]}`}>
-              <Icon size={13} />
-            </div>
-            <span className="text-[11px] font-semibold">{label}</span>
-          </button>
-        ))}
-      </div>
-
-      <p className="mt-4 mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold px-1">
-        {active?.label} · {shops.length} comercios{q ? ` · "${q}"` : ""}
-      </p>
-
-      <div className="space-y-2.5" data-testid="market-list">
-        {shops.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            {q
-              ? `Sin resultados para "${q}".`
-              : "Aún no hay comercios en esta categoría."}
+      {/* Lista de Comercios */}
+      <div className="p-4 space-y-3">
+        {filtrados.length === 0 ? (
+          <div className="text-center py-12 space-y-2">
+            <p className="text-xs font-bold text-slate-600">
+              No hay comercios guardados en esta categoría.
+            </p>
+            <p className="text-[11px] text-slate-400">
+              Selecciona "Todos" para ver el catálogo completo.
+            </p>
           </div>
+        ) : (
+          filtrados.map((comercio) => {
+            const nombre = comercio.nombre || comercio.titulo;
+            return (
+              <div
+                key={comercio.id || nombre}
+                onClick={() => setComercioSel(comercio)}
+                className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-slate-900">{nombre}</h3>
+                      {comercio.tag && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+                          {comercio.tag}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 line-clamp-2">{comercio.descripcion}</p>
+                  </div>
+
+                  {comercio.imagen && comercio.imagen.length > 10 && (
+                    <img
+                      src={comercio.imagen}
+                      alt={nombre}
+                      className="w-16 h-16 rounded-xl object-cover shrink-0 border"
+                    />
+                  )}
+                </div>
+
+                {comercio.oferta && (
+                  <div className="flex items-center gap-1.5 p-2 rounded-xl bg-amber-50 text-amber-900 text-[11px] font-medium border border-amber-200/60">
+                    <Tag size={13} className="text-amber-600 shrink-0" />
+                    <span className="line-clamp-1">{comercio.oferta}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <MapPin size={13} className="text-slate-400" />
+                    {comercio.direccion || "Utrera"}
+                  </span>
+
+                  <span className="font-bold text-[color:var(--terracotta)] flex items-center gap-0.5">
+                    Ver Ficha <ChevronRight size={14} />
+                  </span>
+                </div>
+              </div>
+            );
+          })
         )}
-        {shops.map((s) => {
-          const img = safeImg(s.imagen);
-          const toneCls = TONES[(CATEGORIES.find((c) => c.id === s.categoria) || active || CATEGORIES[1]).tone];
-          return (
+      </div>
+
+      {/* Modal Ficha Completa */}
+      {comercioSel && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm grid place-items-center p-4">
+          <div className="bg-white max-w-md w-full rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto space-y-4 p-5 relative">
             <button
-              key={s.id}
-              onClick={() => setDetail(s)}
-              data-testid={`market-shop-${s.id}`}
-              className="w-full text-left tile rounded-2xl border border-border/70 bg-card p-4 flex gap-3 items-start"
+              onClick={() => setComercioSel(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 z-10"
             >
-              {img ? (
-                <img
-                  src={img}
-                  alt={s.nombre}
-                  onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  className="w-14 h-14 rounded-xl object-cover shrink-0"
-                />
-              ) : (
-                <div className={`w-14 h-14 rounded-xl grid place-items-center shrink-0 ${toneCls}`}>
-                  <Store size={19} />
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-display font-bold text-[14px] truncate">
-                    {s.nombre || "(Sin nombre)"}
-                  </h3>
-                  {s.categoria && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                      {s.categoria}
-                    </span>
-                  )}
-                  {s.tag && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[color:var(--secondary)]/25 text-[color:var(--terracotta-dark)]">
-                      {s.tag}
-                    </span>
-                  )}
-                  {s.oferta_titulo && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 inline-flex items-center gap-1">
-                      <Megaphone size={10} /> Oferta
-                    </span>
-                  )}
-                  {s._local && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
-                      LOCAL
-                    </span>
-                  )}
-                </div>
-                {s.descripcion && (
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.descripcion}</p>
+              <X size={18} />
+            </button>
+
+            {/* Foto Principal */}
+            {comercioSel.imagen && comercioSel.imagen.length > 10 && (
+              <img
+                src={comercioSel.imagen}
+                alt={comercioSel.nombre || comercioSel.titulo}
+                className="w-full h-48 rounded-2xl object-cover border"
+              />
+            )}
+
+            {/* Fotos Adicionales */}
+            {(comercioSel.imagen_2 || comercioSel.imagen_3) && (
+              <div className="grid grid-cols-2 gap-2">
+                {comercioSel.imagen_2 && comercioSel.imagen_2.length > 10 && (
+                  <img
+                    src={comercioSel.imagen_2}
+                    alt="Foto 2"
+                    className="w-full h-24 rounded-xl object-cover border"
+                  />
+                )}
+                {comercioSel.imagen_3 && comercioSel.imagen_3.length > 10 && (
+                  <img
+                    src={comercioSel.imagen_3}
+                    alt="Foto 3"
+                    className="w-full h-24 rounded-xl object-cover border"
+                  />
                 )}
               </div>
-              <ExternalLink size={16} className="text-muted-foreground shrink-0 mt-1" />
-            </button>
-          );
-        })}
-      </div>
+            )}
 
-      <ShopDetail
-        item={detail}
-        onClose={() => setDetail(null)}
-        tone={TONES[(CATEGORIES.find((c) => c.id === detail?.categoria) || active || CATEGORIES[1]).tone]}
-      />
+            <div className="space-y-2">
+              <h2 className="font-display font-bold text-lg text-slate-900">
+                {comercioSel.nombre || comercioSel.titulo}
+              </h2>
+              <p className="text-xs text-slate-600 leading-relaxed">{comercioSel.descripcion}</p>
+            </div>
+
+            {/* Promoción u Oferta */}
+            {comercioSel.oferta && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl space-y-1">
+                <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1">
+                  <Tag size={12} /> Promoción / Evento
+                </p>
+                <p className="text-xs text-amber-900 font-medium">{comercioSel.oferta}</p>
+              </div>
+            )}
+
+            {/* Ver Carta / Menú en PDF */}
+            {comercioSel.pdf && (
+              <a
+                href={comercioSel.pdf}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3 px-4 rounded-xl bg-slate-900 text-white text-xs font-bold flex items-center justify-center gap-2 shadow hover:bg-slate-800 transition-colors"
+              >
+                <FileText size={16} /> Ver Carta / Menú en PDF
+              </a>
+            )}
+
+            {/* Contacto y Botones */}
+            <div className="space-y-2.5 pt-3 border-t border-slate-100 text-xs">
+              {comercioSel.direccion && (
+                <div className="flex items-center gap-2 text-slate-700">
+                  <MapPin size={15} className="text-[color:var(--terracotta)] shrink-0" />
+                  <span>{comercioSel.direccion}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                {comercioSel.telefono && (
+                  <a
+                    href={`tel:${comercioSel.telefono}`}
+                    className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Phone size={14} className="text-emerald-600" /> Llamar
+                  </a>
+                )}
+
+                <button
+                  onClick={() => abrirMapa(comercioSel)}
+                  className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold flex items-center justify-center gap-1.5"
+                >
+                  <Navigation size={14} className="text-sky-600" /> Cómo llegar
+                </button>
+              </div>
+
+              {comercioSel.url && (
+                <a
+                  href={comercioSel.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2 w-full py-3 rounded-xl bg-[color:var(--terracotta)] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Globe size={15} /> Visitar Web / Tienda Online
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>
-  );
-}
-
-function ShopDetail({ item, onClose, tone }) {
-  if (!item) return null;
-  const cover = safeImg(item.imagen);
-  const extras = cleanPhotos(item.fotos);
-  const gallery = [cover, ...extras].filter(Boolean);
-  const promoImg = safeImg(item.oferta_imagen);
-  const menuPdf = safeExternal(item.menu_pdf_url) || (typeof item.menu_pdf_url === "string" && item.menu_pdf_url.startsWith("data:application/pdf") ? item.menu_pdf_url : null);
-  const web = safeExternal(item.web);
-  const url = safeExternal(item.url);
-  const tel = telHref(item.telefono);
-  const map = mapsHref(item.direccion || item.nombre);
-  const ig = igHref(item.instagram);
-  const fb = fbHref(item.facebook);
-  const tk = tkHref(item.tiktok);
-
-  return (
-    <Dialog open={!!item} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent data-testid="market-shop-detail" className="rounded-3xl max-w-md p-0 overflow-hidden gap-0 max-h-[90vh] overflow-y-auto">
-        {gallery.length > 0 && (
-          <div data-testid="market-gallery" className={gallery.length === 1 ? "" : "grid grid-cols-2 gap-1"}>
-            {gallery.length === 1 && (
-              <img src={gallery[0]} alt={item.nombre} className="w-full h-44 object-cover" onError={(e)=>{e.currentTarget.style.display="none";}} />
-            )}
-            {gallery.length >= 2 && (
-              <>
-                <img src={gallery[0]} alt={item.nombre} className="w-full h-40 object-cover col-span-2" onError={(e)=>{e.currentTarget.style.display="none";}} />
-                {gallery.slice(1, 3).map((p, i) => (
-                  <img key={i} src={p} alt="" className="w-full h-24 object-cover" onError={(e)=>{e.currentTarget.style.display="none";}} />
-                ))}
-              </>
-            )}
-          </div>
-        )}
-
-        <div className="p-5">
-          <DialogHeader>
-            <div className="flex items-start gap-2">
-              {!gallery.length && (
-                <div className={`w-11 h-11 rounded-xl grid place-items-center shrink-0 ${tone}`}>
-                  <Store size={19} />
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                  {item.categoria || "comercio"}
-                </span>
-                <DialogTitle className="font-display text-lg leading-tight">{item.nombre || "(Sin nombre)"}</DialogTitle>
-                <DialogDescription className="sr-only">
-                  Ficha del comercio {item.nombre}
-                </DialogDescription>
-              </div>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted grid place-items-center shrink-0" aria-label="Cerrar">
-                <X size={16} />
-              </button>
-            </div>
-          </DialogHeader>
-
-          {item.descripcion && (
-            <p className="text-sm text-foreground/80 mt-3 whitespace-pre-wrap">{item.descripcion}</p>
-          )}
-
-          {(item.oferta_titulo || item.oferta_texto || promoImg) && (
-            <div data-testid="market-promo" className="mt-4 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white p-4 shadow-inner">
-              <p className="text-[10px] uppercase tracking-widest text-white/80 font-semibold inline-flex items-center gap-1">
-                🎉 Evento / Menú Especial
-              </p>
-              {item.oferta_titulo && (
-                <p className="font-display font-extrabold text-base leading-tight mt-1">{item.oferta_titulo}</p>
-              )}
-              {item.oferta_texto && (
-                <p className="text-xs text-white/90 mt-1 whitespace-pre-wrap">{item.oferta_texto}</p>
-              )}
-              {promoImg && (
-                <img src={promoImg} alt="" className="mt-3 w-full rounded-xl max-h-56 object-cover" onError={(e)=>{e.currentTarget.style.display="none";}} />
-              )}
-            </div>
-          )}
-
-          {menuPdf && (
-            <a
-              href={menuPdf}
-              target="_blank"
-              rel="noreferrer"
-              data-testid="market-menu-pdf"
-              className="mt-4 w-full py-3 rounded-xl bg-[color:var(--terracotta)] text-white text-sm font-extrabold inline-flex items-center justify-center gap-2"
-            >
-              <FileText size={16} /> Ver Carta / Menú (PDF)
-            </a>
-          )}
-
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {tel && (
-              <a href={tel} data-testid="market-call" className="py-2.5 rounded-xl bg-[color:var(--transit)] text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5">
-                <Phone size={13} /> Llamar
-              </a>
-            )}
-            {map && (
-              <a href={map} target="_blank" rel="noreferrer" data-testid="market-map" className="py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5">
-                <MapPin size={13} /> Cómo llegar
-              </a>
-            )}
-            {web && (
-              <a href={web} target="_blank" rel="noreferrer" data-testid="market-web" className="py-2.5 rounded-xl bg-slate-800 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5">
-                <Globe size={13} /> Web
-              </a>
-            )}
-            {url && (
-              <a href={url} target="_blank" rel="noreferrer" data-testid="market-shop-link" className="py-2.5 rounded-xl bg-[color:var(--secondary)] text-[#1C1917] text-xs font-extrabold inline-flex items-center justify-center gap-1.5">
-                <Store size={13} /> Tienda online
-              </a>
-            )}
-          </div>
-
-          {(ig || fb || tk) && (
-            <div data-testid="market-socials" className="mt-3 flex gap-2">
-              {ig && (
-                <a href={ig} target="_blank" rel="noreferrer" data-testid="market-ig" className="flex-1 py-2 rounded-xl bg-gradient-to-br from-fuchsia-500 to-orange-500 text-white text-xs font-semibold inline-flex items-center justify-center gap-1">
-                  <Instagram size={13} /> Instagram
-                </a>
-              )}
-              {fb && (
-                <a href={fb} target="_blank" rel="noreferrer" data-testid="market-fb" className="flex-1 py-2 rounded-xl bg-[#1877F2] text-white text-xs font-semibold inline-flex items-center justify-center gap-1">
-                  <Facebook size={13} /> Facebook
-                </a>
-              )}
-              {tk && (
-                <a href={tk} target="_blank" rel="noreferrer" data-testid="market-tk" className="flex-1 py-2 rounded-xl bg-black text-white text-xs font-semibold inline-flex items-center justify-center gap-1">
-                  <Music2 size={13} /> TikTok
-                </a>
-              )}
-            </div>
-          )}
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }

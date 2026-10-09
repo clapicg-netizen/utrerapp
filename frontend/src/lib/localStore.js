@@ -126,6 +126,37 @@ export const mapsHref = (address) => {
   )}`;
 };
 
+// Format strictly as requested: nombre + direccion + ", Utrera, Sevilla".
+// This guarantees Google Maps opens the exact Utrera (Sevilla) address and
+// never falls back to a street with the same name in another province.
+export const gpsSearchHref = (nombre, direccion) => {
+  const parts = [nombre, direccion].filter(Boolean).map((s) => String(s).trim()).filter(Boolean);
+  if (!parts.length) return null;
+  const query = `${parts.join(" ")}, Utrera, Sevilla`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+};
+
+// Pick the preferred image for a record. Uploaded base64 ALWAYS wins over
+// any API/template URL — regardless of which field it lives in.
+// Order: base64 in imagen/foto → base64 inside fotos[] → valid URL fallback.
+export const preferredImage = (item) => {
+  if (!item) return null;
+  const isB64 = (s) => typeof s === "string" && s.startsWith("data:image/");
+  if (isB64(item.imagen)) return item.imagen;
+  if (isB64(item.foto)) return item.foto;
+  if (Array.isArray(item.fotos)) {
+    const b64 = item.fotos.find(isB64);
+    if (b64) return b64;
+  }
+  const main = safeImg(item.imagen) || safeImg(item.foto);
+  if (main) return main;
+  if (Array.isArray(item.fotos)) {
+    const url = item.fotos.map(safeImg).find(Boolean);
+    if (url) return url;
+  }
+  return null;
+};
+
 export const safeExternal = (url) => {
   if (!url || typeof url !== "string") return null;
   const s = url.trim();
