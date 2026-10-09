@@ -11,7 +11,7 @@ import {
   Globe, FileText, Instagram, Facebook, Music2, X, Megaphone,
 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
 const CATEGORIES = [
@@ -209,6 +209,9 @@ function ShopDetail({ item, onClose, tone }) {
                   {item.categoria}
                 </span>
                 <DialogTitle className="font-display text-lg leading-tight">{item.nombre}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Ficha del comercio {item.nombre}
+                </DialogDescription>
               </div>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted grid place-items-center shrink-0" aria-label="Cerrar">
                 <X size={16} />

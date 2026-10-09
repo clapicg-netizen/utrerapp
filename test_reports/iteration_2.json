@@ -1,0 +1,30 @@
+{
+  "summary": "Full backend + frontend regression on Utrerapp v2 hyperflex features: 401 auth gating, new comercio/hosteleria fields (menu_pdf_url, oferta_*, instagram/facebook/tiktok, telefono, direccion, web, fotos[]), localStorage fallback in Admin, MERGE of API+local in Market/Bares/Vivienda, image sanitation (safeImg/cleanPhotos) and conditional rendering of PDF/promo/socials. All 7 pytest cases pass; all 25+ frontend assertions pass. Train/chat smoke OK.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Market/Bares dialogs", "issues": ["Radix Dialog warning: Missing `Description` or `aria-describedby` for DialogContent (a11y only, non-blocking)"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_utrerapp_v2.py",
+    "/app/test_reports/pytest/v2_results.xml"
+  ],
+  "action_items": [
+    "(Optional / a11y) Add <DialogDescription> or aria-describedby to ShopDetail/PlaceDetail Dialogs to silence Radix warning."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 1000+ lines — consider splitting into routers (admin, catalog, chat).",
+    "ADMIN_TOKENS stored in-memory set → tokens lost on backend restart (acceptable for MVP but worth noting; combined with new localStorage fallback the UX is covered).",
+    "Admin.jsx AdminSection renderRow for comercios/hosteleria still renders <img src={c.imagen}> directly without isValidImage() — empty strings fall back to onError handler which is fine but isValidImage would avoid the request entirely."
+  ],
+  "updated_files": ["/app/backend/tests/test_utrerapp_v2.py"],
+  "success_rate": {"backend": "100% (7/7)", "frontend": "100% (admin fallback + merge + sanitation + conditional)"},
+  "test_credentials": "Admin password: 955863577 (loaded from backend/.env ADMIN_PASSWORD)",
+  "seed_data_creation": "No backend seeds added. Frontend tests inject local_comercios/local_hosteleria/local_inmuebles via page.evaluate(localStorage.setItem).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend v2 fields are stable. Fallback flow verified: deleting utrerapp_admin_token then submitting admin-form-comercios triggers 401, Admin catches error and stores in local_comercios with _local:true and generates loc-* id; item appears with 📴 indicator and can be deleted locally. Public Market tab 'moda' lists local items including those with empty imagen/fotos (no empty <img> rendered). ShopDetail / PlaceDetail render market-menu-pdf, market-promo, market-socials strictly conditionally. Bares and Vivienda work identically. If adding more hyperflex fields, extend NEW_COMERCIO_FIELDS in test_utrerapp_v2.py."
+}

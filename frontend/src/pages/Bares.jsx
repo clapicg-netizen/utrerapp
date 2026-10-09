@@ -12,7 +12,7 @@ import {
   Megaphone, X,
 } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
 const CATS = [
@@ -213,6 +213,9 @@ function PlaceDetail({ item, cat, onClose }) {
                   {item.tipo}{item.rating ? ` · ★ ${item.rating}` : ""}
                 </span>
                 <DialogTitle className="font-display text-lg leading-tight">{item.nombre}</DialogTitle>
+                <DialogDescription className="sr-only">
+                  Ficha del negocio {item.nombre}
+                </DialogDescription>
               </div>
               <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted grid place-items-center shrink-0" aria-label="Cerrar">
                 <X size={16} />
