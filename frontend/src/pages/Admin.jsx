@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { api } from "@/lib/api";
 import {
-  mergeWithLocal, addLocal, patchLocal, removeLocal, genLocalId,
+  mergeWithLocal, addLocal, patchLocal, removeLocal, genLocalId, isValidImage,
 } from "@/lib/localStore";
 import { toast } from "sonner";
-import { Trash2, Shield, LogOut, Plus, Check, X, Pencil, Save, ChevronDown } from "lucide-react";
+import {
+  Trash2, Shield, LogOut, Plus, Check, X, Pencil, Save, ChevronDown,
+  Image as ImageIcon, FileUp, FileText,
+} from "lucide-react";
 
 const TABS = [
   { id: "traffic", label: "Tráfico" },
@@ -18,6 +21,17 @@ const TABS = [
   { id: "inmuebles", label: "Vivienda" },
   { id: "tablon", label: "Tablón" },
 ];
+
+const MAX_IMG_MB = 2.5;
+const MAX_PDF_MB = 6;
+
+const readAsDataUrl = (file) =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
 
 export default function Admin() {
   const [tok, setTok] = useState(() => localStorage.getItem("utrerapp_admin_token") || "");
@@ -123,7 +137,7 @@ export default function Admin() {
             newLabel="+ Nuevo aviso"
             fields={[
               { k: "zone", label: "Zona", ph: "Trianilla" },
-              { k: "status", label: "Estado (green/yellow/red)", ph: "yellow" },
+              { k: "status", label: "Estado", ph: "yellow", options: ["green", "yellow", "red"] },
               { k: "message", label: "Mensaje", ph: "Obras en marcha" },
               { k: "detail", label: "Detalle", ph: "Descripción larga…", ta: true },
             ]}
@@ -148,8 +162,8 @@ export default function Admin() {
               { k: "address", label: "Dirección", ph: "C/ Ancha, 34" },
               { k: "phone", label: "Teléfono", ph: "955 861 234" },
               { k: "hours", label: "Horario", ph: "09:00 - 22:00" },
-              { k: "on_duty_today", label: "De guardia (true/false)", ph: "true", type: "bool" },
-              { k: "is_24h", label: "24h (true/false)", ph: "false", type: "bool" },
+              { k: "on_duty_today", label: "De guardia hoy", type: "bool" },
+              { k: "is_24h", label: "Abierta 24h", type: "bool" },
             ]}
             renderRow={(p) => (
               <>
@@ -171,7 +185,7 @@ export default function Admin() {
               { k: "date", label: "Fecha (YYYY-MM-DD)", ph: "2026-10-14" },
               { k: "location", label: "Lugar", ph: "Recinto ferial" },
               { k: "description", label: "Descripción", ph: "Descripción…", ta: true },
-              { k: "highlighted", label: "Destacado (true/false)", ph: "true", type: "bool" },
+              { k: "highlighted", label: "Destacado en portada", type: "bool" },
             ]}
             renderRow={(e) => (
               <>
@@ -212,16 +226,16 @@ export default function Admin() {
                 title: "Datos básicos",
                 fields: [
                   { k: "nombre", label: "Nombre del comercio *", ph: "Boutique Trianilla" },
-                  { k: "categoria", label: "Categoría *", ph: "moda", options: ["moda", "alimentacion", "deportes", "hogar"] },
+                  { k: "categoria", label: "Categoría *", options: ["moda", "alimentacion", "deportes", "hogar"] },
                   { k: "descripcion", label: "Descripción", ph: "Moda mujer y complementos artesanos.", ta: true },
                   { k: "tag", label: "Etiqueta (opcional)", ph: "Envío gratis > 30€" },
                 ],
               },
               {
-                title: "Imágenes",
+                title: "Imágenes (desde tu dispositivo)",
                 fields: [
-                  { k: "imagen", label: "Imagen/logo principal (URL o base64)", ph: "https://…jpg" },
-                  { k: "fotos", label: "Fotos secundarias (URLs separadas por coma)", ph: "https://a.jpg, https://b.jpg", type: "list" },
+                  { k: "imagen", label: "Imagen / logo principal", type: "file-image" },
+                  { k: "fotos", label: "Fotos secundarias (puedes elegir varias)", type: "file-image-multi" },
                 ],
               },
               {
@@ -236,24 +250,26 @@ export default function Admin() {
               {
                 title: "Carta / PDF y oferta destacada",
                 fields: [
-                  { k: "menu_pdf_url", label: "📄 PDF Carta/Menú (URL o base64)", ph: "https://…pdf" },
+                  { k: "menu_pdf_url", label: "📄 PDF Carta / Menú", type: "file-pdf" },
                   { k: "oferta_titulo", label: "🎉 Título de oferta/evento", ph: "Rebajas de verano" },
                   { k: "oferta_texto", label: "Texto descriptivo de la oferta", ph: "Hasta un 50% dto. todo el stock.", ta: true },
-                  { k: "oferta_imagen", label: "Cartel de la oferta (URL o base64)", ph: "https://…jpg" },
+                  { k: "oferta_imagen", label: "Cartel de la oferta", type: "file-image" },
                 ],
               },
               {
                 title: "Redes sociales",
                 fields: [
-                  { k: "instagram", label: "Instagram (URL o @usuario)", ph: "@mitienda" },
+                  { k: "instagram", label: "Instagram (@usuario o URL)", ph: "@mitienda" },
                   { k: "facebook", label: "Facebook (URL)", ph: "https://facebook.com/mitienda" },
-                  { k: "tiktok", label: "TikTok (URL o @usuario)", ph: "@mitienda" },
+                  { k: "tiktok", label: "TikTok (@usuario o URL)", ph: "@mitienda" },
                 ],
               },
             ]}
             renderRow={(c) => (
               <div className="flex items-center gap-2 min-w-0">
-                {c.imagen && <img src={c.imagen} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e)=>{e.currentTarget.style.display="none";}} />}
+                {isValidImage(c.imagen) && (
+                  <img src={c.imagen} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                )}
                 <div className="min-w-0">
                   <p className="font-display font-bold text-[14px] truncate">{c.nombre}{c._local ? " · 📴" : ""}</p>
                   <p className="text-xs text-muted-foreground">{c.categoria} · {c.tag || "—"}</p>
@@ -273,17 +289,17 @@ export default function Admin() {
                 title: "Datos básicos",
                 fields: [
                   { k: "nombre", label: "Nombre *", ph: "Bar Casa Manolo" },
-                  { k: "tipo", label: "Tipo *", ph: "bares", options: ["bares", "restaurantes", "cafes", "domicilio"] },
+                  { k: "tipo", label: "Tipo *", options: ["bares", "restaurantes", "cafes", "domicilio"] },
                   { k: "descripcion", label: "Descripción", ph: "Tapas de guiso y montaditos.", ta: true },
                   { k: "horario", label: "Horario", ph: "L-D · 12:00-16:30 y 19:30-00:00" },
                   { k: "rating", label: "Valoración (0-5)", ph: "4.7", type: "number" },
                 ],
               },
               {
-                title: "Imágenes",
+                title: "Imágenes (desde tu dispositivo)",
                 fields: [
-                  { k: "foto", label: "Foto principal (URL o base64)", ph: "https://…jpg" },
-                  { k: "fotos", label: "Fotos extra (URLs separadas por coma)", ph: "https://a.jpg, https://b.jpg", type: "list" },
+                  { k: "foto", label: "Foto principal", type: "file-image" },
+                  { k: "fotos", label: "Fotos extra (puedes elegir varias)", type: "file-image-multi" },
                 ],
               },
               {
@@ -292,7 +308,7 @@ export default function Admin() {
                   { k: "telefono", label: "Teléfono (Llamar)", ph: "955861010" },
                   { k: "whatsapp", label: "WhatsApp (Reservas/Pedidos)", ph: "34655700001" },
                   { k: "zona", label: "Zona/Dirección (GPS)", ph: "C/ Ancha, 22" },
-                  { k: "direccion", label: "Dirección completa (opcional, para Mapas)", ph: "C/ Ancha, 22, 41710 Utrera" },
+                  { k: "direccion", label: "Dirección completa (opcional)", ph: "C/ Ancha, 22, 41710 Utrera" },
                   { k: "web", label: "Web oficial", ph: "https://miweb.es" },
                   { k: "carta_url", label: "Enlace carta web (opcional)", ph: "https://miweb.es/carta" },
                 ],
@@ -300,10 +316,10 @@ export default function Admin() {
               {
                 title: "Carta / PDF y oferta destacada",
                 fields: [
-                  { k: "menu_pdf_url", label: "📄 PDF Carta/Menú (URL o base64)", ph: "https://…pdf" },
+                  { k: "menu_pdf_url", label: "📄 PDF Carta / Menú", type: "file-pdf" },
                   { k: "oferta_titulo", label: "🎉 Título oferta/evento", ph: "Flamenco en vivo sábado" },
-                  { k: "oferta_texto", label: "Descripción de la promoción", ph: "Actuación en directo a las 22h con cover de 5€.", ta: true },
-                  { k: "oferta_imagen", label: "Cartel de la promoción (URL o base64)", ph: "https://…jpg" },
+                  { k: "oferta_texto", label: "Descripción de la promoción", ph: "Actuación en directo a las 22h.", ta: true },
+                  { k: "oferta_imagen", label: "Cartel de la promoción", type: "file-image" },
                 ],
               },
               {
@@ -317,7 +333,9 @@ export default function Admin() {
             ]}
             renderRow={(h) => (
               <div className="flex items-center gap-2 min-w-0">
-                {h.foto && <img src={h.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e)=>{e.currentTarget.style.display="none";}} />}
+                {isValidImage(h.foto) && (
+                  <img src={h.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                )}
                 <div className="min-w-0">
                   <p className="font-display font-bold text-[14px] truncate">{h.nombre}{h._local ? " · 📴" : ""}</p>
                   <p className="text-xs text-muted-foreground">{h.tipo} · ★{h.rating} · {h.telefono}</p>
@@ -332,21 +350,38 @@ export default function Admin() {
             title="Vivienda (inmuebles)"
             endpoint="/inmuebles"
             newLabel="+ Inmueble"
-            fields={[
-              { k: "titulo", label: "Título *", ph: "Piso 3 dorm. junto al Altozano" },
-              { k: "tipo", label: "Tipo *", ph: "venta", options: ["venta", "alquiler", "garajes", "locales"] },
-              { k: "precio", label: "Precio", ph: "148.000€ o 650€/mes" },
-              { k: "foto", label: "URL foto", ph: "https://…jpg" },
-              { k: "descripcion", label: "Descripción", ph: "Reformado, orientación sur…", ta: true },
-              { k: "telefono", label: "Teléfono de contacto", ph: "955860100" },
-              { k: "zona", label: "Zona", ph: "Centro" },
-              { k: "agencia", label: "Agencia", ph: "Inmobiliaria Utrera Centro" },
-              { k: "dorm", label: "Dormitorios (nº)", ph: "3", type: "number" },
-              { k: "m2", label: "Superficie m² (nº)", ph: "92", type: "number" },
+            groups={[
+              {
+                title: "Datos básicos",
+                fields: [
+                  { k: "titulo", label: "Título *", ph: "Piso 3 dorm. junto al Altozano" },
+                  { k: "tipo", label: "Tipo *", options: ["venta", "alquiler", "garajes", "locales"] },
+                  { k: "precio", label: "Precio", ph: "148.000€ o 650€/mes" },
+                  { k: "descripcion", label: "Descripción", ph: "Reformado, orientación sur…", ta: true },
+                ],
+              },
+              {
+                title: "Imagen",
+                fields: [
+                  { k: "foto", label: "Foto principal", type: "file-image" },
+                ],
+              },
+              {
+                title: "Contacto y ubicación",
+                fields: [
+                  { k: "telefono", label: "Teléfono de contacto", ph: "955860100" },
+                  { k: "zona", label: "Zona", ph: "Centro" },
+                  { k: "agencia", label: "Agencia", ph: "Inmobiliaria Utrera Centro" },
+                  { k: "dorm", label: "Dormitorios (nº)", ph: "3", type: "number" },
+                  { k: "m2", label: "Superficie m² (nº)", ph: "92", type: "number" },
+                ],
+              },
             ]}
             renderRow={(v) => (
               <div className="flex items-center gap-2 min-w-0">
-                {v.foto && <img src={v.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e)=>{e.currentTarget.style.display="none";}} />}
+                {isValidImage(v.foto) && (
+                  <img src={v.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                )}
                 <div className="min-w-0">
                   <p className="font-display font-bold text-[14px] truncate">{v.titulo}{v._local ? " · 📴" : ""}</p>
                   <p className="text-xs text-muted-foreground">{v.tipo} · {v.precio} · {v.zona}</p>
@@ -370,6 +405,7 @@ function AdminSection({
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({});
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const allFields = groups ? groups.flatMap((g) => g.fields) : (fields || []);
 
@@ -378,7 +414,6 @@ function AdminSection({
       const r = await api.get(endpoint);
       setItems(mergeWithLocal(endpoint, r.data));
     } catch {
-      // offline: show local only
       setItems(mergeWithLocal(endpoint, []));
     }
   };
@@ -387,38 +422,60 @@ function AdminSection({
   const coerce = (payload) => {
     for (const f of allFields) {
       const v = payload[f.k];
-      if (f.type === "bool") payload[f.k] = String(v).toLowerCase() === "true";
+      if (f.type === "bool") payload[f.k] = v === true || String(v).toLowerCase() === "true";
       if (f.type === "number" && v !== undefined && v !== "" && v !== null) {
         const n = Number(v);
         payload[f.k] = Number.isFinite(n) ? n : v;
       }
-      if (f.type === "list" && typeof v === "string") {
-        payload[f.k] = v.split(",").map((s) => s.trim()).filter(Boolean);
+      if (f.type === "file-image-multi" && !Array.isArray(v)) {
+        payload[f.k] = v ? [v] : [];
       }
     }
     return payload;
   };
 
+  const startEdit = (item) => {
+    const base = {};
+    for (const f of allFields) {
+      base[f.k] = item[f.k] ?? (f.type === "file-image-multi" ? [] : "");
+    }
+    base.id = item.id;
+    base._local = !!item._local;
+    setForm(base);
+    setEditingId(item.id);
+    setOpen(true);
+  };
+
+  const cancelEdit = () => {
+    setForm({});
+    setEditingId(null);
+    setOpen(false);
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     const payload = coerce({ ...form });
+    if (editingId) payload.id = editingId;
     try {
       await api.post(endpoint, payload);
-      toast.success("Guardado en el servidor");
+      toast.success(editingId ? "Cambios guardados" : "Guardado en el servidor");
+      // If item was local-only, promote to server copy by removing local trace
+      if (editingId && form._local) removeLocal(endpoint, editingId);
       setForm({});
+      setEditingId(null);
       setOpen(false);
       load();
     } catch (err) {
-      // Fallback — token missing/invalid or server down. Persist locally.
-      const saved = addLocal(endpoint, { id: payload.id || genLocalId(), ...payload });
+      const saved = addLocal(endpoint, { ...payload, id: payload.id || genLocalId() });
       const status = err?.response?.status;
       toast(
         status === 401
-          ? "Guardado offline (token caducado). Vuelve a entrar al Admin para sincronizar."
-          : "Guardado offline. Se mantendrá hasta que la API esté disponible.",
-        { description: saved.nombre || saved.titulo || saved.headline || "Registro guardado localmente" }
+          ? (editingId ? "Cambios guardados offline (token caducado)" : "Guardado offline (token caducado)")
+          : (editingId ? "Cambios guardados offline" : "Guardado offline"),
+        { description: saved.nombre || saved.titulo || saved.headline || saved.name || "Registro local" }
       );
       setForm({});
+      setEditingId(null);
       setOpen(false);
       load();
     }
@@ -446,14 +503,33 @@ function AdminSection({
     }
   };
 
+  const setKey = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
   const renderInput = (f) => {
     const common = {
       value: form[f.k] ?? "",
-      onChange: (e) => setForm({ ...form, [f.k]: e.target.value }),
+      onChange: (e) => setKey(f.k, e.target.value),
       placeholder: f.ph,
       "data-testid": `admin-input-${testKey}-${f.k}`,
       className: "mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-[color:var(--terracotta)]",
     };
+
+    if (f.type === "bool") {
+      const checked = form[f.k] === true || String(form[f.k]).toLowerCase() === "true";
+      return (
+        <button
+          type="button"
+          onClick={() => setKey(f.k, !checked)}
+          data-testid={`admin-input-${testKey}-${f.k}`}
+          className={`mt-1 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
+            checked ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+          }`}
+        >
+          <span className={`w-3 h-3 rounded-full ${checked ? "bg-white" : "bg-slate-400"}`} />
+          {checked ? "Sí" : "No"}
+        </button>
+      );
+    }
     if (f.options) {
       return (
         <select {...common}>
@@ -465,6 +541,36 @@ function AdminSection({
     if (f.ta) {
       return <textarea rows={3} {...common} className={common.className + " resize-none"} />;
     }
+    if (f.type === "file-image") {
+      return (
+        <FileImageField
+          testKey={testKey}
+          fieldKey={f.k}
+          value={form[f.k]}
+          onChange={(v) => setKey(f.k, v)}
+        />
+      );
+    }
+    if (f.type === "file-image-multi") {
+      return (
+        <FileImageMultiField
+          testKey={testKey}
+          fieldKey={f.k}
+          value={Array.isArray(form[f.k]) ? form[f.k] : (form[f.k] ? [form[f.k]] : [])}
+          onChange={(v) => setKey(f.k, v)}
+        />
+      );
+    }
+    if (f.type === "file-pdf") {
+      return (
+        <FilePdfField
+          testKey={testKey}
+          fieldKey={f.k}
+          value={form[f.k]}
+          onChange={(v) => setKey(f.k, v)}
+        />
+      );
+    }
     return <input {...common} />;
   };
 
@@ -473,7 +579,7 @@ function AdminSection({
       <div className="flex items-center justify-between mb-2 px-1">
         <p className="font-display font-bold text-[14px]">{title}</p>
         <button
-          onClick={() => setOpen(!open)}
+          onClick={() => (open ? cancelEdit() : setOpen(true))}
           data-testid={`admin-add-${testKey}`}
           className="text-xs inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[color:var(--terracotta)] text-white"
         >
@@ -482,7 +588,19 @@ function AdminSection({
       </div>
 
       {open && (
-        <form onSubmit={submit} data-testid={`admin-form-${testKey}`} className="rounded-2xl border border-border/70 bg-card p-3 mb-3 space-y-3">
+        <form
+          onSubmit={submit}
+          data-testid={`admin-form-${testKey}`}
+          className="rounded-2xl border border-border/70 bg-card p-3 mb-3 space-y-3"
+        >
+          {editingId && (
+            <div
+              data-testid={`admin-edit-banner-${testKey}`}
+              className="rounded-xl bg-[color:var(--terracotta)]/10 text-[color:var(--terracotta-dark)] px-3 py-2 text-xs font-semibold flex items-center gap-2"
+            >
+              <Pencil size={13} /> Editando registro existente · ID {editingId.slice(0, 10)}…
+            </div>
+          )}
           {groups ? (
             groups.map((g) => (
               <details key={g.title} open className="group rounded-xl bg-muted/50">
@@ -508,13 +626,27 @@ function AdminSection({
               </div>
             ))
           )}
-          <button
-            type="submit"
-            data-testid={`admin-submit-${testKey}`}
-            className="w-full py-2.5 rounded-full bg-[color:var(--terracotta)] text-white text-sm font-semibold"
-          >
-            Guardar
-          </button>
+          <div className="flex gap-2">
+            {editingId && (
+              <button
+                type="button"
+                onClick={cancelEdit}
+                data-testid={`admin-cancel-${testKey}`}
+                className="flex-1 py-2.5 rounded-full bg-muted text-sm font-semibold"
+              >
+                Cancelar
+              </button>
+            )}
+            <button
+              type="submit"
+              data-testid={`admin-submit-${testKey}`}
+              className={`flex-1 py-2.5 rounded-full text-white text-sm font-semibold inline-flex items-center justify-center gap-1.5 ${
+                editingId ? "bg-[color:var(--transit)]" : "bg-[color:var(--terracotta)]"
+              }`}
+            >
+              {editingId ? <><Save size={14} /> Guardar Cambios / Actualizar</> : <><Plus size={14} /> Guardar</>}
+            </button>
+          </div>
         </form>
       )}
 
@@ -529,13 +661,24 @@ function AdminSection({
             className="rounded-xl border border-border/70 bg-card p-3 flex items-start justify-between gap-2"
           >
             <div className="flex-1 min-w-0">{renderRow(it)}</div>
-            <button
-              onClick={() => remove(it.id, !!it._local)}
-              data-testid={`admin-delete-${testKey}-${it.id}`}
-              className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-600 grid place-items-center shrink-0"
-            >
-              <Trash2 size={14} />
-            </button>
+            <div className="flex gap-1 shrink-0">
+              <button
+                onClick={() => startEdit(it)}
+                data-testid={`admin-edit-${testKey}-${it.id}`}
+                className="w-8 h-8 rounded-full bg-[color:var(--transit)]/15 text-[color:var(--transit)] grid place-items-center"
+                aria-label="Editar"
+              >
+                <Pencil size={14} />
+              </button>
+              <button
+                onClick={() => remove(it.id, !!it._local)}
+                data-testid={`admin-delete-${testKey}-${it.id}`}
+                className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-600 grid place-items-center"
+                aria-label="Eliminar"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
@@ -543,6 +686,214 @@ function AdminSection({
   );
 }
 
+// ---------- File fields ----------
+function FileImageField({ testKey, fieldKey, value, onChange }) {
+  const ref = useRef(null);
+  const onPick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecciona un archivo de imagen");
+      return;
+    }
+    if (file.size > MAX_IMG_MB * 1024 * 1024) {
+      toast.error(`La imagen pesa más de ${MAX_IMG_MB} MB. Reduce la calidad e inténtalo de nuevo.`);
+      return;
+    }
+    try {
+      const data = await readAsDataUrl(file);
+      onChange(data);
+    } catch {
+      toast.error("No se pudo leer la imagen");
+    } finally {
+      if (ref.current) ref.current.value = "";
+    }
+  };
+  const hasImg = isValidImage(value);
+  return (
+    <div className="mt-1 space-y-2">
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        onChange={onPick}
+        data-testid={`admin-fileimg-input-${testKey}-${fieldKey}`}
+        className="hidden"
+      />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          data-testid={`admin-fileimg-pick-${testKey}-${fieldKey}`}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[color:var(--terracotta)]/10 text-[color:var(--terracotta-dark)] text-xs font-semibold"
+        >
+          <ImageIcon size={13} /> Seleccionar imagen
+        </button>
+        {hasImg && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            data-testid={`admin-fileimg-clear-${testKey}-${fieldKey}`}
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-muted text-xs font-semibold"
+          >
+            <X size={12} /> Quitar
+          </button>
+        )}
+      </div>
+      {hasImg && (
+        <img
+          src={value}
+          alt="preview"
+          data-testid={`admin-fileimg-preview-${testKey}-${fieldKey}`}
+          onError={(e) => { e.currentTarget.style.display = "none"; }}
+          className="w-full max-w-[180px] h-24 rounded-lg object-cover border border-border"
+        />
+      )}
+    </div>
+  );
+}
+
+function FileImageMultiField({ testKey, fieldKey, value, onChange }) {
+  const ref = useRef(null);
+  const list = Array.isArray(value) ? value : [];
+  const onPick = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const added = [];
+    for (const f of files) {
+      if (!f.type.startsWith("image/")) continue;
+      if (f.size > MAX_IMG_MB * 1024 * 1024) {
+        toast.error(`"${f.name}" pesa más de ${MAX_IMG_MB} MB — descartada.`);
+        continue;
+      }
+      try {
+        added.push(await readAsDataUrl(f));
+      } catch { /* ignore */ }
+    }
+    onChange([...list, ...added]);
+    if (ref.current) ref.current.value = "";
+  };
+  const removeAt = (i) => onChange(list.filter((_, idx) => idx !== i));
+  return (
+    <div className="mt-1 space-y-2">
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={onPick}
+        data-testid={`admin-filemulti-input-${testKey}-${fieldKey}`}
+        className="hidden"
+      />
+      <button
+        type="button"
+        onClick={() => ref.current?.click()}
+        data-testid={`admin-filemulti-pick-${testKey}-${fieldKey}`}
+        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[color:var(--terracotta)]/10 text-[color:var(--terracotta-dark)] text-xs font-semibold"
+      >
+        <ImageIcon size={13} /> Añadir fotos ({list.length})
+      </button>
+      {list.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5" data-testid={`admin-filemulti-preview-${testKey}-${fieldKey}`}>
+          {list.map((src, i) => (
+            isValidImage(src) ? (
+              <div key={i} className="relative">
+                <img src={src} alt="" className="w-full h-16 rounded-lg object-cover border border-border" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                <button
+                  type="button"
+                  onClick={() => removeAt(i)}
+                  data-testid={`admin-filemulti-remove-${testKey}-${fieldKey}-${i}`}
+                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-600 text-white grid place-items-center text-[10px]"
+                  aria-label="Quitar foto"
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            ) : null
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilePdfField({ testKey, fieldKey, value, onChange }) {
+  const ref = useRef(null);
+  const [name, setName] = useState(() => {
+    if (!value) return "";
+    if (typeof value === "string" && value.startsWith("data:application/pdf")) return "Documento PDF adjunto";
+    if (typeof value === "string") return value.split("/").pop() || "Documento";
+    return "";
+  });
+
+  const onPick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("Selecciona un archivo PDF");
+      return;
+    }
+    if (file.size > MAX_PDF_MB * 1024 * 1024) {
+      toast.error(`El PDF pesa más de ${MAX_PDF_MB} MB. Reduce el peso e inténtalo de nuevo.`);
+      return;
+    }
+    try {
+      const data = await readAsDataUrl(file);
+      onChange(data);
+      setName(file.name);
+    } catch {
+      toast.error("No se pudo leer el PDF");
+    } finally {
+      if (ref.current) ref.current.value = "";
+    }
+  };
+
+  const clear = () => { onChange(""); setName(""); };
+
+  return (
+    <div className="mt-1 space-y-2">
+      <input
+        ref={ref}
+        type="file"
+        accept="application/pdf,.pdf"
+        onChange={onPick}
+        data-testid={`admin-filepdf-input-${testKey}-${fieldKey}`}
+        className="hidden"
+      />
+      <div className="flex gap-2 flex-wrap">
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          data-testid={`admin-filepdf-pick-${testKey}-${fieldKey}`}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[color:var(--terracotta)]/10 text-[color:var(--terracotta-dark)] text-xs font-semibold"
+        >
+          <FileUp size={13} /> Seleccionar PDF de carta/menú
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={clear}
+            data-testid={`admin-filepdf-clear-${testKey}-${fieldKey}`}
+            className="inline-flex items-center gap-1 px-3 py-2 rounded-full bg-muted text-xs font-semibold"
+          >
+            <X size={12} /> Quitar
+          </button>
+        )}
+      </div>
+      {value && (
+        <div
+          data-testid={`admin-filepdf-preview-${testKey}-${fieldKey}`}
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-muted text-xs font-mono text-foreground/80"
+        >
+          <FileText size={14} className="text-[color:var(--terracotta)]" />
+          <span className="truncate max-w-[220px]">{name || "Documento PDF"}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------- Tablón (unchanged structure, kept for completeness) ----------
 function AdminTablon() {
   const [items, setItems] = useState([]);
   const [editing, setEditing] = useState(null);
