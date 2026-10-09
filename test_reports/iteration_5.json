@@ -1,0 +1,30 @@
+{
+  "summary": "Retested iteration_4 fix (search-overrides-category) on /market with hard cache-busting (?nocache=timestamp + context.clear_cookies + reload networkidle). Verified line 95 of Market.jsx on disk BEFORE browser testing: `if (!needle && cat !== \"todos\" && x.categoria !== cat) return false;` — matches spec exactly. All 6 scenarios pass with the updated bundle. The iteration_4 false-negative is resolved.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "tests_executed": [
+    {"name": "Todos + empty search → item without categoria appears", "expected": ">=1", "actual": 1, "pass": true},
+    {"name": "Moda + empty search → item without categoria hidden", "expected": "0", "actual": 0, "pass": true},
+    {"name": "Moda + search 'DIGITAL' → item appears (search bypasses category)", "expected": ">=1", "actual": 1, "pass": true},
+    {"name": "Moda + cleared search → item hidden again", "expected": "0", "actual": 0, "pass": true},
+    {"name": "Deportes tab regression: deportes item shown, hogar item hidden", "expected": "dep>=1, hog=0", "actual": "dep=1, hog=0", "pass": true},
+    {"name": "Live sync via dispatchEvent('utrerapp:local-updated') without reload", "expected": ">=1", "actual": 1, "pass": true}
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Market.jsx line 95 logic matches spec and is working as intended. No further action required for this bug.",
+    "The initial 'category buttons: []' output during first run was due to using wrong selector pattern (cat-* instead of market-cat-*). Not a product issue, test-script issue — corrected."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "seed_data_creation": "Transient localStorage.local_comercios items injected during test only; not persisted on backend.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Market category filtering + search-override behaviour is confirmed working. Use selectors: [data-testid=market-cat-{id}], [data-testid=market-search-input], [data-testid^=market-shop-]. Always use cache-busting query param + context.clear_cookies + reload networkidle for /market because SW/HMR may cache stale bundles.",
+  "rca of the issue": "Iteration_4 reported false negative; root cause was stale cached bundle in test browser. After cache-busting (?nocache=TS + clear_cookies + reload networkidle) the current bundle executes the correct line-95 filter and all scenarios pass."
+}
