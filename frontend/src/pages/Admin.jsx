@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { api } from "@/lib/api";
+import {
+  mergeWithLocal, addLocal, patchLocal, removeLocal, genLocalId,
+} from "@/lib/localStore";
 import { toast } from "sonner";
-import { Trash2, Shield, LogOut, Plus, Check, X, Pencil, Save } from "lucide-react";
+import { Trash2, Shield, LogOut, Plus, Check, X, Pencil, Save, ChevronDown } from "lucide-react";
 
 const TABS = [
   { id: "traffic", label: "Tráfico" },
@@ -122,7 +125,7 @@ export default function Admin() {
               { k: "zone", label: "Zona", ph: "Trianilla" },
               { k: "status", label: "Estado (green/yellow/red)", ph: "yellow" },
               { k: "message", label: "Mensaje", ph: "Obras en marcha" },
-              { k: "detail", label: "Detalle", ph: "Descripción larga…" },
+              { k: "detail", label: "Detalle", ph: "Descripción larga…", ta: true },
             ]}
             renderRow={(t) => (
               <>
@@ -167,7 +170,7 @@ export default function Admin() {
               { k: "category", label: "Categoría", ph: "Fiestas" },
               { k: "date", label: "Fecha (YYYY-MM-DD)", ph: "2026-10-14" },
               { k: "location", label: "Lugar", ph: "Recinto ferial" },
-              { k: "description", label: "Descripción", ph: "Descripción…" },
+              { k: "description", label: "Descripción", ph: "Descripción…", ta: true },
               { k: "highlighted", label: "Destacado (true/false)", ph: "true", type: "bool" },
             ]}
             renderRow={(e) => (
@@ -187,7 +190,7 @@ export default function Admin() {
             fields={[
               { k: "source", label: "Medio", ph: "Utrera al Día" },
               { k: "headline", label: "Titular", ph: "Titular…" },
-              { k: "summary", label: "Resumen", ph: "Resumen…" },
+              { k: "summary", label: "Resumen", ph: "Resumen…", ta: true },
               { k: "category", label: "Categoría", ph: "Cultura" },
             ]}
             renderRow={(n) => (
@@ -204,19 +207,55 @@ export default function Admin() {
             title="Comercios (Utrera Market)"
             endpoint="/comercios"
             newLabel="+ Nuevo Comercio"
-            fields={[
-              { k: "nombre", label: "Nombre del comercio", ph: "Boutique Trianilla" },
-              { k: "categoria", label: "Categoría (moda/alimentacion/deportes/hogar)", ph: "moda" },
-              { k: "imagen", label: "URL imagen/logo", ph: "https://…jpg" },
-              { k: "descripcion", label: "Descripción", ph: "Moda mujer y complementos artesanos." },
-              { k: "url", label: "Tienda online / WhatsApp", ph: "https://wa.me/34655…" },
-              { k: "tag", label: "Etiqueta (opcional)", ph: "Envío gratis > 30€" },
+            groups={[
+              {
+                title: "Datos básicos",
+                fields: [
+                  { k: "nombre", label: "Nombre del comercio *", ph: "Boutique Trianilla" },
+                  { k: "categoria", label: "Categoría *", ph: "moda", options: ["moda", "alimentacion", "deportes", "hogar"] },
+                  { k: "descripcion", label: "Descripción", ph: "Moda mujer y complementos artesanos.", ta: true },
+                  { k: "tag", label: "Etiqueta (opcional)", ph: "Envío gratis > 30€" },
+                ],
+              },
+              {
+                title: "Imágenes",
+                fields: [
+                  { k: "imagen", label: "Imagen/logo principal (URL o base64)", ph: "https://…jpg" },
+                  { k: "fotos", label: "Fotos secundarias (URLs separadas por coma)", ph: "https://a.jpg, https://b.jpg", type: "list" },
+                ],
+              },
+              {
+                title: "Contacto y acciones rápidas",
+                fields: [
+                  { k: "telefono", label: "Teléfono (Llamar)", ph: "955861234" },
+                  { k: "direccion", label: "Dirección (GPS / Google Maps)", ph: "C/ Ancha, 34" },
+                  { k: "url", label: "Tienda online / WhatsApp (CTA)", ph: "https://wa.me/34655…" },
+                  { k: "web", label: "Web oficial", ph: "https://miweb.es" },
+                ],
+              },
+              {
+                title: "Carta / PDF y oferta destacada",
+                fields: [
+                  { k: "menu_pdf_url", label: "📄 PDF Carta/Menú (URL o base64)", ph: "https://…pdf" },
+                  { k: "oferta_titulo", label: "🎉 Título de oferta/evento", ph: "Rebajas de verano" },
+                  { k: "oferta_texto", label: "Texto descriptivo de la oferta", ph: "Hasta un 50% dto. todo el stock.", ta: true },
+                  { k: "oferta_imagen", label: "Cartel de la oferta (URL o base64)", ph: "https://…jpg" },
+                ],
+              },
+              {
+                title: "Redes sociales",
+                fields: [
+                  { k: "instagram", label: "Instagram (URL o @usuario)", ph: "@mitienda" },
+                  { k: "facebook", label: "Facebook (URL)", ph: "https://facebook.com/mitienda" },
+                  { k: "tiktok", label: "TikTok (URL o @usuario)", ph: "@mitienda" },
+                ],
+              },
             ]}
             renderRow={(c) => (
               <div className="flex items-center gap-2 min-w-0">
-                {c.imagen && <img src={c.imagen} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />}
+                {c.imagen && <img src={c.imagen} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e)=>{e.currentTarget.style.display="none";}} />}
                 <div className="min-w-0">
-                  <p className="font-display font-bold text-[14px] truncate">{c.nombre}</p>
+                  <p className="font-display font-bold text-[14px] truncate">{c.nombre}{c._local ? " · 📴" : ""}</p>
                   <p className="text-xs text-muted-foreground">{c.categoria} · {c.tag || "—"}</p>
                 </div>
               </div>
@@ -229,23 +268,58 @@ export default function Admin() {
             title="Hostelería (Bares & Tapas)"
             endpoint="/hosteleria"
             newLabel="+ Nuevo Bar/Restaurante"
-            fields={[
-              { k: "nombre", label: "Nombre", ph: "Bar Casa Manolo" },
-              { k: "tipo", label: "Tipo (bares/restaurantes/cafes/domicilio)", ph: "bares" },
-              { k: "foto", label: "URL foto", ph: "https://…jpg" },
-              { k: "telefono", label: "Teléfono", ph: "955861010" },
-              { k: "whatsapp", label: "WhatsApp (con prefijo)", ph: "34655700001" },
-              { k: "carta_url", label: "Carta / Menú (URL)", ph: "https://…menu" },
-              { k: "horario", label: "Horario", ph: "L-D · 12:00-16:30 y 19:30-00:00" },
-              { k: "zona", label: "Zona/Dirección", ph: "C/ Ancha, 22" },
-              { k: "descripcion", label: "Descripción", ph: "Tapas de guiso y montaditos." },
-              { k: "rating", label: "Valoración (0-5)", ph: "4.7", type: "number" },
+            groups={[
+              {
+                title: "Datos básicos",
+                fields: [
+                  { k: "nombre", label: "Nombre *", ph: "Bar Casa Manolo" },
+                  { k: "tipo", label: "Tipo *", ph: "bares", options: ["bares", "restaurantes", "cafes", "domicilio"] },
+                  { k: "descripcion", label: "Descripción", ph: "Tapas de guiso y montaditos.", ta: true },
+                  { k: "horario", label: "Horario", ph: "L-D · 12:00-16:30 y 19:30-00:00" },
+                  { k: "rating", label: "Valoración (0-5)", ph: "4.7", type: "number" },
+                ],
+              },
+              {
+                title: "Imágenes",
+                fields: [
+                  { k: "foto", label: "Foto principal (URL o base64)", ph: "https://…jpg" },
+                  { k: "fotos", label: "Fotos extra (URLs separadas por coma)", ph: "https://a.jpg, https://b.jpg", type: "list" },
+                ],
+              },
+              {
+                title: "Contacto y acciones rápidas",
+                fields: [
+                  { k: "telefono", label: "Teléfono (Llamar)", ph: "955861010" },
+                  { k: "whatsapp", label: "WhatsApp (Reservas/Pedidos)", ph: "34655700001" },
+                  { k: "zona", label: "Zona/Dirección (GPS)", ph: "C/ Ancha, 22" },
+                  { k: "direccion", label: "Dirección completa (opcional, para Mapas)", ph: "C/ Ancha, 22, 41710 Utrera" },
+                  { k: "web", label: "Web oficial", ph: "https://miweb.es" },
+                  { k: "carta_url", label: "Enlace carta web (opcional)", ph: "https://miweb.es/carta" },
+                ],
+              },
+              {
+                title: "Carta / PDF y oferta destacada",
+                fields: [
+                  { k: "menu_pdf_url", label: "📄 PDF Carta/Menú (URL o base64)", ph: "https://…pdf" },
+                  { k: "oferta_titulo", label: "🎉 Título oferta/evento", ph: "Flamenco en vivo sábado" },
+                  { k: "oferta_texto", label: "Descripción de la promoción", ph: "Actuación en directo a las 22h con cover de 5€.", ta: true },
+                  { k: "oferta_imagen", label: "Cartel de la promoción (URL o base64)", ph: "https://…jpg" },
+                ],
+              },
+              {
+                title: "Redes sociales",
+                fields: [
+                  { k: "instagram", label: "Instagram (@usuario o URL)", ph: "@casamanolo" },
+                  { k: "facebook", label: "Facebook (URL)", ph: "https://facebook.com/casamanolo" },
+                  { k: "tiktok", label: "TikTok (@usuario o URL)", ph: "@casamanolo" },
+                ],
+              },
             ]}
             renderRow={(h) => (
               <div className="flex items-center gap-2 min-w-0">
-                {h.foto && <img src={h.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />}
+                {h.foto && <img src={h.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e)=>{e.currentTarget.style.display="none";}} />}
                 <div className="min-w-0">
-                  <p className="font-display font-bold text-[14px] truncate">{h.nombre}</p>
+                  <p className="font-display font-bold text-[14px] truncate">{h.nombre}{h._local ? " · 📴" : ""}</p>
                   <p className="text-xs text-muted-foreground">{h.tipo} · ★{h.rating} · {h.telefono}</p>
                 </div>
               </div>
@@ -259,11 +333,11 @@ export default function Admin() {
             endpoint="/inmuebles"
             newLabel="+ Inmueble"
             fields={[
-              { k: "titulo", label: "Título", ph: "Piso 3 dorm. junto al Altozano" },
-              { k: "tipo", label: "Tipo (venta/alquiler/garajes/locales)", ph: "venta" },
+              { k: "titulo", label: "Título *", ph: "Piso 3 dorm. junto al Altozano" },
+              { k: "tipo", label: "Tipo *", ph: "venta", options: ["venta", "alquiler", "garajes", "locales"] },
               { k: "precio", label: "Precio", ph: "148.000€ o 650€/mes" },
               { k: "foto", label: "URL foto", ph: "https://…jpg" },
-              { k: "descripcion", label: "Descripción", ph: "Reformado, orientación sur…" },
+              { k: "descripcion", label: "Descripción", ph: "Reformado, orientación sur…", ta: true },
               { k: "telefono", label: "Teléfono de contacto", ph: "955860100" },
               { k: "zona", label: "Zona", ph: "Centro" },
               { k: "agencia", label: "Agencia", ph: "Inmobiliaria Utrera Centro" },
@@ -272,9 +346,9 @@ export default function Admin() {
             ]}
             renderRow={(v) => (
               <div className="flex items-center gap-2 min-w-0">
-                {v.foto && <img src={v.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />}
+                {v.foto && <img src={v.foto} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" onError={(e)=>{e.currentTarget.style.display="none";}} />}
                 <div className="min-w-0">
-                  <p className="font-display font-bold text-[14px] truncate">{v.titulo}</p>
+                  <p className="font-display font-bold text-[14px] truncate">{v.titulo}{v._local ? " · 📴" : ""}</p>
                   <p className="text-xs text-muted-foreground">{v.tipo} · {v.precio} · {v.zona}</p>
                 </div>
               </div>
@@ -290,42 +364,108 @@ export default function Admin() {
   );
 }
 
-function AdminSection({ title, endpoint, fields, renderRow, testKey, newLabel = "+ Nuevo" }) {
+function AdminSection({
+  title, endpoint, fields, groups, renderRow, testKey, newLabel = "+ Nuevo",
+}) {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({});
   const [open, setOpen] = useState(false);
 
-  const load = () => api.get(endpoint).then((r) => setItems(r.data));
+  const allFields = groups ? groups.flatMap((g) => g.fields) : (fields || []);
+
+  const load = async () => {
+    try {
+      const r = await api.get(endpoint);
+      setItems(mergeWithLocal(endpoint, r.data));
+    } catch {
+      // offline: show local only
+      setItems(mergeWithLocal(endpoint, []));
+    }
+  };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+
+  const coerce = (payload) => {
+    for (const f of allFields) {
+      const v = payload[f.k];
+      if (f.type === "bool") payload[f.k] = String(v).toLowerCase() === "true";
+      if (f.type === "number" && v !== undefined && v !== "" && v !== null) {
+        const n = Number(v);
+        payload[f.k] = Number.isFinite(n) ? n : v;
+      }
+      if (f.type === "list" && typeof v === "string") {
+        payload[f.k] = v.split(",").map((s) => s.trim()).filter(Boolean);
+      }
+    }
+    return payload;
+  };
 
   const submit = async (e) => {
     e.preventDefault();
-    const payload = { ...form };
-    for (const f of fields) {
-      if (f.type === "bool") payload[f.k] = String(payload[f.k]).toLowerCase() === "true";
-      if (f.type === "number" && payload[f.k] !== undefined && payload[f.k] !== "") {
-        payload[f.k] = Number(payload[f.k]);
-      }
-    }
+    const payload = coerce({ ...form });
     try {
       await api.post(endpoint, payload);
-      toast.success("Guardado");
+      toast.success("Guardado en el servidor");
       setForm({});
       setOpen(false);
       load();
     } catch (err) {
-      toast.error("Error al guardar", { description: err?.response?.data?.detail || "" });
+      // Fallback — token missing/invalid or server down. Persist locally.
+      const saved = addLocal(endpoint, { id: payload.id || genLocalId(), ...payload });
+      const status = err?.response?.status;
+      toast(
+        status === 401
+          ? "Guardado offline (token caducado). Vuelve a entrar al Admin para sincronizar."
+          : "Guardado offline. Se mantendrá hasta que la API esté disponible.",
+        { description: saved.nombre || saved.titulo || saved.headline || "Registro guardado localmente" }
+      );
+      setForm({});
+      setOpen(false);
+      load();
     }
   };
 
-  const remove = async (id) => {
+  const remove = async (id, isLocal) => {
+    if (isLocal) {
+      removeLocal(endpoint, id);
+      toast.success("Eliminado (local)");
+      load();
+      return;
+    }
     try {
       await api.delete(`${endpoint}/${id}`);
       toast.success("Eliminado");
       load();
-    } catch {
-      toast.error("Error al eliminar");
+    } catch (err) {
+      if (err?.response?.status === 401 || err?.response?.status === 404) {
+        removeLocal(endpoint, id);
+        toast.success("Eliminado localmente");
+        load();
+      } else {
+        toast.error("Error al eliminar");
+      }
     }
+  };
+
+  const renderInput = (f) => {
+    const common = {
+      value: form[f.k] ?? "",
+      onChange: (e) => setForm({ ...form, [f.k]: e.target.value }),
+      placeholder: f.ph,
+      "data-testid": `admin-input-${testKey}-${f.k}`,
+      className: "mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-[color:var(--terracotta)]",
+    };
+    if (f.options) {
+      return (
+        <select {...common}>
+          <option value="">—</option>
+          {f.options.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+      );
+    }
+    if (f.ta) {
+      return <textarea rows={3} {...common} className={common.className + " resize-none"} />;
+    }
+    return <input {...common} />;
   };
 
   return (
@@ -342,19 +482,32 @@ function AdminSection({ title, endpoint, fields, renderRow, testKey, newLabel = 
       </div>
 
       {open && (
-        <form onSubmit={submit} data-testid={`admin-form-${testKey}`} className="rounded-2xl border border-border/70 bg-card p-3 mb-3 space-y-2">
-          {fields.map((f) => (
-            <div key={f.k}>
-              <label className="text-[11px] text-muted-foreground font-semibold">{f.label}</label>
-              <input
-                value={form[f.k] ?? ""}
-                onChange={(e) => setForm({ ...form, [f.k]: e.target.value })}
-                placeholder={f.ph}
-                data-testid={`admin-input-${testKey}-${f.k}`}
-                className="mt-1 w-full px-3 py-2 rounded-lg border border-border bg-background text-sm outline-none focus:border-[color:var(--terracotta)]"
-              />
-            </div>
-          ))}
+        <form onSubmit={submit} data-testid={`admin-form-${testKey}`} className="rounded-2xl border border-border/70 bg-card p-3 mb-3 space-y-3">
+          {groups ? (
+            groups.map((g) => (
+              <details key={g.title} open className="group rounded-xl bg-muted/50">
+                <summary className="list-none cursor-pointer flex items-center justify-between px-3 py-2 font-display font-bold text-[12px] uppercase tracking-wider text-muted-foreground">
+                  {g.title}
+                  <ChevronDown size={14} className="group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-3 pb-3 space-y-2">
+                  {g.fields.map((f) => (
+                    <div key={f.k}>
+                      <label className="text-[11px] text-muted-foreground font-semibold">{f.label}</label>
+                      {renderInput(f)}
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ))
+          ) : (
+            (fields || []).map((f) => (
+              <div key={f.k}>
+                <label className="text-[11px] text-muted-foreground font-semibold">{f.label}</label>
+                {renderInput(f)}
+              </div>
+            ))
+          )}
           <button
             type="submit"
             data-testid={`admin-submit-${testKey}`}
@@ -377,7 +530,7 @@ function AdminSection({ title, endpoint, fields, renderRow, testKey, newLabel = 
           >
             <div className="flex-1 min-w-0">{renderRow(it)}</div>
             <button
-              onClick={() => remove(it.id)}
+              onClick={() => remove(it.id, !!it._local)}
               data-testid={`admin-delete-${testKey}-${it.id}`}
               className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-600 grid place-items-center shrink-0"
             >
@@ -395,39 +548,69 @@ function AdminTablon() {
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState({});
 
-  const load = () =>
-    api.get("/anuncios/all").then((r) => setItems(r.data)).catch(() => toast.error("No se pudieron cargar los anuncios"));
+  const load = async () => {
+    try {
+      const r = await api.get("/anuncios/all");
+      setItems(mergeWithLocal("/anuncios", r.data));
+    } catch {
+      setItems(mergeWithLocal("/anuncios", []));
+      toast.message("Modo offline: mostrando anuncios locales");
+    }
+  };
   useEffect(() => { load(); }, []);
 
-  const setActive = async (id, es_activo) => {
+  const setActive = async (a, es_activo) => {
+    if (a._local) {
+      patchLocal("/anuncios", a.id, { es_activo });
+      toast.success(es_activo ? "Anuncio aprobado (local)" : "Ocultado (local)");
+      load();
+      return;
+    }
     try {
-      await api.patch(`/anuncios/${id}`, { es_activo });
+      await api.patch(`/anuncios/${a.id}`, { es_activo });
       toast.success(es_activo ? "Anuncio aprobado" : "Anuncio ocultado");
       load();
     } catch {
-      toast.error("Error al actualizar");
+      patchLocal("/anuncios", a.id, { es_activo });
+      toast.success("Guardado offline");
+      load();
     }
   };
 
-  const remove = async (id) => {
+  const remove = async (a) => {
+    if (a._local) {
+      removeLocal("/anuncios", a.id);
+      toast.success("Eliminado (local)");
+      load();
+      return;
+    }
     try {
-      await api.delete(`/anuncios/${id}`);
+      await api.delete(`/anuncios/${a.id}`);
       toast.success("Eliminado");
       load();
     } catch {
-      toast.error("Error al eliminar");
+      removeLocal("/anuncios", a.id);
+      toast.success("Eliminado localmente");
+      load();
     }
   };
 
-  const saveEdit = async (id) => {
+  const saveEdit = async (a) => {
+    const patch = { ...draft };
+    if (a._local) {
+      patchLocal("/anuncios", a.id, patch);
+      toast.success("Guardado (local)");
+      setEditing(null); setDraft({}); load();
+      return;
+    }
     try {
-      await api.patch(`/anuncios/${id}`, draft);
+      await api.patch(`/anuncios/${a.id}`, patch);
       toast.success("Guardado");
-      setEditing(null);
-      setDraft({});
-      load();
+      setEditing(null); setDraft({}); load();
     } catch {
-      toast.error("Error al guardar");
+      patchLocal("/anuncios", a.id, patch);
+      toast.success("Guardado offline");
+      setEditing(null); setDraft({}); load();
     }
   };
 
@@ -457,7 +640,7 @@ function AdminTablon() {
             ))}
             <div className="flex gap-2">
               <button
-                onClick={() => saveEdit(a.id)}
+                onClick={() => saveEdit(a)}
                 data-testid={`admin-tablon-save-${a.id}`}
                 className="flex-1 py-1.5 rounded-full bg-[color:var(--terracotta)] text-white text-xs font-semibold inline-flex items-center justify-center gap-1"
               >
@@ -484,6 +667,7 @@ function AdminTablon() {
                   {!a.es_activo && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white">PENDIENTE</span>
                   )}
+                  {a._local && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200">OFFLINE</span>}
                 </div>
                 <p className="font-display font-bold text-[14px] mt-1 leading-tight">{a.titulo}</p>
                 <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{a.descripcion}</p>
@@ -495,7 +679,7 @@ function AdminTablon() {
             <div className="flex gap-1.5">
               {a.es_activo ? (
                 <button
-                  onClick={() => setActive(a.id, false)}
+                  onClick={() => setActive(a, false)}
                   data-testid={`admin-tablon-hide-${a.id}`}
                   className="flex-1 py-1.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 text-xs font-semibold inline-flex items-center justify-center gap-1"
                 >
@@ -503,7 +687,7 @@ function AdminTablon() {
                 </button>
               ) : (
                 <button
-                  onClick={() => setActive(a.id, true)}
+                  onClick={() => setActive(a, true)}
                   data-testid={`admin-tablon-approve-${a.id}`}
                   className="flex-1 py-1.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-semibold inline-flex items-center justify-center gap-1"
                 >
@@ -518,7 +702,7 @@ function AdminTablon() {
                 <Pencil size={12} /> Editar
               </button>
               <button
-                onClick={() => remove(a.id)}
+                onClick={() => remove(a)}
                 data-testid={`admin-tablon-delete-${a.id}`}
                 className="w-8 h-8 rounded-full bg-rose-500/10 text-rose-600 grid place-items-center"
               >

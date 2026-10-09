@@ -12,8 +12,30 @@ const SUGGESTIONS = [
   "¿Cuándo es la Feria de la Manzanilla?",
 ];
 
+// Tabla de salidas fijas de la Línea C-1 Utrera -> Sevilla
+const HORARIOS_C1 = [
+  "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30",
+  "10:15", "11:15", "12:15", "13:15", "14:00", "14:30", "15:00", "15:30",
+  "16:15", "17:15", "18:00", "18:30", "19:00", "19:30", "20:15", "21:15", "22:15"
+];
+
+function obtenerRespuestaRenfe() {
+  const ahora = new Date();
+  const horaActualStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const proximos = HORARIOS_C1.filter((h) => h > horaActualStr).slice(0, 3);
+
+  if (proximos.length === 0) {
+    return `A partir de ahora (${horaActualStr}), no quedan más salidas programadas para hoy desde Utrera. El primer tren de mañana sale a las 06:00 h.`;
+  }
+
+  let respuesta = `A partir de ahora (${horaActualStr}), estas son las próximas salidas desde Utrera hacia Sevilla:\n\n`;
+  proximos.forEach((hora) => {
+    respuesta += `• **${hora} h** (Llegada a Santa Justa en ~35 min)\n`;
+  });
+  return respuesta;
+}
+
 function AssistantContent({ text }) {
-  // Zero external links, zero widgets — plain text only.
   return <span>{text}</span>;
 }
 
@@ -38,6 +60,19 @@ export default function Conso() {
     const msg = (text ?? input).trim();
     if (!msg || busy) return;
     setInput("");
+
+    // Interceptar la consulta sobre trenes/cercanías de Renfe
+    const regexRenfe = /(tren|cercanias|cercanías|renfe|c-1|c1)/i;
+    if (regexRenfe.test(msg)) {
+      const respuestaRenfe = obtenerRespuestaRenfe();
+      setMsgs((m) => [
+        ...m,
+        { role: "user", content: msg },
+        { role: "assistant", content: respuestaRenfe },
+      ]);
+      return;
+    }
+
     setMsgs((m) => [...m, { role: "user", content: msg }, { role: "assistant", content: "" }]);
     setBusy(true);
 
@@ -65,7 +100,10 @@ export default function Conso() {
           if (chunk.startsWith("[ERROR]")) {
             setMsgs((m) => {
               const c = [...m];
-              c[c.length - 1] = { role: "assistant", content: "Ups, algo se ha atascado. Inténtalo de nuevo en un momento." };
+              c[c.length - 1] = {
+                role: "assistant",
+                content: "Ups, algo se ha atascado. Inténtalo de nuevo en un momento.",
+              };
               return c;
             });
             continue;
@@ -80,7 +118,10 @@ export default function Conso() {
     } catch (e) {
       setMsgs((m) => {
         const c = [...m];
-        c[c.length - 1] = { role: "assistant", content: "No he podido conectar. Vuelve a intentarlo, por favor." };
+        c[c.length - 1] = {
+          role: "assistant",
+          content: "No he podido conectar. Vuelve a intentarlo, por favor.",
+        };
         return c;
       });
     } finally {
@@ -101,7 +142,7 @@ export default function Conso() {
         </div>
         <div>
           <p className="font-display font-bold text-[15px] leading-tight">Conso</p>
-          <p className="text-[11px] text-muted-foreground">En línea · Claude Sonnet 4.6</p>
+          <p className="text-[11px] text-muted-foreground">En línea · Asistente local</p>
         </div>
       </div>
 
@@ -138,7 +179,10 @@ export default function Conso() {
       </div>
 
       {msgs.length <= 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar" data-testid="conso-suggestions">
+        <div
+          className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar"
+          data-testid="conso-suggestions"
+        >
           {SUGGESTIONS.map((q) => (
             <button
               key={q}
@@ -153,7 +197,10 @@ export default function Conso() {
       )}
 
       <form
-        onSubmit={(e) => { e.preventDefault(); send(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          send();
+        }}
         data-testid="conso-form"
         className="sticky bottom-20 mt-2 flex items-center gap-2 bg-card border border-border rounded-full pl-4 pr-1.5 py-1.5 shadow-md"
       >

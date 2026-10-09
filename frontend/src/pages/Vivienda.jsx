@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { api } from "@/lib/api";
+import { mergeWithLocal, safeImg, telHref, mapsHref } from "@/lib/localStore";
 import { Home as HomeIcon, KeyRound, Car, Building2, MapPin, BedDouble, Euro, Phone } from "lucide-react";
 
 const CATS = [
@@ -20,12 +21,20 @@ const TONES = {
 
 export default function Vivienda() {
   const [cat, setCat] = useState("venta");
-  const [items, setItems] = useState([]);
+  const [all, setAll] = useState([]);
   const active = CATS.find((c) => c.id === cat);
 
-  useEffect(() => {
-    api.get(`/inmuebles?tipo=${cat}`).then((r) => setItems(r.data));
-  }, [cat]);
+  const load = async () => {
+    try {
+      const r = await api.get(`/inmuebles`);
+      setAll(mergeWithLocal("/inmuebles", r.data));
+    } catch {
+      setAll(mergeWithLocal("/inmuebles", []));
+    }
+  };
+  useEffect(() => { load(); }, []);
+
+  const items = useMemo(() => all.filter((x) => x.tipo === cat), [all, cat]);
 
   return (
     <div className="app-shell" data-testid="vivienda-page">
@@ -78,57 +87,75 @@ export default function Vivienda() {
             No hay inmuebles publicados en esta categoría.
           </div>
         )}
-        {items.map((l) => (
-          <div
-            key={l.id}
-            data-testid={`vivienda-item-${l.id}`}
-            className="tile rounded-2xl border border-border/70 bg-card overflow-hidden"
-          >
-            {l.foto && (
-              <img src={l.foto} alt={l.titulo} className="w-full h-32 object-cover" />
-            )}
-            <div className="p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  {l.agencia && (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted">
-                      {l.agencia}
-                    </span>
+        {items.map((l) => {
+          const img = safeImg(l.foto);
+          const map = mapsHref(l.zona);
+          const tel = telHref(l.telefono);
+          return (
+            <div
+              key={l.id}
+              data-testid={`vivienda-item-${l.id}`}
+              className="tile rounded-2xl border border-border/70 bg-card overflow-hidden"
+            >
+              {img && (
+                <img src={img} alt={l.titulo} onError={(e)=>{e.currentTarget.style.display="none";}} className="w-full h-32 object-cover" />
+              )}
+              <div className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    {l.agencia && (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted">
+                        {l.agencia}
+                      </span>
+                    )}
+                    <h3 className="font-display font-bold text-[14px] mt-1.5 leading-tight">{l.titulo}</h3>
+                    {l.zona && (
+                      <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                        <MapPin size={11} /> {l.zona}
+                      </p>
+                    )}
+                  </div>
+                  <p className="font-display font-extrabold text-[color:var(--terracotta)] text-base leading-none flex items-center gap-0.5 shrink-0">
+                    <Euro size={13} /> {String(l.precio || "").replace("€", "").trim()}
+                  </p>
+                </div>
+                {l.descripcion && (
+                  <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{l.descripcion}</p>
+                )}
+                {(l.dorm || l.m2) && (
+                  <div className="mt-2.5 flex gap-3 text-xs text-muted-foreground font-mono">
+                    {l.dorm ? (
+                      <span className="inline-flex items-center gap-1"><BedDouble size={11} /> {l.dorm} dorm.</span>
+                    ) : null}
+                    {l.m2 ? <span>· {l.m2} m²</span> : null}
+                  </div>
+                )}
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {tel && (
+                    <a
+                      href={tel}
+                      data-testid={`vivienda-call-${l.id}`}
+                      className="py-2 rounded-full bg-[color:var(--transit)] hover:opacity-90 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5"
+                    >
+                      <Phone size={13} /> Llamar
+                    </a>
                   )}
-                  <h3 className="font-display font-bold text-[14px] mt-1.5 leading-tight">{l.titulo}</h3>
-                  {l.zona && (
-                    <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                      <MapPin size={11} /> {l.zona}
-                    </p>
+                  {map && (
+                    <a
+                      href={map}
+                      target="_blank"
+                      rel="noreferrer"
+                      data-testid={`vivienda-map-${l.id}`}
+                      className="py-2 rounded-full bg-emerald-600 hover:opacity-90 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5"
+                    >
+                      <MapPin size={13} /> Cómo llegar
+                    </a>
                   )}
                 </div>
-                <p className="font-display font-extrabold text-[color:var(--terracotta)] text-base leading-none flex items-center gap-0.5 shrink-0">
-                  <Euro size={13} /> {l.precio.replace("€", "").trim()}
-                </p>
               </div>
-              {l.descripcion && (
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{l.descripcion}</p>
-              )}
-              {(l.dorm || l.m2) && (
-                <div className="mt-2.5 flex gap-3 text-xs text-muted-foreground font-mono">
-                  {l.dorm ? (
-                    <span className="inline-flex items-center gap-1"><BedDouble size={11} /> {l.dorm} dorm.</span>
-                  ) : null}
-                  {l.m2 ? <span>· {l.m2} m²</span> : null}
-                </div>
-              )}
-              {l.telefono && (
-                <a
-                  href={`tel:${l.telefono}`}
-                  data-testid={`vivienda-call-${l.id}`}
-                  className="mt-3 w-full py-2 rounded-full bg-[color:var(--transit)] hover:opacity-90 text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5"
-                >
-                  <Phone size={13} /> Llamar · {l.telefono}
-                </a>
-              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <BottomNav />

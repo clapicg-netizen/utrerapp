@@ -118,6 +118,17 @@ class Comercio(BaseModel):
     imagen: str = ""
     url: str = "#"
     tag: str = ""
+    telefono: str = ""
+    direccion: str = ""
+    web: str = ""
+    menu_pdf_url: str = ""
+    oferta_imagen: str = ""
+    oferta_titulo: str = ""
+    oferta_texto: str = ""
+    instagram: str = ""
+    facebook: str = ""
+    tiktok: str = ""
+    fotos: List[str] = Field(default_factory=list)
 
 
 class Hosteleria(BaseModel):
@@ -132,6 +143,16 @@ class Hosteleria(BaseModel):
     horario: str = ""
     zona: str = ""
     rating: float = 4.5
+    direccion: str = ""
+    web: str = ""
+    menu_pdf_url: str = ""
+    oferta_imagen: str = ""
+    oferta_titulo: str = ""
+    oferta_texto: str = ""
+    instagram: str = ""
+    facebook: str = ""
+    tiktok: str = ""
+    fotos: List[str] = Field(default_factory=list)
 
 
 class Inmueble(BaseModel):
