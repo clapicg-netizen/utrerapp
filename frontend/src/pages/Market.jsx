@@ -1,20 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
 import { api } from "@/lib/api";
 import {
-  mergeWithLocal, safeImg, cleanPhotos, telHref, whatsappHref,
+  mergeWithLocal, safeImg, cleanPhotos, telHref,
   mapsHref, safeExternal,
 } from "@/lib/localStore";
 import {
   Shirt, Utensils, Dumbbell, Sofa, Store, ExternalLink, Phone, MapPin,
-  Globe, FileText, Instagram, Facebook, Music2, X, Megaphone,
+  Globe, FileText, Instagram, Facebook, Music2, X, Megaphone, Search, LayoutGrid,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 
 const CATEGORIES = [
+  { id: "todos", label: "Todos", Icon: LayoutGrid, tone: "amber" },
   { id: "moda", label: "Moda", Icon: Shirt, tone: "rose" },
   { id: "alimentacion", label: "Alimentación", Icon: Utensils, tone: "amber" },
   { id: "deportes", label: "Deportes", Icon: Dumbbell, tone: "sky" },
@@ -31,21 +32,21 @@ const TONES = {
 const igHref = (val) => {
   if (!val) return null;
   if (val.startsWith("http")) return val;
-  const u = val.replace(/^@/, "");
-  return `https://instagram.com/${u}`;
+  return `https://instagram.com/${val.replace(/^@/, "")}`;
 };
 const tkHref = (val) => {
   if (!val) return null;
   if (val.startsWith("http")) return val;
-  const u = val.replace(/^@/, "");
-  return `https://tiktok.com/@${u}`;
+  return `https://tiktok.com/@${val.replace(/^@/, "")}`;
 };
 const fbHref = (val) => safeExternal(val);
 
 export default function Market() {
-  const [cat, setCat] = useState("moda");
+  const [cat, setCat] = useState("todos");
   const [all, setAll] = useState([]);
   const [detail, setDetail] = useState(null);
+  const [q, setQ] = useState("");
+  const loadRef = useRef(null);
 
   const load = async () => {
     try {
@@ -55,9 +56,51 @@ export default function Market() {
       setAll(mergeWithLocal("/comercios", []));
     }
   };
-  useEffect(() => { load(); }, []);
+  loadRef.current = load;
 
-  const shops = useMemo(() => all.filter((x) => x.categoria === cat), [all, cat]);
+  // Live sync: reload whenever Admin writes to localStorage (same tab or
+  // other tab), when the tab regains visibility, or on hash/route change.
+  useEffect(() => {
+    load();
+    const onLocal = (e) => {
+      if (!e?.detail || e.detail.endpoint === "/comercios") loadRef.current?.();
+    };
+    const onStorage = (e) => {
+      if (e.key === "local_comercios") loadRef.current?.();
+    };
+    const onVis = () => {
+      if (document.visibilityState === "visible") loadRef.current?.();
+    };
+    window.addEventListener("utrerapp:local-updated", onLocal);
+    window.addEventListener("storage", onStorage);
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    return () => {
+      window.removeEventListener("utrerapp:local-updated", onLocal);
+      window.removeEventListener("storage", onStorage);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+    };
+  }, []);
+
+  // Filter + search. "Todos" and any search term match EVERY local item
+  // (even if `categoria` is missing). Specific category tabs only match
+  // items whose categoria equals the tab id.
+  const shops = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return all.filter((x) => {
+      if (cat !== "todos" && x.categoria !== cat) return false;
+      if (!needle) return true;
+      const hay = [
+        x.nombre, x.descripcion, x.tag, x.categoria, x.direccion,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(needle);
+    });
+  }, [all, cat, q]);
+
   const active = CATEGORIES.find((c) => c.id === cat);
 
   return (
@@ -81,38 +124,66 @@ export default function Market() {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-4 gap-2" data-testid="market-categories">
+      {/* Search */}
+      <div
+        data-testid="market-search-wrap"
+        className="mt-4 flex items-center gap-2 rounded-full border border-border/70 bg-card px-4 py-2.5"
+      >
+        <Search size={15} className="text-muted-foreground shrink-0" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar comercio por nombre, categoría…"
+          data-testid="market-search-input"
+          className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+        />
+        {q && (
+          <button
+            data-testid="market-search-clear"
+            onClick={() => setQ("")}
+            className="w-6 h-6 rounded-full bg-muted grid place-items-center"
+            aria-label="Limpiar búsqueda"
+          >
+            <X size={12} />
+          </button>
+        )}
+      </div>
+
+      <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1" data-testid="market-categories">
         {CATEGORIES.map(({ id, label, Icon, tone }) => (
           <button
             key={id}
             onClick={() => setCat(id)}
             data-testid={`market-cat-${id}`}
-            className={`rounded-2xl border p-2.5 flex flex-col items-center gap-1.5 tile ${
+            className={`shrink-0 rounded-full border px-3 py-2 flex items-center gap-1.5 tile ${
               cat === id
-                ? "border-[color:var(--terracotta)] bg-[color:var(--terracotta)]/8"
+                ? "border-[color:var(--terracotta)] bg-[color:var(--terracotta)]/10"
                 : "border-border/70 bg-card"
             }`}
           >
-            <div className={`w-9 h-9 rounded-xl grid place-items-center ${TONES[tone]}`}>
-              <Icon size={16} />
+            <div className={`w-6 h-6 rounded-md grid place-items-center ${TONES[tone]}`}>
+              <Icon size={13} />
             </div>
             <span className="text-[11px] font-semibold">{label}</span>
           </button>
         ))}
       </div>
 
-      <p className="mt-5 mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold px-1">
-        {active?.label} · {shops.length} comercios
+      <p className="mt-4 mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold px-1">
+        {active?.label} · {shops.length} comercios{q ? ` · "${q}"` : ""}
       </p>
 
       <div className="space-y-2.5" data-testid="market-list">
         {shops.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-            Aún no hay comercios en esta categoría.
+            {q
+              ? `Sin resultados para "${q}".`
+              : "Aún no hay comercios en esta categoría."}
           </div>
         )}
         {shops.map((s) => {
           const img = safeImg(s.imagen);
+          const toneCls = TONES[(CATEGORIES.find((c) => c.id === s.categoria) || active || CATEGORIES[1]).tone];
           return (
             <button
               key={s.id}
@@ -128,13 +199,20 @@ export default function Market() {
                   className="w-14 h-14 rounded-xl object-cover shrink-0"
                 />
               ) : (
-                <div className={`w-14 h-14 rounded-xl grid place-items-center shrink-0 ${TONES[active?.tone || "rose"]}`}>
+                <div className={`w-14 h-14 rounded-xl grid place-items-center shrink-0 ${toneCls}`}>
                   <Store size={19} />
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-display font-bold text-[14px] truncate">{s.nombre}</h3>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-display font-bold text-[14px] truncate">
+                    {s.nombre || "(Sin nombre)"}
+                  </h3>
+                  {s.categoria && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      {s.categoria}
+                    </span>
+                  )}
                   {s.tag && (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[color:var(--secondary)]/25 text-[color:var(--terracotta-dark)]">
                       {s.tag}
@@ -145,8 +223,15 @@ export default function Market() {
                       <Megaphone size={10} /> Oferta
                     </span>
                   )}
+                  {s._local && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                      LOCAL
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.descripcion}</p>
+                {s.descripcion && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.descripcion}</p>
+                )}
               </div>
               <ExternalLink size={16} className="text-muted-foreground shrink-0 mt-1" />
             </button>
@@ -154,7 +239,11 @@ export default function Market() {
         })}
       </div>
 
-      <ShopDetail item={detail} onClose={() => setDetail(null)} tone={TONES[active?.tone || "rose"]} />
+      <ShopDetail
+        item={detail}
+        onClose={() => setDetail(null)}
+        tone={TONES[(CATEGORIES.find((c) => c.id === detail?.categoria) || active || CATEGORIES[1]).tone]}
+      />
 
       <BottomNav />
     </div>
@@ -167,7 +256,7 @@ function ShopDetail({ item, onClose, tone }) {
   const extras = cleanPhotos(item.fotos);
   const gallery = [cover, ...extras].filter(Boolean);
   const promoImg = safeImg(item.oferta_imagen);
-  const menuPdf = safeExternal(item.menu_pdf_url);
+  const menuPdf = safeExternal(item.menu_pdf_url) || (typeof item.menu_pdf_url === "string" && item.menu_pdf_url.startsWith("data:application/pdf") ? item.menu_pdf_url : null);
   const web = safeExternal(item.web);
   const url = safeExternal(item.url);
   const tel = telHref(item.telefono);
@@ -179,7 +268,6 @@ function ShopDetail({ item, onClose, tone }) {
   return (
     <Dialog open={!!item} onOpenChange={(v) => !v && onClose()}>
       <DialogContent data-testid="market-shop-detail" className="rounded-3xl max-w-md p-0 overflow-hidden gap-0 max-h-[90vh] overflow-y-auto">
-        {/* Gallery */}
         {gallery.length > 0 && (
           <div data-testid="market-gallery" className={gallery.length === 1 ? "" : "grid grid-cols-2 gap-1"}>
             {gallery.length === 1 && (
@@ -206,9 +294,9 @@ function ShopDetail({ item, onClose, tone }) {
               )}
               <div className="min-w-0 flex-1">
                 <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
-                  {item.categoria}
+                  {item.categoria || "comercio"}
                 </span>
-                <DialogTitle className="font-display text-lg leading-tight">{item.nombre}</DialogTitle>
+                <DialogTitle className="font-display text-lg leading-tight">{item.nombre || "(Sin nombre)"}</DialogTitle>
                 <DialogDescription className="sr-only">
                   Ficha del comercio {item.nombre}
                 </DialogDescription>
@@ -223,7 +311,6 @@ function ShopDetail({ item, onClose, tone }) {
             <p className="text-sm text-foreground/80 mt-3 whitespace-pre-wrap">{item.descripcion}</p>
           )}
 
-          {/* Promo */}
           {(item.oferta_titulo || item.oferta_texto || promoImg) && (
             <div data-testid="market-promo" className="mt-4 rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white p-4 shadow-inner">
               <p className="text-[10px] uppercase tracking-widest text-white/80 font-semibold inline-flex items-center gap-1">
@@ -241,7 +328,6 @@ function ShopDetail({ item, onClose, tone }) {
             </div>
           )}
 
-          {/* Carta PDF */}
           {menuPdf && (
             <a
               href={menuPdf}
@@ -254,7 +340,6 @@ function ShopDetail({ item, onClose, tone }) {
             </a>
           )}
 
-          {/* Quick actions */}
           <div className="mt-4 grid grid-cols-2 gap-2">
             {tel && (
               <a href={tel} data-testid="market-call" className="py-2.5 rounded-xl bg-[color:var(--transit)] text-white text-xs font-semibold inline-flex items-center justify-center gap-1.5">
@@ -278,7 +363,6 @@ function ShopDetail({ item, onClose, tone }) {
             )}
           </div>
 
-          {/* Socials */}
           {(ig || fb || tk) && (
             <div data-testid="market-socials" className="mt-3 flex gap-2">
               {ig && (

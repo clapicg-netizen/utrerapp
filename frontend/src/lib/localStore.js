@@ -30,6 +30,11 @@ export const readLocal = (endpoint) => {
 export const writeLocal = (endpoint, arr) => {
   try {
     localStorage.setItem(localKey(endpoint), JSON.stringify(arr || []));
+    try {
+      window.dispatchEvent(
+        new CustomEvent("utrerapp:local-updated", { detail: { endpoint } })
+      );
+    } catch { /* non-browser env */ }
   } catch {
     // Quota or privacy mode — silently drop; UI still works in-memory.
   }
