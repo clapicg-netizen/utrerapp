@@ -1,0 +1,52 @@
+{
+  "summary": "Frontend-only tests for Market bug fix (DIGITAL GM visibility, Todos tab, search, live sync, image sanitization, category regression). 7/8 scenarios pass. One spec deviation found: when an active category tab (e.g. 'Moda') is selected, typing a search term does NOT bypass the category filter, so items without 'categoria' do not re-appear via search as the spec requires ('vuelve a aparecer independientemente de la categoría activa').",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Market.jsx filter (useMemo `shops`)",
+        "issue": "Search does not override active category filter. Spec says: 'Al escribir \"DIGITAL\" en el buscador vuelve a aparecer independientemente de la categoría activa.' Repro: inject local item {nombre:'DIGITAL GM'} without `categoria`, click `market-cat-moda`, type 'DIGITAL' in `market-search-input` → list shows 'Sin resultados'. Expected: DIGITAL GM should appear. Current code (lines 89-102) applies `cat !== 'todos' && x.categoria !== cat` BEFORE the search check.",
+        "selector": "[data-testid=\"market-search-input\"] + [data-testid=\"market-cat-moda\"]",
+        "priority": "HIGH"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Admin → Market end-to-end (crear DIGITAL GM solo con nombre)",
+        "issue": "After clicking + Nuevo Comercio, filling nombre='DIGITAL GM' and Guardar in /admin → navigating to /market, DIGITAL GM NOT visible in Todos. Could not fully diagnose from UI alone; backend may silently reject missing categoria or Admin submit button selector matched a non-save button. Needs main agent to verify Admin.jsx submit path and whether addLocal fallback triggered.",
+        "affected_selectors": ["#Admin submit", "[data-testid=\"market-list\"]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Market page loads with data-testid='market-page'",
+    "Tab 'Todos' present as market-cat-todos and active by default",
+    "Search input data-testid='market-search-input' present and functional",
+    "Local item without categoria appears in Todos as market-shop-{id}",
+    "Local item without categoria does NOT appear in Moda tab (correct)",
+    "Image sanitization: no <img> rendered when imagen missing (fallback Store icon shown)",
+    "'Oferta' chip renders when oferta_titulo is present",
+    "Live sync: dispatching CustomEvent('utrerapp:local-updated', {detail:{endpoint:'/comercios'}}) after adding to localStorage refreshes Market list without reload",
+    "Regression: Moda/Deportes tabs filter strictly by categoria === tab id (no cross-contamination)",
+    "Search works correctly when 'Todos' tab is active"
+  ],
+  "test_report_links": [],
+  "action_items": [
+    "Fix Market.jsx filter in `shops` useMemo so that when the user has typed a search query, the category filter is relaxed (or at least allows items without `categoria`). Suggested change: if `needle` is non-empty, skip the `cat !== 'todos' && x.categoria !== cat` early-return (match by search across ALL items), OR include items with missing categoria. Example: `if (cat !== 'todos' && x.categoria && x.categoria !== cat) return false; if (!needle) return cat === 'todos' || x.categoria === cat; ...` — exact behavior per spec: search bypasses category.",
+    "Verify Admin → Market end-to-end flow for DIGITAL GM creation (categoria vacía). Check Admin.jsx submit handler + API fallback to addLocal when categoria is omitted."
+  ],
+  "critical_code_review_comments": [
+    "Market.jsx `shops` filter logic contradicts the spec stated in the review request: search should match regardless of active category.",
+    "Fallback image handler uses `e.currentTarget.style.display = 'none'` which hides a broken image but leaves the <img> element in DOM — current implementation acceptable because safeImg() already prevents rendering empty src.",
+    "mergeWithLocal uses `{...byId.get(it.id), ...it}` which means for duplicate ids local overrides server (good), but if server item has `_local` undefined and local has true, label 'LOCAL' will appear even for items that exist on server — minor edge case."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A", "frontend": "87%"},
+  "test_credentials": "Admin password: 955863577 (used in E2E attempt)",
+  "seed_data_creation": "Injected test items in localStorage['local_comercios'] during tests (test-digital-gm-1, test-live-sync-2, test-moda-1, test-dep-1, bug-check-1). Not persisted to backend.",
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Main bug to retest: typing a term in market-search-input while a non-'Todos' category is active should surface matching items that lack `categoria`. Current code at /app/frontend/src/pages/Market.jsx lines 89-102 blocks this. Also retest the Admin→Market E2E for an item created with empty categoria.",
+  "rca of the issue": "In Market.jsx `shops` useMemo, the filter returns false for any item where categoria !== active tab (unless tab is 'todos'), BEFORE evaluating the search needle. Therefore a user who selected 'Moda' and types 'DIGITAL' can never see an item whose categoria is undefined/different. Spec requires search to override category filter. Fix: short-circuit the category check when `needle` is non-empty, or additionally allow items where x.categoria is falsy."
+}
