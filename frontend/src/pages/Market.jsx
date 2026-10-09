@@ -83,13 +83,16 @@ export default function Market() {
     };
   }, []);
 
-  // Filter + search. "Todos" and any search term match EVERY local item
-  // (even if `categoria` is missing). Specific category tabs only match
-  // items whose categoria equals the tab id.
+  // Filter + search per spec:
+  // - Specific category tabs only match items whose categoria equals the tab id,
+  //   UNLESS the user is typing in the search box: a non-empty search term
+  //   bypasses the category filter so matching items reappear even if their
+  //   categoria is missing or belongs to another tab.
+  // - "Todos" always matches EVERY local item (even if `categoria` is missing).
   const shops = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return all.filter((x) => {
-      if (cat !== "todos" && x.categoria !== cat) return false;
+      if (!needle && cat !== "todos" && x.categoria !== cat) return false;
       if (!needle) return true;
       const hay = [
         x.nombre, x.descripcion, x.tag, x.categoria, x.direccion,
