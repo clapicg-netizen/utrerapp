@@ -1,228 +1,169 @@
-import { useEffect, useRef, useState } from "react";
-import TopBar from "@/components/app/TopBar";
-import BottomNav from "@/components/app/BottomNav";
-import { API, getSessionId } from "@/lib/api";
-import { Send, Sparkles } from "lucide-react";
-
-const SUGGESTIONS = [
-  "¿Qué farmacia está de guardia hoy?",
-  "¿Cómo va el tráfico en Trianilla?",
-  "Próximo tren de Cercanías a Sevilla",
-  "¿Qué obra hay en el Teatro esta semana?",
-  "¿Cuándo es la Feria de la Manzanilla?",
-];
-
-// Tabla de salidas fijas de la Línea C-1 Utrera -> Sevilla
-const HORARIOS_C1 = [
-  "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30",
-  "10:15", "11:15", "12:15", "13:15", "14:00", "14:30", "15:00", "15:30",
-  "16:15", "17:15", "18:00", "18:30", "19:00", "19:30", "20:15", "21:15", "22:15"
-];
-
-function obtenerRespuestaRenfe() {
-  const ahora = new Date();
-  const horaActualStr = ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  const proximos = HORARIOS_C1.filter((h) => h > horaActualStr).slice(0, 3);
-
-  if (proximos.length === 0) {
-    return `A partir de ahora (${horaActualStr}), no quedan más salidas programadas para hoy desde Utrera. El primer tren de mañana sale a las 06:00 h.`;
-  }
-
-  let respuesta = `A partir de ahora (${horaActualStr}), estas son las próximas salidas desde Utrera hacia Sevilla:\n\n`;
-  proximos.forEach((hora) => {
-    respuesta += `• **${hora} h** (Llegada a Santa Justa en ~35 min)\n`;
-  });
-  return respuesta;
-}
-
-function AssistantContent({ text }) {
-  return <span>{text}</span>;
-}
+import React, { useState } from 'react';
+import { obtenerRespuestaConso } from '../lib/consoService';
 
 export default function Conso() {
-  const [msgs, setMsgs] = useState([
+  // Saludo inicial estándar oficial
+  const [messages, setMessages] = useState([
     {
-      role: "assistant",
-      content:
-        "¡Hola! Soy Conso, tu asistente de Utrera. Pregúntame por farmacias, tráfico, transporte, teatro o eventos. ¿En qué te ayudo?",
-    },
-  ]);
-  const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
-  const scRef = useRef(null);
-  const sid = getSessionId();
-
-  useEffect(() => {
-    scRef.current?.scrollTo({ top: scRef.current.scrollHeight, behavior: "smooth" });
-  }, [msgs, busy]);
-
-  const send = async (text) => {
-    const msg = (text ?? input).trim();
-    if (!msg || busy) return;
-    setInput("");
-
-    // Interceptar la consulta sobre trenes/cercanías de Renfe
-    const regexRenfe = /(tren|cercanias|cercanías|renfe|c-1|c1)/i;
-    if (regexRenfe.test(msg)) {
-      const respuestaRenfe = obtenerRespuestaRenfe();
-      setMsgs((m) => [
-        ...m,
-        { role: "user", content: msg },
-        { role: "assistant", content: respuestaRenfe },
-      ]);
-      return;
+      sender: 'bot',
+      text: '¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia o los horarios de Renfe y te llevaré directamente.'
     }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    setMsgs((m) => [...m, { role: "user", content: msg }, { role: "assistant", content: "" }]);
-    setBusy(true);
+  const quickActions = [
+    { label: '🏥 Farmacia de Guardia hoy', action: 'farmacia' },
+    { label: '🚆 Próximo Cercanías Renfe C1', action: 'renfe' }
+  ];
+
+  const handleSendMessage = async (textToSend) => {
+    const text = textToSend || input;
+    if (!text.trim()) return;
+
+    const userMessage = { sender: 'user', text };
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
+    if (!textToSend) setInput('');
+    setLoading(true);
 
     try {
-      const res = await fetch(`${API}/chat/stream`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sid, message: msg }),
-      });
-      if (!res.body) throw new Error("no stream");
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const parts = buf.split("\n\n");
-        buf = parts.pop() || "";
-        for (const p of parts) {
-          const line = p.trim();
-          if (!line.startsWith("data:")) continue;
-          const chunk = line.slice(5).replace(/^\s/, "");
-          if (chunk === "[DONE]") continue;
-          if (chunk.startsWith("[ERROR]")) {
-            setMsgs((m) => {
-              const c = [...m];
-              c[c.length - 1] = {
-                role: "assistant",
-                content: "Ups, algo se ha atascado. Inténtalo de nuevo en un momento.",
-              };
-              return c;
-            });
-            continue;
-          }
-          setMsgs((m) => {
-            const c = [...m];
-            c[c.length - 1] = { role: "assistant", content: c[c.length - 1].content + chunk };
-            return c;
-          });
-        }
-      }
-    } catch (e) {
-      setMsgs((m) => {
-        const c = [...m];
-        c[c.length - 1] = {
-          role: "assistant",
-          content: "No he podido conectar. Vuelve a intentarlo, por favor.",
-        };
-        return c;
-      });
+      const botReplyText = await obtenerRespuestaConso(text, updatedMessages);
+      setMessages((prev) => [...prev, { sender: 'bot', text: botReplyText }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'bot', text: 'Lo siento, ha ocurrido un error al conectar con Conso.' }
+      ]);
     } finally {
-      setBusy(false);
+      setLoading(false);
+    }
+  };
+
+  const handleQuickAction = (action) => {
+    if (action === 'farmacia') {
+      const userMessage = { sender: 'user', text: '🏥 Farmacia de Guardia hoy' };
+      const botMessage = {
+        sender: 'bot',
+        text: `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**
+📅 *MARTES, 13 DE OCTUBRE*
+
+• **Ldo/a. Francisco Javier González Mancha**
+📍 Dirección: Real, 29
+📞 Teléfono: 954861840
+⏰ Horarios: Turno de Guardia 24 horas`,
+        buttons: [
+          { label: '🗺️ Te llevo a Francisco Javier González Mancha', url: 'https://maps.google.com/?q=Real+29+Utrera' },
+          { label: '📞 Llamar a Francisco Javier González Mancha (954861840)', url: 'tel:954861840' }
+        ]
+      };
+      setMessages((prev) => [...prev, userMessage, botMessage]);
+    } else if (action === 'renfe') {
+      const userMessage = { sender: 'user', text: '🚆 Próximo Cercanías Renfe C1' };
+      const botMessage = {
+        sender: 'bot',
+        text: `🚆 **CERCANÍAS RENFE LÍNEA C1 (Utrera ↔ Sevilla)**
+
+• **Próximas salidas Utrera dirección Sevilla:**
+  - 09:35 h (Cercanías C1)
+  - 09:58 h (Media Distancia)
+  - 10:20 h (Cercanías C1)
+  - 10:50 h (Cercanías C1)
+
+📍 **Estación de Trenes de Utrera:** Plaza de la Estación, s/n
+⏱️ **Tiempo estimado a San Bernardo:** 32 min.`,
+        buttons: [
+          { label: '🗺️ Te llevo a la Estación de Renfe', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
+          { label: '📱 Consultar horarios oficiales Renfe', url: 'https://www.renfe.com' }
+        ]
+      };
+      setMessages((prev) => [...prev, userMessage, botMessage]);
     }
   };
 
   return (
-    <div className="app-shell flex flex-col h-screen" data-testid="conso-page">
-      <TopBar title="Conso · Asistente de Utrera" back testId="conso-topbar" />
-
-      <div className="mt-3 flex items-center gap-3 px-1">
-        <div className="relative">
-          <div className="w-11 h-11 rounded-2xl bg-[color:var(--terracotta)] text-white grid place-items-center">
-            <Sparkles size={20} />
-          </div>
-          <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-background live-dot" />
-        </div>
+    <div className="flex flex-col h-screen bg-slate-50">
+      {/* Cabecera */}
+      <div className="bg-amber-900 text-white p-4 flex items-center shadow-md">
+        <div className="bg-amber-700 p-2 rounded-full mr-3">🤝</div>
         <div>
-          <p className="font-display font-bold text-[15px] leading-tight">Conso</p>
-          <p className="text-[11px] text-muted-foreground">En línea · Asistente local</p>
+          <h1 className="font-bold text-lg">Conso 🤖</h1>
+          <p className="text-xs text-amber-200">Asistente Virtual de Utrera</p>
         </div>
       </div>
 
-      <div
-        ref={scRef}
-        data-testid="conso-chat-modal"
-        className="flex-1 min-h-0 overflow-y-auto mt-4 space-y-3 pb-4"
-      >
-        {msgs.map((m, i) => (
-          <div
-            key={i}
-            data-testid={`chat-msg-${m.role}-${i}`}
-            className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+      {/* Botones de acción rápida */}
+      <div className="p-3 flex gap-2 overflow-x-auto bg-white border-b">
+        {quickActions.map((qa, idx) => (
+          <button
+            key={idx}
+            onClick={() => handleQuickAction(qa.action)}
+            className="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-amber-300"
           >
-            <div
-              className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
-                m.role === "user"
-                  ? "bg-[color:var(--terracotta)] text-white rounded-br-md"
-                  : "bg-muted text-foreground rounded-bl-md border border-border/60"
-              }`}
-            >
-              {m.role === "assistant" && m.content ? (
-                <AssistantContent text={m.content} />
-              ) : m.content || (busy && i === msgs.length - 1 ? (
-                <span className="inline-flex gap-1 py-1">
-                  <span className="dot w-1.5 h-1.5 bg-current rounded-full inline-block" />
-                  <span className="dot w-1.5 h-1.5 bg-current rounded-full inline-block" />
-                  <span className="dot w-1.5 h-1.5 bg-current rounded-full inline-block" />
-                </span>
-              ) : "")}
-            </div>
-          </div>
+            {qa.label}
+          </button>
         ))}
       </div>
 
-      {msgs.length <= 1 && (
-        <div
-          className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-scrollbar"
-          data-testid="conso-suggestions"
-        >
-          {SUGGESTIONS.map((q) => (
-            <button
-              key={q}
-              data-testid={`suggestion-${q.slice(0, 12)}`}
-              onClick={() => send(q)}
-              className="shrink-0 text-xs px-3 py-2 rounded-full bg-muted hover:bg-muted/70 border border-border/60"
+      {/* Área de Chat */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div
+              className={`max-w-[85%] p-3 rounded-2xl text-sm ${
+                msg.sender === 'user'
+                  ? 'bg-amber-500 text-white rounded-br-none font-medium'
+                  : 'bg-white border text-slate-800 rounded-bl-none shadow-sm'
+              }`}
             >
-              {q}
-            </button>
-          ))}
-        </div>
-      )}
+              <p className="whitespace-pre-line">{msg.text}</p>
+              {msg.buttons && (
+                <div className="mt-3 space-y-2">
+                  {msg.buttons.map((btn, bIdx) => (
+                    <a
+                      key={bIdx}
+                      href={btn.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-3 rounded-xl text-xs shadow-sm transition"
+                    >
+                      {btn.label}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {loading && (
+          <div className="flex justify-start">
+            <div className="bg-white border p-3 rounded-2xl text-xs text-slate-500 animate-pulse">
+              Conso está pensando...
+            </div>
+          </div>
+        )}
+      </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          send();
-        }}
-        data-testid="conso-form"
-        className="sticky bottom-20 mt-2 flex items-center gap-2 bg-card border border-border rounded-full pl-4 pr-1.5 py-1.5 shadow-md"
-      >
+      {/* Entrada de texto */}
+      <div className="p-3 bg-white border-t flex items-center gap-2">
         <input
+          type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          disabled={busy}
-          placeholder="Escribe tu pregunta…"
-          data-testid="conso-input"
-          className="flex-1 bg-transparent outline-none text-sm placeholder:text-muted-foreground"
+          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+          placeholder="Escribe tu consulta a Conso..."
+          className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
         <button
-          type="submit"
-          disabled={busy || !input.trim()}
-          data-testid="conso-send"
-          className="w-10 h-10 rounded-full bg-[color:var(--terracotta)] hover:bg-[color:var(--terracotta-dark)] text-white grid place-items-center disabled:opacity-50"
+          onClick={() => handleSendMessage()}
+          className="bg-rose-600 hover:bg-rose-700 text-white p-2.5 rounded-full shadow-md transition"
         >
-          <Send size={17} />
+          ➤
         </button>
-      </form>
-
-      <BottomNav />
+      </div>
     </div>
   );
 }

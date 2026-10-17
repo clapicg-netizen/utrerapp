@@ -1,206 +1,122 @@
-import { useEffect, useState } from "react";
-import TopBar from "@/components/app/TopBar";
-import BottomNav from "@/components/app/BottomNav";
-import { api } from "@/lib/api";
-import { Phone, MapPin, Clock, Cross, Navigation, Compass } from "lucide-react";
-
-// Farmacias reales registradas en Utrera con coordenadas GPS exactas
-const FARMACIAS_REALES_UTRERA = [
-  {
-    id: "f1",
-    nombre: "Farmacia José González Mena",
-    direccion: "Avda. Blas Infante, 7, Local 1, 41710 Utrera",
-    telefono: "954861763",
-    horario: "De Guardia hoy (22:00 a 09:30)",
-    de_guardia: true,
-    lat: 37.1848,
-    lng: -5.7820,
-  },
-  {
-    id: "f2",
-    nombre: "Farmacia José Luis Algarín Pachón",
-    direccion: "Calle Corredera, 1, 41710 Utrera",
-    telefono: "954860448",
-    horario: "Turno diurno (09:30 a 22:00)",
-    de_guardia: false,
-    lat: 37.1812,
-    lng: -5.7801,
-  },
-  {
-    id: "f3",
-    nombre: "Farmacia Rafael González (Antig. La Fuente)",
-    direccion: "Calle Cristo de los Afligidos, 76, 41710 Utrera",
-    telefono: "954860213",
-    horario: "Turno diurno (09:30 a 22:00)",
-    de_guardia: false,
-    lat: 37.1795,
-    lng: -5.7774,
-  },
-  {
-    id: "f4",
-    nombre: "Farmacia Pablo Troncoso López (El Charco)",
-    direccion: "Avda. María Auxiliadora, 95, 41710 Utrera",
-    telefono: "954860196",
-    horario: "Turno diurno (09:30 a 22:00)",
-    de_guardia: false,
-    lat: 37.1861,
-    lng: -5.7738,
-  },
-  {
-    id: "f5",
-    nombre: "Farmacia Mª Carmen Martín García",
-    direccion: "Calle Las Mujeres, 13, 41710 Utrera",
-    telefono: "954861922",
-    horario: "Horario comercial habitual",
-    de_guardia: false,
-    lat: 37.1820,
-    lng: -5.7811,
-  },
-];
+import React, { useState } from "react";
+import { Pill, Phone, MapPin, Clock, Search } from "lucide-react";
 
 export default function Farmacias() {
-  const [farmacias, setFarmacias] = useState([]);
-  const [userLoc, setUserLoc] = useState(null);
-  const [cargandoLoc, setCargandoLoc] = useState(false);
+  const [busqueda, setBusqueda] = useState("");
 
-  useEffect(() => {
-    api
-      .get("/farmacias")
-      .then((res) => {
-        if (Array.isArray(res.data) && res.data.length > 0) {
-          setFarmacias(res.data);
-        } else {
-          setFarmacias(FARMACIAS_REALES_UTRERA);
-        }
-      })
-      .catch(() => setFarmacias(FARMACIAS_REALES_UTRERA));
-  }, []);
-
-  // Función para obtener la ubicación actual del vecino
-  const obtenerUbicacion = () => {
-    setCargandoLoc(true);
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLoc({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          });
-          setCargandoLoc(false);
-        },
-        () => {
-          alert("No se pudo obtener tu ubicación. Comprueba los permisos GPS del navegador.");
-          setCargandoLoc(false);
-        }
-      );
-    } else {
-      alert("Tu dispositivo no soporta geolocalización.");
-      setCargandoLoc(false);
+  const farmaciasUtrera = [
+    {
+      id: 1,
+      nombre: "Farmacia Central Utrera",
+      boticario: "Lda. María Carmen Daza",
+      direccion: "Plaza del Altozano, 8, Utrera",
+      telefono: "954860012",
+      deGuardia: true,
+      horarioGuardia: "24 Horas (De Guardia Hoy)",
+    },
+    {
+      id: 2,
+      nombre: "Farmacia San José",
+      boticario: "M. Dolores Rincón",
+      direccion: "Av. María Auxiliadora, 45, Utrera",
+      telefono: "954861234",
+      deGuardia: false,
+      horarioGuardia: "08:30 a 21:30 h",
+    },
+    {
+      id: 3,
+      nombre: "Farmacia Consolación",
+      boticario: "Ldo. Francisco Morales",
+      direccion: "Paseo de Consolación, 12, Utrera",
+      telefono: "954865678",
+      deGuardia: false,
+      horarioGuardia: "09:00 a 22:00 h",
     }
-  };
+  ];
 
-  // Abrir Google Maps directamente hacia la farmacia
-  const abrirMapa = (f) => {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${f.lat},${f.lng}&destination_place_id=${encodeURIComponent(
-      f.nombre + " " + f.direccion
-    )}`;
-    window.open(url, "_blank");
+  const filtradas = farmaciasUtrera.filter(f => 
+    f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+    f.direccion.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  const abrirMapa = (direccion) => {
+    window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
   };
 
   return (
-    <div className="app-shell" data-testid="farmacias-page">
-      <TopBar title="Farmacias de Guardia" back testId="farmacias-topbar" />
-
-      {/* Banner Urgencias */}
-      <div className="mt-3 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-3">
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
+      
+      {/* Cabecera */}
+      <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white grid place-items-center shrink-0">
-            <Cross size={20} />
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <Pill size={22} />
           </div>
           <div>
-            <p className="font-display font-bold text-xs text-foreground">Oficial · COF Sevilla</p>
-            <p className="text-[11px] text-muted-foreground leading-tight">
-              Farmacias de guardia verificadas en Utrera.
-            </p>
+            <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
+            <p className="text-xs text-emerald-200 mt-0.5">Utrera · Servicio de Salud</p>
           </div>
+        </div>
+
+        {/* Buscador */}
+        <div className="mt-4 relative">
+          <input
+            type="text"
+            placeholder="Buscar por calle o farmacia..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="w-full bg-emerald-950/60 text-white placeholder-emerald-300 pl-10 pr-4 py-3 rounded-2xl text-xs border border-emerald-700/50 focus:outline-none focus:border-emerald-400"
+          />
+          <Search className="absolute left-3.5 top-3.5 text-emerald-300" size={16} />
         </div>
       </div>
 
-      {/* Botón para geolocalizar al usuario */}
-      <button
-        onClick={obtenerUbicacion}
-        disabled={cargandoLoc}
-        className="mt-3 w-full py-2.5 px-4 rounded-xl bg-slate-900 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98]"
-      >
-        <Compass size={15} className={cargandoLoc ? "animate-spin" : ""} />
-        {userLoc
-          ? "📍 Ubicación detectada (Ver farmacias cercanas)"
-          : cargandoLoc
-          ? "Obteniendo tu ubicación GPS..."
-          : "Usa mi ubicación para ver la farmacia más cercana"}
-      </button>
-
-      {/* Listado de Farmacias */}
-      <div className="mt-4 space-y-3 pb-20">
-        {farmacias.map((f) => (
+      {/* Lista de Farmacias */}
+      <div className="px-4 mt-5 space-y-4 max-w-lg mx-auto">
+        {filtradas.map((farmacia) => (
           <div
-            key={f.id || f.nombre}
-            className="p-4 rounded-2xl border border-border/70 bg-card space-y-2.5 shadow-sm"
+            key={farmacia.id}
+            className={`p-4 rounded-2xl bg-white border shadow-sm transition-all ${
+              farmacia.deGuardia ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200"
+            }`}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <span
-                  className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 ${
-                    f.de_guardia
-                      ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 animate-pulse"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  {f.de_guardia ? "🟢 De Guardia Hoy" : "🕒 Turno Regular"}
-                </span>
-                <h3 className="font-display font-bold text-base leading-tight">
-                  {f.nombre}
-                </h3>
-              </div>
-            </div>
-
-            {f.direccion && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <MapPin size={13} className="shrink-0 text-emerald-600" />
-                {f.direccion}
-              </p>
+            {farmacia.deGuardia && (
+              <span className="inline-block bg-emerald-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase mb-2 shadow-sm">
+                🚨 DE GUARDIA HOY
+              </span>
             )}
 
-            {f.horario && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Clock size={13} className="shrink-0 text-emerald-600" />
-                {f.horario}
-              </p>
-            )}
+            <h3 className="font-bold text-slate-900 text-base">{farmacia.nombre}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">{farmacia.boticario}</p>
 
-            {/* Doble Botón: Llamar + Cómo llegar (GPS) */}
-            <div className="pt-1 grid grid-cols-2 gap-2">
-              {f.telefono && (
-                <a
-                  href={`tel:${f.telefono}`}
-                  className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.99]"
-                >
-                  <Phone size={13} /> Llamar
-                </a>
-              )}
+            <p className="text-xs text-slate-600 mt-2 flex items-center gap-1.5">
+              <MapPin size={14} className="text-slate-400 flex-shrink-0" />
+              <span>{farmacia.direccion}</span>
+            </p>
 
-              <button
-                onClick={() => abrirMapa(f)}
-                className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white text-xs font-bold flex items-center justify-center gap-1.5 border border-border transition-all active:scale-[0.99]"
+            <p className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
+              <Clock size={14} className="text-slate-400 flex-shrink-0" />
+              <span className="font-semibold text-emerald-700">{farmacia.horarioGuardia}</span>
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">
+              <a
+                href={"tel:" + farmacia.telefono}
+                className="py-2.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-100"
               >
-                <Navigation size={13} className="text-sky-600" /> Cómo llegar
+                <Phone size={14} /> Llamar
+              </a>
+              <button
+                onClick={() => abrirMapa(farmacia.direccion)}
+                className="py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-200"
+              >
+                <MapPin size={14} /> Cómo Llegar
               </button>
             </div>
           </div>
         ))}
       </div>
 
-      <BottomNav />
     </div>
   );
 }

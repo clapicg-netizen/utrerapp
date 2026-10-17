@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utrerapp - Guía Local y Asistente Virtual de Utrera</title>
+  <meta name="description" content="Descubre comercios locales, farmacias de guardia, horarios de transporte y habla con Conso, tu asistente municipal.">
+  
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #9a0036; /* Tono vino / identidad de Utrera */
+      --primary-dark: #730028;
+      --accent: #f39c12;
+      --bg-light: #f8f9fa;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-light);
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Bar */
+    header {
+      background-color: var(--primary);
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span {
+      color: var(--accent);
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      border-radius: 0 0 2rem 2rem;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+    }
+
+    .hero p {
+      font-size: 1.05rem;
+      opacity: 0.9;
+      max-width: 500px;
+      margin: 0 auto 1.5rem auto;
+    }
+
+    /* Conso Banner CTA */
+    .conso-card {
+      background: white;
+      color: var(--text-dark);
+      max-width: 500px;
+      margin: -2rem auto 2rem auto;
+      padding: 1.25rem 1.5rem;
+      border-radius: 1.25rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .conso-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .conso-avatar {
+      background-color: var(--primary);
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .conso-info h3 {
+      font-size: 1.1rem;
+      color: var(--primary);
+    }
+
+    .conso-info p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    /* Grid de Accesos Rápidos */
+    .main-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem 1.5rem;
+      width: 100%;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--text-dark);
+    }
+
+    .grid-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .action-card {
+      background: white;
+      padding: 1.25rem;
+      border-radius: 1rem;
+      text-decoration: none;
+      color: var(--text-dark);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.75rem;
+      border: 1px solid #edf2f7;
+      transition: all 0.2s ease;
+    }
+
+    .action-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .action-icon {
+      font-size: 1.5rem;
+      color: var(--primary);
+      background: #fdf2f4;
+      width: 42px;
+      height: 42px;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-card h4 {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .action-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid #e2e8f0;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cabecera Superior -->
+  <header>
+    <div class="logo">Utrer<span>app</span></div>
+    <i class="fa-solid fa-bars" style="font-size: 1.2rem;"></i>
+  </header>
+
+  <!-- Hero de Bienvenida -->
+  <section class="hero">
+    <h1>¡Bienvenido a Utrera!</h1>
+    <p>Tu guía local digital: comercios, servicios públicos y atención ciudadana al instante.</p>
+  </section>
+
+  <!-- Tarjeta Destacada de Conso -->
+  <div class="conso-card" onclick="alert('Abriendo chat con Conso...')">
+    <div class="conso-avatar">
+      <i class="fa-solid fa-robot"></i>
+    </div>
+    <div class="conso-info">
+      <h3>Pregúntale a Conso 💬</h3>
+      <p>Farmacias de guardia, transportes y dudas del municipio.</p>
+    </div>
+  </div>
+
+  <!-- Contenido Principal / Accesos Directos -->
+  <main class="main-container">
+    <h2 class="section-title">Servicios Principales</h2>
+
+    <div class="grid-actions">
+      <!-- Comercio Local -->
+      <a href="#comercios" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-store"></i></div>
+        <h4>Comercios</h4>
+        <p>Directorio y tiendas de Utrera</p>
+      </a>
+
+      <!-- Trenes / Renfe -->
+      <a href="#renfe" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-train"></i></div>
+        <h4>Cercanías C1</h4>
+        <p>Horarios y próximas salidas</p>
+      </a>
+
+      <!-- Farmacias -->
+      <a href="#farmacias" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-kit-medical"></i></div>
+        <h4>Farmacias</h4>
+        <p>Servicios de guardia hoy</p>
+      </a>
+
+      <!-- Teléfonos de Interés -->
+      <a href="#telefonos" class="action-card">
+        <div class="action-icon"><i class="fa-solid fa-phone"></i></div>
+        <h4>Teléfonos</h4>
+        <p>Urgencias y municipalidad</p>
+      </a>
+    </div>
+  </main>
+
+  <!-- Pie de página -->
+  <footer>
+    <p>&copy; 2026 Utrerapp — Vive y apoya el comercio local de Utrera</p>
+  </footer>
+
+</body>
+</html>

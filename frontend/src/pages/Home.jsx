@@ -1,180 +1,223 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowUpRight, Trophy, Sparkles, X } from "lucide-react";
-import TopBar from "@/components/app/TopBar";
-import BottomNav from "@/components/app/BottomNav";
-import TrafficTicker from "@/components/app/TrafficTicker";
+import React, { useState, useEffect } from "react";
+import { Store, Pill, Bus, Search, MapPin, Utensils, HeartHandshake, Compass } from "lucide-react";
 
-const MODULES = [
-  { to: "/farmacias",  title: "Farmacias de Guardia", subtitle: "Turno actual y 24h", badge: "Abierta ahora", icon: "💊", tone: "emerald", testId: "module-card-farmacias" },
-  { to: "/teatro",     title: "Teatro E. de la Cuadra", subtitle: "Cartelera y entradas", badge: "Próximo show", icon: "🎟️", tone: "rose",    testId: "module-card-teatro" },
-  { to: "/transporte", title: "Autobuses y Cercanías", subtitle: "Líneas urbanas y Renfe", badge: "Horarios en vivo", icon: "🚌", tone: "sky",     testId: "module-card-transporte" },
-  { to: "/eventos",    title: "Agenda & Fiestas", subtitle: "Feria, cultura y deportes", badge: "3 destacados", icon: "📅", tone: "amber",   testId: "module-card-eventos" },
-  { to: "/utreratv",   title: "Utrera TV en Directo", subtitle: "Emisión local 24/7", badge: "EN DIRECTO", icon: "📺", tone: "red",     testId: "module-card-utreratv" },
-  { to: "/noticias",   title: "Titulares de Utrera", subtitle: "Prensa y noticias locales", badge: "Última hora", icon: "📰", tone: "indigo", testId: "module-card-noticias" },
-  { to: "/urgencias",  title: "Urgencias Médicas", subtitle: "112 · Centros de salud · CHARE", badge: "24 horas", icon: "🚨", tone: "red", testId: "module-card-urgencias" },
-  { to: "/market",     title: "Utrera Market", subtitle: "Las tiendas online de tu pueblo", badge: "Comercio local", icon: "🛍️", tone: "amber", testId: "module-card-market" },
-  { to: "/vivienda",   title: "Utrera Vivienda", subtitle: "Inmobiliaria, alquiler y garajes", badge: "Inmuebles", icon: "🏠", tone: "sky", testId: "module-card-vivienda" },
-  { to: "/tablon",     title: "Tablón de Anuncios", subtitle: "Compra, venta y servicios entre vecinos", badge: "Vecinal", icon: "📢", tone: "emerald", testId: "module-card-tablon" },
-  { to: "/bares",      title: "Utrera Bares & Tapas", subtitle: "Tapeo, carta digital y pedidos", badge: "Recomendados", icon: "🍺", tone: "amber", testId: "module-card-bares" },
-];
+export default function Home({ setTab }) {
+  const [slideActual, setSlideActual] = useState(0);
 
-const TONES = {
-  emerald: { chip: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300", icon: "bg-emerald-500/12 text-emerald-700 dark:text-emerald-300" },
-  rose:    { chip: "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300", icon: "bg-rose-500/12 text-rose-700 dark:text-rose-300" },
-  sky:     { chip: "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300", icon: "bg-sky-500/12 text-sky-700 dark:text-sky-300" },
-  amber:   { chip: "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300", icon: "bg-amber-500/12 text-amber-800 dark:text-amber-300" },
-  red:     { chip: "bg-red-600 text-white", icon: "bg-red-500/15 text-red-600 dark:text-red-300" },
-  indigo:  { chip: "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300", icon: "bg-indigo-500/12 text-indigo-700 dark:text-indigo-300" },
-};
+  const avisos = [
+    {
+      id: 1,
+      tipo: "CONSO TE AYUDA 🤝",
+      color_badge: "bg-rose-500 text-white",
+      titulo: "Habla con Conso, tu asistente de Utrera",
+      subtitulo: "Pregúntale horarios, teléfonos de interés y ayuda local",
+      bg_gradient: "from-rose-600 to-pink-700",
+      icono: "💬",
+      accion_tab: "conso"
+    },
+    {
+      id: 2,
+      tipo: "JUEGO & PREMIOS 🏆",
+      color_badge: "bg-amber-500 text-slate-900",
+      titulo: "La Búsqueda del Mostachón",
+      subtitulo: "Encuentra las pistas por los comercios y gana premios",
+      bg_gradient: "from-amber-600 to-yellow-600",
+      icono: "🧁",
+      accion_tab: "juego-mostachon"
+    },
+    {
+      id: 3,
+      tipo: "OFERTA DEL DÍA ⚡",
+      color_badge: "bg-amber-500 text-white",
+      titulo: "Bar Alonsi: 2x1 en tapas de arroz",
+      subtitulo: "Muestra la PWA Utrerapp al hacer tu pedido hoy",
+      bg_gradient: "from-amber-600 to-orange-700",
+      icono: "⚡",
+      accion_tab: "market"
+    },
+    {
+      id: 4,
+      tipo: "PAELLA EN LA CHANA 🥘",
+      color_badge: "bg-sky-500 text-white",
+      titulo: "Hoy Domingo a partir de las 13:30 horas",
+      subtitulo: "¿Te la vas a perder?",
+      bg_gradient: "from-slate-800 to-slate-900",
+      icono: "📢",
+      accion_tab: "market"
+    }
+  ];
 
-export default function Home() {
-  const [showRules, setShowRules] = useState(false);
-  const hh = new Date().getHours();
-  const greet = hh < 6 ? "Buenas noches" : hh < 14 ? "Buenos días" : hh < 21 ? "Buenas tardes" : "Buenas noches";
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSlideActual((prev) => (prev + 1) % avisos.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [avisos.length]);
+
+  const cambiarPestana = (e, destino) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (typeof setTab === "function") {
+      setTab(destino);
+    }
+  };
 
   return (
-    <div className="app-shell" data-testid="home-page">
-      <TopBar title="Utrerapp" testId="home-topbar" />
-
-      <TrafficTicker />
-
-      {/* Greeting */}
-      <div className="mt-5" data-testid="home-greeting">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
-          {greet}, utrerano/a
-        </p>
-        <h2 className="font-display font-extrabold text-2xl sm:text-3xl tracking-tight leading-tight mt-1">
-          Todo lo que <span className="text-[color:var(--terracotta)]">pasa en Utrera</span>,
-          en tu bolsillo.
-        </h2>
-      </div>
-
-      {/* Tarjeta Destacada Principal: La Búsqueda del Mostachón */}
-      <div className="tile group relative mt-4 block rounded-3xl overflow-hidden border border-amber-500/30 bg-gradient-to-br from-[#3D200F] to-[#1C0D05] text-white p-5 shadow-md">
-        <div className="relative flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-600 grid place-items-center text-2xl shadow-lg shrink-0">
-            🍩
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 live-dot" />
-              <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-amber-300">
-                Juego Local · Utrerapp
-              </p>
-            </div>
-            <p className="font-display font-extrabold text-xl leading-tight mt-1">
-              La Búsqueda del Mostachón
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
+      {/* CABECERA */}
+      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg">
+        <div className="flex justify-between items-center max-w-md mx-auto">
+          <div>
+            <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+              <MapPin size={12} /> Utrera en tu bolsillo
             </p>
-            <p className="text-sm text-white/70 mt-1">
-              Escanea códigos en bares, acumula puntos y compite en el Ranking.
-            </p>
+            <h1 className="text-2xl font-black mt-0.5">¡Hola, Utrera! 👋</h1>
+          </div>
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg shadow-inner">
+            🏰
           </div>
         </div>
 
-        {/* Dos botones de acción */}
-        <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-white/10">
-          <button
-            onClick={() => setShowRules(true)}
-            className="w-full py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white text-center transition flex items-center justify-center gap-1.5"
-          >
-            📜 Reglas & Premios
-          </button>
-          <a
-            href="https://clapicg-netizen.github.io/la-busqueda-del-mostachon/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-xs font-bold text-slate-950 text-center flex items-center justify-center gap-1 shadow-md transition"
-          >
-            🔎 ¡JUGAR! <ArrowUpRight size={14} />
-          </a>
+        <div className="mt-4 relative max-w-md mx-auto">
+          <input
+            type="text"
+            placeholder="¿Qué buscas hoy en Utrera?"
+            className="w-full bg-slate-800 text-white placeholder-slate-400 pl-10 pr-4 py-3 rounded-2xl text-xs border border-slate-700 focus:outline-none focus:border-amber-500 transition-colors"
+          />
+          <Search className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
         </div>
       </div>
 
-      {/* Modal Ventana de Reglas y Premios */}
-      {showRules && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-md rounded-3xl bg-[#1C1410] border border-amber-500/30 p-6 text-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setShowRules(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white/70 hover:text-white"
-            >
-              <X size={18} />
-            </button>
-
-            <div className="flex items-center gap-2 text-amber-400 text-xs uppercase font-bold tracking-wider">
-              <Trophy size={16} /> Bases del Juego
-            </div>
-            <h3 className="text-xl font-extrabold mt-1 text-white">Reglas & Premios</h3>
-
-            <div className="mt-4 space-y-3 text-xs leading-relaxed text-white/80 max-h-[60vh] overflow-y-auto pr-1">
-              <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
-                <p className="font-bold text-amber-300 text-sm mb-1">📜 ¿Cómo jugar?</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li><strong>Acércate:</strong> Ve a menos de 6m de los puntos del mapa.</li>
-                  <li><strong>Escanea:</strong> Busca el cartel QR en bares colaboradores.</li>
-                  <li><strong>Suma:</strong> +10 pts por monumentos, +30 pts por bares.</li>
-                </ul>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-                <p className="font-bold text-amber-300 text-sm mb-1">🎁 Premios</p>
-                <p className="italic text-amber-200/90">
-                  Cada mes se informará de los premios correspondientes para los primeros clasificados del Ranking.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowRules(false)}
-              className="mt-5 w-full py-3 rounded-xl bg-amber-500 font-bold text-slate-950 text-xs uppercase tracking-wider"
-            >
-              ¡Entendido, a buscar!
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Modules */}
-      <div className="mt-6 flex items-center justify-between px-1">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
-          Servicios locales
-        </p>
-        <p className="text-[11px] text-muted-foreground">11 módulos</p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 mt-2" data-testid="modules-grid">
-        {MODULES.map(({ to, title, subtitle, badge, icon, tone, testId }) => {
-          const t = TONES[tone];
-          return (
-            <Link
-              key={to}
-              to={to}
-              data-testid={testId}
-              className="tile relative rounded-2xl border border-border/70 bg-card p-4 shadow-sm hover:shadow-md flex flex-col justify-between min-h-[10.5rem] overflow-hidden"
-            >
-              <div className="relative flex items-start justify-between">
-                <div className={`w-11 h-11 rounded-xl grid place-items-center text-xl ${t.icon}`}>
-                  {icon}
+      {/* CARRUSEL DE BANNERS EN PORTADA */}
+      <div className="px-4 mt-4 max-w-md mx-auto">
+        <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
+          <div 
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${slideActual * 100}%)` }}
+          >
+            {avisos.map((aviso) => (
+              <div 
+                key={aviso.id}
+                onClick={(e) => cambiarPestana(e, aviso.accion_tab)}
+                className={`w-full flex-shrink-0 bg-gradient-to-r ${aviso.bg_gradient} p-4 text-white relative cursor-pointer min-h-[110px] flex flex-col justify-between active:opacity-90`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-sm ${aviso.color_badge}`}>
+                    {aviso.tipo}
+                  </span>
+                  <span className="text-xl">{aviso.icono}</span>
                 </div>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${t.chip}`}>
-                  {badge}
-                </span>
+
+                <div className="mt-1">
+                  <h3 className="font-bold text-sm leading-tight truncate">{aviso.titulo}</h3>
+                  <p className="text-xs text-slate-200 mt-0.5 line-clamp-1">{aviso.subtitulo}</p>
+                </div>
               </div>
-              <div className="relative mt-3">
-                <h3 className="font-display font-bold text-[15px] leading-tight">{title}</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>
-              </div>
-            </Link>
-          );
-        })}
+            ))}
+          </div>
+
+          <div className="absolute bottom-2 right-3 flex gap-1 z-10">
+            {avisos.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSlideActual(idx);
+                }}
+                className={`h-1.5 rounded-full transition-all ${slideActual === idx ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
 
-      <p className="mt-6 mb-4 text-center text-[11px] text-muted-foreground">
-        Hecho en Utrera · v1.0 · <Link to="/admin" data-testid="footer-admin-link" className="underline">Panel</Link>
-      </p>
+      {/* BANNER DESTACADO DE "LA BÚSQUEDA DEL MOSTACHÓN" */}
+      <div className="px-4 mt-4 max-w-md mx-auto">
+        <button 
+          type="button"
+          onClick={(e) => cambiarPestana(e, "juego-mostachon")}
+          className="w-full text-left bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 p-4 rounded-2xl text-white shadow-md flex items-center justify-between border border-amber-400/40 active:scale-[0.98] transition-transform"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
+              🧁
+            </div>
+            <div>
+              <p className="text-[10px] uppercase font-black text-amber-200 tracking-wider">Juego Interactivo</p>
+              <h2 className="font-extrabold text-sm">La Búsqueda del Mostachón</h2>
+              <p className="text-[11px] text-amber-100 mt-0.5">¡Encuentra tesoros en los negocios locales!</p>
+            </div>
+          </div>
+          <Compass size={20} className="text-amber-200 flex-shrink-0 ml-2" />
+        </button>
+      </div>
 
-      <BottomNav />
+      {/* SERVICIOS DESTACADOS */}
+      <div className="px-4 mt-5 max-w-md mx-auto">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+          Servicios Destacados
+        </h2>
+
+        <div className="grid grid-cols-2 gap-3">
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "market")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+              <Store size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Comercios</p>
+              <p className="text-[10px] text-slate-500">Guía & Ofertas</p>
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "conso")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
+              <HeartHandshake size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Conso</p>
+              <p className="text-[10px] text-slate-500">Asistente Local</p>
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "market")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0">
+              <Utensils size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Hostelería</p>
+              <p className="text-[10px] text-slate-500">Bares y Tapas</p>
+            </div>
+          </button>
+
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "market")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+              <Pill size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Farmacias</p>
+              <p className="text-[10px] text-slate-500">Salud & Guardia</p>
+            </div>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
