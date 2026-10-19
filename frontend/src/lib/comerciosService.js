@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 // Obtener todos los comercios de la nueva tabla limpia
 export const obtenerComercios = async () => {
   const { data, error } = await supabase
-    .from('comercios_utrera')
+    .from('guia_local')
     .select('*');
   
   if (error) throw error;
@@ -13,7 +13,7 @@ export const obtenerComercios = async () => {
 // Crear un nuevo comercio
 export const crearComercio = async (comercio) => {
   const { data, error } = await supabase
-    .from('comercios_utrera')
+    .from('guia_local')
     .insert([comercio]);
     
   if (error) throw error;
@@ -23,7 +23,7 @@ export const crearComercio = async (comercio) => {
 // Actualizar un comercio existente
 export const actualizarComercio = async (id, comercio) => {
   const { data, error } = await supabase
-    .from('comercios_utrera')
+    .from('guia_local')
     .update(comercio)
     .eq('id', id);
     
@@ -34,7 +34,7 @@ export const actualizarComercio = async (id, comercio) => {
 // Eliminar un comercio
 export const eliminarComercio = async (id) => {
   const { data, error } = await supabase
-    .from('comercios_utrera')
+    .from('guia_local')
     .delete()
     .eq('id', id);
     
