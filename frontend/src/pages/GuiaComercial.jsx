@@ -20,10 +20,14 @@ export default function GuiaComercial() {
 
   const cargarComercios = async () => {
     setCargando(true);
-    // Carga inicial de todos los comercios de Supabase
-    const data = await obtenerComercios("Todos");
-    setComercios(data || []);
-    setCargando(false);
+    try {
+      const data = await obtenerComercios();
+      setComercios(data || []);
+    } catch (error) {
+      console.error("Error al cargar los comercios:", error.message);
+    } finally {
+      setCargando(false);
+    }
   };
 
   // Función para normalizar texto (elimina tildes y convierte a minúsculas)
@@ -35,18 +39,16 @@ export default function GuiaComercial() {
 
   // Filtrado dual: por categoría seleccionada Y por texto de búsqueda
   const comerciosFiltrados = comercios.filter((c) => {
-    // 1. Filtro por Categoría
     const coincideCategoria =
       categoriaSel === "Todos" ||
       normalizar(c.categoria) === normalizar(categoriaSel) ||
-      normalizar(c.subcategoria).includes(normalizar(categoriaSel));
+      (c.subcategoria && normalizar(c.subcategoria).includes(normalizar(categoriaSel)));
 
-    // 2. Filtro por Buscador
     const coincideBusqueda =
       !busqueda.trim() ||
       normalizar(c.nombre).includes(normalizar(busqueda)) ||
       normalizar(c.descripcion).includes(normalizar(busqueda)) ||
-      normalizar(c.subcategoria).includes(normalizar(busqueda));
+      (c.subcategoria && normalizar(c.subcategoria).includes(normalizar(busqueda)));
 
     return coincideCategoria && coincideBusqueda;
   });
@@ -56,7 +58,6 @@ export default function GuiaComercial() {
     window.open("https://www.google.com/maps/search/?api=1&query=" + direccionEscapada, "_blank");
   };
 
-  // Función para convertir URLs de YouTube a formato Embed
   const obtenerYoutubeEmbed = (url) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
@@ -224,7 +225,7 @@ export default function GuiaComercial() {
               </p>
             )}
 
-            {/* BANNER OFERTA FLASH */}
+            {/* OFERTA FLASH */}
             {comercioSel.oferta_flash && comercioSel.oferta_flash !== "EMPTY" && comercioSel.oferta_flash !== "NULL" && (
               <div className="mt-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3.5 rounded-2xl shadow-md border border-amber-400 flex items-start gap-3">
                 <div className="bg-white/20 p-2 rounded-xl flex-shrink-0">
@@ -248,7 +249,7 @@ export default function GuiaComercial() {
               </p>
             )}
 
-            {/* VÍDEO PROMOCIONAL (Soporta YouTube y MP4 directo) */}
+            {/* VÍDEO PROMOCIONAL */}
             {comercioSel.video_story_url && comercioSel.video_story_url !== "EMPTY" && comercioSel.video_story_url !== "NULL" && (
               <div className="mt-4">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
@@ -295,7 +296,7 @@ export default function GuiaComercial() {
               </div>
             )}
 
-            {/* BOTÓN VER CARTA / MENÚ EN PDF */}
+            {/* BOTÓN CARTA / MENÚ EN PDF */}
             {(comercioSel.carta_pdf_url || comercioSel.carta_pdf || comercioSel.carta_url || comercioSel.menu_pdf) && 
              (comercioSel.carta_pdf_url !== "EMPTY" && comercioSel.carta_pdf !== "EMPTY" && comercioSel.carta_url !== "EMPTY" && comercioSel.menu_pdf !== "EMPTY") && 
              (comercioSel.carta_pdf_url !== "NULL" && comercioSel.carta_pdf !== "NULL") && (
@@ -340,7 +341,7 @@ export default function GuiaComercial() {
               <Navigation size={14} className="text-sky-600" /> Cómo Llegar
             </button>
 
-            {/* Web / Tienda */}
+            {/* Web */}
             <div className="mt-3 space-y-2">
               {(comercioSel.web_url || comercioSel.sitio_web) && (
                 <a
@@ -352,60 +353,13 @@ export default function GuiaComercial() {
                   <Globe size={15} /> Sitio Web Oficial <ExternalLink size={12} />
                 </a>
               )}
-
-              {(comercioSel.tienda_url || comercioSel.tienda_online) && (comercioSel.tienda_url !== comercioSel.web_url) && (
-                <a
-                  href={comercioSel.tienda_url || comercioSel.tienda_online}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-xs flex items-center justify-center gap-2 shadow"
-                >
-                  🛒 Tienda Online <ExternalLink size={12} />
-                </a>
-              )}
-            </div>
-
-            {/* Redes Sociales */}
-            <div className="mt-4 pt-3 pb-6 border-t border-slate-100 flex flex-wrap gap-2 justify-center">
-              {(comercioSel.facebook_url || comercioSel.facebook) && (
-                <a
-                  href={comercioSel.facebook_url || comercioSel.facebook}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 text-xs font-bold flex items-center gap-1"
-                >
-                  📘 Facebook
-                </a>
-              )}
-
-              {(comercioSel.instagram_username || comercioSel.instagram) && comercioSel.instagram_username !== "EMPTY" && (
-                <a
-                  href={(comercioSel.instagram_username || comercioSel.instagram).indexOf("http") === 0 ? (comercioSel.instagram_username || comercioSel.instagram) : "https://instagram.com/" + (comercioSel.instagram_username || comercioSel.instagram).replace("@","")}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-pink-50 text-pink-700 hover:bg-pink-100 text-xs font-bold flex items-center gap-1"
-                >
-                  📸 Instagram
-                </a>
-              )}
-
-              {(comercioSel.tiktok_username || comercioSel.tiktok_url || comercioSel.tiktok) && (comercioSel.tiktok_username !== "EMPTY" && comercioSel.tiktok_username !== "NULL") && (
-                <a
-                  href={(comercioSel.tiktok_username || comercioSel.tiktok_url || comercioSel.tiktok).indexOf("http") === 0 ? (comercioSel.tiktok_username || comercioSel.tiktok_url || comercioSel.tiktok) : "https://tiktok.com/@" + (comercioSel.tiktok_username || comercioSel.tiktok_url || comercioSel.tiktok).replace("@","")}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 text-xs font-bold flex items-center gap-1"
-                >
-                  🎵 TikTok
-                </a>
-              )}
             </div>
 
           </div>
         </div>
       )}
 
-      {/* LUZ BOX / AMPLIADOR DE FOTOGRAFÍAS */}
+      {/* AMPLIADOR DE FOTOGRAFÍAS */}
       {fotoAmpliada && (
         <div 
           onClick={() => setFotoAmpliada(null)}
@@ -417,4 +371,4 @@ export default function GuiaComercial() {
 
     </div>
   );
-}
+} 
