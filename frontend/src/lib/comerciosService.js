@@ -1,11 +1,10 @@
 import { supabase } from './supabaseClient';
 
-// Obtener todos los comercios ordenados alfabéticamente
+// Obtener todos los comercios sin ordenamiento conflictivo
 export const obtenerComercios = async () => {
   const { data, error } = await supabase
     .from('comercios')
-    .select('*')
-    .order('nombre', { ascending: true });
+    .select('*');
   
   if (error) throw error;
   return data;
