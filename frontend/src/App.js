@@ -62,9 +62,14 @@ function VistaGuiaComercial() {
 
   useEffect(() => {
     async function cargarDatos() {
+      console.log("Intentando conectar con Supabase...");
       const { data, error } = await supabase.from("comercios_utrera").select("*");
-      if (!error && data) {
-        setComercios(data);
+      
+      if (error) {
+        console.error("Error al cargar de Supabase:", error);
+      } else {
+        console.log("Datos recibidos de Supabase:", data);
+        if (data) setComercios(data);
       }
       setCargando(false);
     }
