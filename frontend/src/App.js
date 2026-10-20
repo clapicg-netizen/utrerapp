@@ -5,9 +5,9 @@ import {
 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
-// Configuración directa y limpia de Supabase
+// Configuración directa y limpia de Supabase con la nueva API Key válida
 const supabaseUrl = 'https://vqhweoknhlxsdlnfnack.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxaHdlb2tubmxsc2RsbmZuYWNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE0MzI1OTMsImV4cCI6MjA1NzAwODU5M30.cyK0B5Sop31qJTvQXqe4TOdA1M2MTqSiMv24icJPyXQiOjE30A1M2MTqSiMv24icJPyXQiOjE30A1M2MTqSiMv24icJPyXQiOjE3';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxaHdlb2tubmxsc2RsbmZuYWNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MDI2MTQsImV4cCI6MjEwNjA3ODYxNH0.cYk0B5Sop31qJTvqQxe4THDQS1lZJeTcqjLPM2vOJow';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Base de datos de farmacias de guardia (2026)
