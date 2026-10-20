@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@supabase/supabase-js";
 
-// Configuración directa y limpia de Supabase con la nueva API Key válida
+// Configuración directa y limpia de Supabase con la clave válida
 const supabaseUrl = 'https://vqhweoknhlxsdlnfnack.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZxaHdlb2tubmxsc2RsbmZuYWNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA1MDI2MTQsImV4cCI6MjEwNjA3ODYxNH0.cYk0B5Sop31qJTvqQxe4THDQS1lZJeTcqjLPM2vOJow';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -54,7 +54,7 @@ function VistaInicio({ setTab }) {
 }
 
 // -------------------------------------------------------------
-// VISTA GUÍA COMERCIAL (Conectada a la tabla comercios_utrera)
+// VISTA GUÍA COMERCIAL (Conectada correctamente a comercios_utrera)
 // -------------------------------------------------------------
 function VistaGuiaComercial() {
   const [comercios, setComercios] = useState([]);
@@ -62,7 +62,7 @@ function VistaGuiaComercial() {
 
   useEffect(() => {
     async function cargarDatos() {
-      console.log("Intentando conectar con Supabase...");
+      console.log("Intentando conectar con Supabase (comercios_utrera)...");
       const { data, error } = await supabase.from("comercios_utrera").select("*");
       
       if (error) {
