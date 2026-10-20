@@ -54,7 +54,7 @@ function VistaInicio({ setTab }) {
 }
 
 // -------------------------------------------------------------
-// VISTA GUÍA COMERCIAL (Conectada a Supabase)
+// VISTA GUÍA COMERCIAL (Conectada a la tabla comercios_utrera)
 // -------------------------------------------------------------
 function VistaGuiaComercial() {
   const [comercios, setComercios] = useState([]);
@@ -62,7 +62,7 @@ function VistaGuiaComercial() {
 
   useEffect(() => {
     async function cargarDatos() {
-      const { data, error } = await supabase.from("guia_local").select("*");
+      const { data, error } = await supabase.from("comercios_utrera").select("*");
       if (!error && data) {
         setComercios(data);
       }
