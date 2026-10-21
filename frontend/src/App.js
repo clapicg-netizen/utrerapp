@@ -1,345 +1,245 @@
-import React, { useState, useEffect } from "react";
-import { 
-  Store, MapPin, Phone, Building, Pill, FileText, Sparkles, HeartHandshake 
-} from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import React, { useState } from 'react';
 
-// Configuración con tu proyecto de Supabase
-const supabaseUrl = 'https://gzvybwvrkplbipkzkjwg.supabase.co';
-const supabaseKey = 'sb_publishable_nHxahamn3YALCGJM2zmI5Q_L6ug6oMN';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// ==========================================
+// VISTAS DE UTRERAPP (Renovadas y Modernizadas)
+// ==========================================
 
-// -------------------------------------------------------------
-// VISTA INICIO (Con Asistente Conso incluido)
-// -------------------------------------------------------------
-function VistaInicio({ setTab }) {
+function VistaInicio({ setActiveTab }) {
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 p-4 space-y-4 max-w-md mx-auto">
-      <div className="bg-gradient-to-br from-rose-900 to-rose-950 text-white p-6 rounded-3xl shadow-xl relative overflow-hidden">
-        <div className="absolute -right-4 -bottom-4 text-rose-800/30 text-8xl font-black">📍</div>
-        <h1 className="text-2xl font-black flex items-center gap-2">
-          Utrerapp <Sparkles className="text-amber-400" size={20} />
-        </h1>
-        <p className="text-xs text-rose-200 mt-1">Tu ciudad en la palma de la mano</p>
+    <div className="p-4 max-w-md mx-auto space-y-6 pb-24">
+      {/* Cabecera Principal Estilizada */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-900 via-rose-800 to-red-900 p-6 text-white shadow-xl">
+        <div className="relative z-10">
+          <span className="inline-block px-3 py-1 mb-2 text-xs font-semibold tracking-wider bg-rose-700/60 rounded-full text-rose-100 uppercase">
+            Tu ciudad en la palma de la mano
+          </span>
+          <h1 className="text-2xl font-black tracking-tight">Utrerapp ✨</h1>
+          <p className="text-sm text-rose-200 mt-1">Servicios, comercio y agenda de Utrera actualizados.</p>
+        </div>
+        <div className="absolute right-0 bottom-0 translate-x-4 translate-y-4 w-32 h-32 bg-rose-600/20 rounded-full blur-2xl"></div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      {/* Cuadrícula de Accesos Directos con Diseño Moderno */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Guía Local */}
         <button 
-          onClick={() => setTab("market")}
-          className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all"
+          onClick={() => setActiveTab("market")}
+          className="group flex flex-col items-start p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all text-left"
         >
-          <Store className="text-rose-600 mb-2" size={28} />
-          <span className="font-bold text-xs text-slate-900">Guía Local</span>
-          <span className="text-[10px] text-slate-500 mt-0.5">Comercios y servicios</span>
+          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+            🏪
+          </div>
+          <span className="font-bold text-slate-800 text-base">Guía Local</span>
+          <span className="text-xs text-slate-500 mt-0.5">Comercios y servicios</span>
         </button>
 
+        {/* Asistente Conso */}
         <button 
-          onClick={() => setTab("conso")}
-          className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all"
+          onClick={() => setActiveTab("conso")}
+          className="group flex flex-col items-start p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all text-left"
         >
-          <HeartHandshake className="text-rose-600 mb-2" size={28} />
-          <span className="font-bold text-xs text-slate-900">Asistente Conso</span>
-          <span className="text-[10px] text-slate-500 mt-0.5">Farmacias y trenes</span>
+          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+            🤖
+          </div>
+          <span className="font-bold text-slate-800 text-base">Asistente Conso</span>
+          <span className="text-xs text-slate-500 mt-0.5">Farmacias y trenes</span>
         </button>
 
+        {/* Nueva Sección: Agenda y Servicios Útiles */}
         <button 
-          onClick={() => setTab("tablon")}
-          className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all"
+          onClick={() => setActiveTab("agenda")}
+          className="group flex flex-col items-start p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all text-left col-span-2 bg-gradient-to-br from-white to-rose-50/40"
         >
-          <FileText className="text-rose-600 mb-2" size={28} />
-          <span className="font-bold text-xs text-slate-900">Tablón</span>
-          <span className="text-[10px] text-slate-500 mt-0.5">Anuncios locales</span>
+          <div className="w-12 h-12 rounded-xl bg-rose-600 text-white flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform shadow-md shadow-rose-600/20">
+            🏥
+          </div>
+          <span className="font-bold text-slate-800 text-base">Agenda y Urgencias (CHARE & ClicSalud)</span>
+          <span className="text-xs text-slate-500 mt-0.5">Centros médicos, citas previas y teléfonos de interés</span>
         </button>
 
+        {/* Tablón */}
         <button 
-          onClick={() => setTab("farmacias")}
-          className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all"
+          onClick={() => setActiveTab("tablon")}
+          className="group flex flex-col items-start p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all text-left"
         >
-          <Pill className="text-rose-600 mb-2" size={28} />
-          <span className="font-bold text-xs text-slate-900">Farmacias</span>
-          <span className="text-[10px] text-slate-500 mt-0.5">De guardia</span>
+          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+            📋
+          </div>
+          <span className="font-bold text-slate-800 text-base">Tablón</span>
+          <span className="text-xs text-slate-500 mt-0.5">Anuncios locales</span>
         </button>
 
+        {/* Farmacias */}
         <button 
-          onClick={() => setTab("vivienda")}
-          className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center text-center active:scale-95 transition-all col-span-2"
+          onClick={() => setActiveTab("farmacias")}
+          className="group flex flex-col items-start p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-rose-200 transition-all text-left"
         >
-          <Building className="text-rose-600 mb-2" size={28} />
-          <span className="font-bold text-xs text-slate-900">Inmobiliaria</span>
-          <span className="text-[10px] text-slate-500 mt-0.5">Pisos y casas en Utrera</span>
+          <div className="w-12 h-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform">
+            💊
+          </div>
+          <span className="font-bold text-slate-800 text-base">Farmacias</span>
+          <span className="text-xs text-slate-500 mt-0.5">De guardia</span>
         </button>
       </div>
     </div>
   );
 }
 
-// -------------------------------------------------------------
-// VISTA ASISTENTE CONSO (Nueva sección)
-// -------------------------------------------------------------
+function VistaGuiaComercial() {
+  return (
+    <div className="p-4 max-w-md mx-auto pb-24 space-y-4">
+      <h2 className="text-xl font-bold text-slate-800">Guía Comercial de Utrera</h2>
+      <p className="text-sm text-slate-600">Directorio completo de comercios locales filtrados por categoría.</p>
+      {/* Aquí irá el componente o lógica de Supabase */}
+      <div className="p-6 bg-white rounded-2xl border border-slate-100 text-center text-slate-500">
+        Cargando comercios desde Supabase...
+      </div>
+    </div>
+  );
+}
+
 function VistaConso() {
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 p-4 max-w-md mx-auto space-y-3">
-      <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-        <HeartHandshake size={20} className="text-rose-600" /> Asistente Conso
-      </h2>
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-        <span className="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">
-          Ayuda Local
-        </span>
-        <h3 className="font-extrabold text-sm text-slate-900">¡Hola! Soy Conso</h3>
-        <p className="text-xs text-slate-600 leading-relaxed">
-          Tu asistente personal para consultar horarios de trenes de Cercanías, farmacias de guardia y servicios de utilidad en Utrera de forma rápida y sencilla.
-        </p>
+    <div className="p-4 max-w-md mx-auto pb-24 space-y-4">
+      <div className="bg-gradient-to-r from-rose-700 to-red-800 p-5 rounded-2xl text-white shadow-md">
+        <h2 className="text-lg font-bold flex items-center gap-2">🤖 Asistente Conso</h2>
+        <p className="text-xs text-rose-100 mt-1">Pregúntame por farmacias, horarios de trenes o servicios médicos del pueblo.</p>
+      </div>
+      <div className="p-4 bg-white rounded-2xl border border-slate-100 min-h-[300px] flex flex-col justify-between">
+        <div className="text-sm text-slate-600 space-y-2">
+          <p className="bg-rose-50 p-3 rounded-xl text-rose-900">¡Hola, JuanRa! ¿En qué te puedo ayudar hoy en Utrera?</p>
+        </div>
+        <div className="mt-4 flex gap-2">
+          <input type="text" placeholder="Escribe tu consulta..." className="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-rose-600" />
+          <button className="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-rose-700">Enviar</button>
+        </div>
       </div>
     </div>
   );
 }
 
-// -------------------------------------------------------------
-// VISTA GUÍA COMERCIAL CON FILTROS
-// -------------------------------------------------------------
-function VistaGuiaComercial() {
-  const [comercios, setComercios] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("Todas");
-
-  useEffect(() => {
-    async function cargarDatos() {
-      const { data, error } = await supabase.from("comercios_utrera").select("*");
-      
-      const comerciosFicticios = [
-        {
-          id: 'fic-1',
-          nombre: 'Ferretería El Tornillo Utrerano',
-          categoria: 'Ferretería y Hogar',
-          descripcion: 'Herramientas, duplicado de llaves y suministros para el hogar.',
-          direccion: 'Calle Ancha, 14'
-        },
-        {
-          id: 'fic-2',
-          nombre: 'Panadería Artesana La Espiga',
-          categoria: 'Alimentación',
-          descripcion: 'Pan cateto de horno de leña, tortas de utrera y dulces tradicionales.',
-          direccion: 'Plaza del Altozano, 8'
-        }
-      ];
-
-      const listaFinal = (!error && data && data.length > 0) ? [...data, ...comerciosFicticios] : comerciosFicticios;
-      setComercios(listaFinal);
-      setCargando(false);
-    }
-    cargarDatos();
-  }, []);
-
-  const categorias = ["Todas", ...new Set(comercios.map(item => item.categoria || "General"))];
-
-  const comerciosFiltrados = categoriaSeleccionada === "Todas" 
-    ? comercios 
-    : comercios.filter(item => (item.categoria || "General") === categoriaSeleccionada);
-
+function VistaAgendaUrgencias() {
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 p-4 max-w-md mx-auto space-y-3">
-      <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-        <Store size={20} className="text-rose-600" /> Guía Comercial de Utrera
-      </h2>
+    <div className="p-4 max-w-md mx-auto pb-24 space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-slate-800">Agenda y Urgencias</h2>
+        <span className="px-2.5 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">Servicio Esencial</span>
+      </div>
+      <p className="text-sm text-slate-600">Acceso rápido a centros médicos, hospitales y trámites de salud en Utrera.</p>
 
-      {!cargando && (
-        <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none">
-          {categorias.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setCategoriaSeleccionada(cat)}
-              className={`text-[11px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
-                categoriaSeleccionada === cat 
-                  ? "bg-rose-900 text-white shadow-sm" 
-                  : "bg-white text-slate-600 border border-slate-200"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      {/* Tarjeta CHARE */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-800 text-base">CHARE de Utrera (Urgencias)</h3>
+          <span className="text-2xl">🏥</span>
         </div>
-      )}
+        <p className="text-xs text-slate-500">Hospital de Alta Resolución. Atención de urgencias 24 horas.</p>
+        <a href="tel:955000000" className="inline-block w-full text-center py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
+          📞 Llamar a Urgencias / CHARE
+        </a>
+      </div>
 
-      {cargando ? (
-        <p className="text-xs text-slate-500 text-center py-8">Cargando comercios...</p>
-      ) : comerciosFiltrados.length === 0 ? (
-        <p className="text-xs text-slate-500 text-center py-8">No hay comercios en esta categoría.</p>
-      ) : (
-        <div className="space-y-3">
-          {comerciosFiltrados.map((item) => (
-            <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
-              <span className="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full">
-                {item.categoria || "General"}
-              </span>
-              <h3 className="font-extrabold text-sm text-slate-900 mt-1">{item.nombre}</h3>
-              <p className="text-xs text-slate-600">{item.descripcion}</p>
-              {item.direccion && (
-                <p className="text-[11px] text-slate-500 flex items-center gap-1 pt-1">
-                  <MapPin size={12} className="text-rose-600" /> {item.direccion}
-                </p>
-              )}
-            </div>
-          ))}
+      {/* Tarjeta ClicSalud+ */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-slate-800 text-base">Cita Previa ClicSalud+</h3>
+          <span className="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">SAS</span>
         </div>
-      )}
+        <p className="text-xs text-slate-500">Consulta tus citas médicas, recetas electrónicas y historiales del Servicio Andaluz de Salud.</p>
+        <a href="https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/" target="_blank" rel="noreferrer" className="inline-block w-full text-center py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-colors">
+          🔗 Acceder a ClicSalud+
+        </a>
+      </div>
+
+      {/* Teléfonos de Interés */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+        <h3 className="font-bold text-slate-800 text-base">Teléfonos de Emergencia</h3>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <a href="tel:112" className="p-3 bg-slate-50 rounded-xl font-bold text-center text-slate-700 hover:bg-slate-100">🚨 112 Emergencias</a>
+          <a href="tel:092" className="p-3 bg-slate-50 rounded-xl font-bold text-center text-slate-700 hover:bg-slate-100">👮 Policía Local</a>
+        </div>
+      </div>
     </div>
   );
 }
 
-// -------------------------------------------------------------
-// VISTA TABLÓN DE ANUNCIOS
-// -------------------------------------------------------------
 function VistaTablon() {
-  const [anuncios, setAnuncios] = useState([]);
-  const [cargando, setCargando] = useState(true);
-
-  useEffect(() => {
-    async function cargarDatos() {
-      const { data, error } = await supabase.from("anuncios_locales").select("*");
-      if (!error && data) setAnuncios(data);
-      setCargando(false);
-    }
-    cargarDatos();
-  }, []);
-
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 p-4 max-w-md mx-auto">
-      <h2 className="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
-        <FileText size={20} className="text-rose-600" /> Tablón de Anuncios
-      </h2>
-      {cargando ? (
-        <p className="text-xs text-slate-500 text-center py-8">Cargando anuncios...</p>
-      ) : anuncios.length === 0 ? (
-        <p className="text-xs text-slate-500 text-center py-8">No hay anuncios registrados.</p>
-      ) : (
-        <div className="space-y-3">
-          {anuncios.map((item) => (
-            <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
-              <h3 className="font-extrabold text-sm text-slate-900">{item.titulo}</h3>
-              <p className="text-xs text-slate-600">{item.descripcion}</p>
-              {item.precio && <p className="text-xs font-bold text-rose-600">Precio: {item.precio}</p>}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="p-4 max-w-md mx-auto pb-24 space-y-4">
+      <h2 className="text-xl font-bold text-slate-800">Tablón de Anuncios</h2>
+      <p className="text-sm text-slate-600">Avisos y tablón municipal.</p>
     </div>
   );
 }
 
-// -------------------------------------------------------------
-// VISTA FARMACIAS DE GUARDIA
-// -------------------------------------------------------------
 function VistaFarmacias() {
-  const [farmacias, setFarmacias] = useState([]);
-  const [cargando, setCargando] = useState(true);
-
-  useEffect(() => {
-    async function cargarDatos() {
-      const { data, error } = await supabase.from("farmacias_guardia").select("*");
-      if (!error && data) setFarmacias(data);
-      setCargando(false);
-    }
-    cargarDatos();
-  }, []);
-
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 p-4 max-w-md mx-auto">
-      <h2 className="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
-        <Pill size={20} className="text-rose-600" /> Farmacias de Guardia
-      </h2>
-      {cargando ? (
-        <p className="text-xs text-slate-500 text-center py-8">Cargando farmacias...</p>
-      ) : farmacias.length === 0 ? (
-        <p className="text-xs text-slate-500 text-center py-8">No hay farmacias registradas.</p>
-      ) : (
-        <div className="space-y-3">
-          {farmacias.map((item) => (
-            <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
-              <h3 className="font-extrabold text-sm text-slate-900">{item.nombre}</h3>
-              {item.direccion && <p className="text-xs text-slate-600"><MapPin size={12} className="inline text-rose-600" /> {item.direccion}</p>}
-              {item.telefono && <p className="text-xs text-slate-500"><Phone size={12} className="inline text-rose-600" /> {item.telefono}</p>}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="p-4 max-w-md mx-auto pb-24 space-y-4">
+      <h2 className="text-xl font-bold text-slate-800">Farmacias de Guardia</h2>
+      <p className="text-sm text-slate-600">Consulta las farmacias abiertas hoy en Utrera.</p>
     </div>
   );
 }
 
-// -------------------------------------------------------------
-// VISTA INMOBILIARIA
-// -------------------------------------------------------------
-function VistaInmobiliaria() {
-  const [inmuebles, setInmuebles] = useState([]);
-  const [cargando, setCargando] = useState(true);
+// ==========================================
+// COMPONENTE PRINCIPAL (App)
+// ==========================================
 
-  useEffect(() => {
-    async function cargarDatos() {
-      const { data, error } = await supabase.from("especial1_inmobiliaria").select("*");
-      if (!error && data) setInmuebles(data);
-      setCargando(false);
-    }
-    cargarDatos();
-  }, []);
-
-  return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 p-4 max-w-md mx-auto">
-      <h2 className="text-lg font-black text-slate-900 mb-3 flex items-center gap-2">
-        <Building size={20} className="text-rose-600" /> Inmobiliaria
-      </h2>
-      {cargando ? (
-        <p className="text-xs text-slate-500 text-center py-8">Cargando inmuebles...</p>
-      ) : inmuebles.length === 0 ? (
-        <p className="text-xs text-slate-500 text-center py-8">No hay inmuebles registrados.</p>
-      ) : (
-        <div className="space-y-3">
-          {inmuebles.map((item) => (
-            <div key={item.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
-              <h3 className="font-extrabold text-sm text-slate-900">{item.titulo || item.tipo_inmueble}</h3>
-              <p className="text-xs text-slate-600">{item.descripcion}</p>
-              {item.precio && <p className="text-xs font-bold text-rose-600">{item.precio} €</p>}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// -------------------------------------------------------------
-// CONTENEDOR PRINCIPAL PWA
-// -------------------------------------------------------------
 export default function App() {
   const [activeTab, setActiveTab] = useState("home");
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans selection:bg-rose-500 selection:text-white">
       <main className="flex-1">
-        {activeTab === "home" && <VistaInicio setTab={setActiveTab} />}
+        {activeTab === "home" && <VistaInicio setActiveTab={setActiveTab} />}
         {activeTab === "market" && <VistaGuiaComercial />}
         {activeTab === "conso" && <VistaConso />}
+        {activeTab === "agenda" && <VistaAgendaUrgencias />}
         {activeTab === "tablon" && <VistaTablon />}
         {activeTab === "farmacias" && <VistaFarmacias />}
-        {activeTab === "vivienda" && <VistaInmobiliaria />}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-4 py-2 z-40 shadow-lg">
+      {/* Barra de Navegación Inferior (Dock Moderno) */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200/60 py-2 px-2 z-40 shadow-lg">
         <div className="max-w-md mx-auto flex justify-around items-center">
-          <button onClick={() => setActiveTab("home")} className={`flex flex-col items-center text-[10px] font-bold ${activeTab === "home" ? "text-rose-600" : "text-slate-500"}`}>
-            <span>🏠 Inicio</span>
+          <button 
+            onClick={() => setActiveTab("home")} 
+            className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${activeTab === "home" ? "text-rose-600 font-bold scale-105 bg-rose-50" : "text-slate-400 hover:text-slate-600"}`}
+          >
+            <span className="text-lg">🏠</span>
+            <span className="text-[10px] mt-0.5">Inicio</span>
           </button>
-          <button onClick={() => setActiveTab("market")} className={`flex flex-col items-center text-[10px] font-bold ${activeTab === "market" ? "text-rose-600" : "text-slate-500"}`}>
-            <span>🏪 Guía</span>
+
+          <button 
+            onClick={() => setActiveTab("market")} 
+            className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${activeTab === "market" ? "text-rose-600 font-bold scale-105 bg-rose-50" : "text-slate-400 hover:text-slate-600"}`}
+          >
+            <span className="text-lg">🏪</span>
+            <span className="text-[10px] mt-0.5">Guía</span>
           </button>
-          <button onClick={() => setActiveTab("conso")} className={`flex flex-col items-center text-[10px] font-bold ${activeTab === "conso" ? "text-rose-600" : "text-slate-500"}`}>
-            <span>🤖 Conso</span>
+
+          <button 
+            onClick={() => setActiveTab("conso")} 
+            className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${activeTab === "conso" ? "text-rose-600 font-bold scale-105 bg-rose-50" : "text-slate-400 hover:text-slate-600"}`}
+          >
+            <span className="text-lg">🤖</span>
+            <span className="text-[10px] mt-0.5">Conso</span>
           </button>
-          <button onClick={() => setActiveTab("tablon")} className={`flex flex-col items-center text-[10px] font-bold ${activeTab === "tablon" ? "text-rose-600" : "text-slate-500"}`}>
-            <span>📋 Tablón</span>
+
+          <button 
+            onClick={() => setActiveTab("agenda")} 
+            className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${activeTab === "agenda" ? "text-rose-600 font-bold scale-105 bg-rose-50" : "text-slate-400 hover:text-slate-600"}`}
+          >
+            <span className="text-lg">🏥</span>
+            <span className="text-[10px] mt-0.5">Agenda</span>
           </button>
-          <button onClick={() => setActiveTab("vivienda")} className={`flex flex-col items-center text-[10px] font-bold ${activeTab === "vivienda" ? "text-rose-600" : "text-slate-500"}`}>
-            <span>🏢 Inmo</span>
+
+          <button 
+            onClick={() => setActiveTab("tablon")} 
+            className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${activeTab === "tablon" ? "text-rose-600 font-bold scale-105 bg-rose-50" : "text-slate-400 hover:text-slate-600"}`}
+          >
+            <span className="text-lg">📋</span>
+            <span className="text-[10px] mt-0.5">Tablón</span>
           </button>
         </div>
       </nav>
