@@ -1,5 +1,27 @@
 import React, { useState } from 'react';
-import { obtenerRespuestaConso } from './lib/consoService';
+import { obtenerRespuestaConso } from '../lib/consoService';
+
+// Coordenadas de las estaciones clave de la línea C-1
+const STATIONS = [
+  { name: 'Estación de Utrera', lat: 37.2185, lon: -5.7813 },
+  { name: 'Apeadero Canta el Gallo', lat: 37.2350, lon: -5.8150 },
+  { name: 'Estación de San Bernardo (Sevilla)', lat: 37.3772, lon: -5.9794 }
+];
+
+// Fórmula de Haversine para calcular la distancia en metros entre dos coordenadas GPS
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3; // Radio de la tierra en metros
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
 
 export default function Conso() {
   const [messages, setMessages] = useState([
@@ -16,6 +38,95 @@ export default function Conso() {
     { label: '🚆 Próximo Cercanías Renfe C1', action: 'renfe' }
   ];
 
+  // Horarios base de salida hacia Sevilla (Línea C-1)
+  const trainSchedules = [
+    '06:15', '06:45', '07:15', '07:45', '08:10', '08:35', '09:05', '09:35',
+    '10:20', '10:50', '11:20', '11:50', '12:20', '12:50', '13:20', '13:50',
+    '14:20', '14:50', '15:20', '15:50', '16:20', '16:50', '17:20', '17:50',
+    '18:20', '18:50', '19:20', '19:50', '20:20', '20:50', '21:30', '22:30'
+  ];
+
+  const getNextTrain = () => {
+    const now = new Date();
+    const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    for (let timeStr of trainSchedules) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const trainTimeMinutes = hours * 60 + minutes;
+      if (trainTimeMinutes >= currentTimeMinutes) {
+        return timeStr;
+      }
+    }
+    return '06:15 (del día siguiente)';
+  };
+
+  const handleRenfeQuery = () => {
+    setLoading(true);
+    const userMessage = { sender: 'user', text: '🚆 Próximo Cercanías Renfe C1' };
+    
+    if (!navigator.geolocation) {
+      const nextTrain = getNextTrain();
+      const botMessage = {
+        sender: 'bot',
+        text: `El próximo tren sale a las ${nextTrain} según Renfe. (Tu dispositivo no soporta geolocalización).`,
+        buttons: [
+          { label: '🗺️ Ir a Estación de Utrera', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
+          { label: '📱 Web oficial Renfe', url: 'https://www.renfe.com' }
+        ]
+      };
+      setMessages((prev) => [...prev, userMessage, botMessage]);
+      setLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+
+        let closestStation = STATIONS[0];
+        let minDistance = calculateDistance(userLat, userLon, closestStation.lat, closestStation.lon);
+
+        for (let i = 1; i < STATIONS.length; i++) {
+          const dist = calculateDistance(userLat, userLon, STATIONS[i].lat, STATIONS[i].lon);
+          if (dist < minDistance) {
+            minDistance = dist;
+            closestStation = STATIONS[i];
+          }
+        }
+
+        const nextTrain = getNextTrain();
+        const distanceText = minDistance < 1000 ? `${minDistance} metros` : `${(minDistance / 1000).toFixed(1)} km`;
+
+        const botMessage = {
+          sender: 'bot',
+          text: `El próximo tren sale a las ${nextTrain} según Renfe, te encuentras a ${distanceText} de la ${closestStation.name}.`,
+          buttons: [
+            { label: `🗺️ Ir a ${closestStation.name}`, url: `https://maps.google.com/?q=${encodeURIComponent(closestStation.name)}` },
+            { label: '📱 Consultar horarios oficiales Renfe', url: 'https://www.renfe.com' }
+          ]
+        };
+
+        setMessages((prev) => [...prev, userMessage, botMessage]);
+        setLoading(false);
+      },
+      (error) => {
+        const nextTrain = getNextTrain();
+        const botMessage = {
+          sender: 'bot',
+          text: `El próximo tren sale a las ${nextTrain} según Renfe. (No se pudo obtener la ubicación GPS: ${error.message}).`,
+          buttons: [
+            { label: '🗺️ Ir a Estación de Utrera', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
+            { label: '📱 Web oficial Renfe', url: 'https://www.renfe.com' }
+          ]
+        };
+        setMessages((prev) => [...prev, userMessage, botMessage]);
+        setLoading(false);
+      },
+      { timeout: 10000, enableHighAccuracy: true }
+    );
+  };
+
   const handleSendMessage = async (textToSend) => {
     const text = textToSend || input;
     if (!text.trim()) return;
@@ -25,6 +136,11 @@ export default function Conso() {
     setMessages(updatedMessages);
     if (!textToSend) setInput('');
     setLoading(true);
+
+    if (text.toLowerCase().includes('renfe') || text.toLowerCase().includes('tren') || text.toLowerCase().includes('cercanias')) {
+      handleRenfeQuery();
+      return;
+    }
 
     try {
       const botReplyText = await obtenerRespuestaConso(text, updatedMessages);
@@ -44,13 +160,7 @@ export default function Conso() {
       const userMessage = { sender: 'user', text: '🏥 Farmacia de Guardia hoy' };
       const botMessage = {
         sender: 'bot',
-        text: `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**
-📅 *MARTES, 13 DE OCTUBRE*
-
-• **Ldo/a. Francisco Javier González Mancha**
-📍 Dirección: Real, 29
-📞 Teléfono: 954861840
-⏰ Horarios: Turno de Guardia 24 horas`,
+        text: `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *MARTES, 13 DE OCTUBRE*\n\n- **Ldo/a. Francisco Javier González Mancha**\n📍 Dirección: Real, 29\n📞 Teléfono: 954861840\n⏰ Horarios: Turno de Guardia 24 horas`,
         buttons: [
           { label: '🗺️ Te llevo a Francisco Javier González Mancha', url: 'https://maps.google.com/?q=Real+29+Utrera' },
           { label: '📞 Llamar a Francisco Javier González Mancha (954861840)', url: 'tel:954861840' }
@@ -58,25 +168,7 @@ export default function Conso() {
       };
       setMessages((prev) => [...prev, userMessage, botMessage]);
     } else if (action === 'renfe') {
-      const userMessage = { sender: 'user', text: '🚆 Próximo Cercanías Renfe C1' };
-      const botMessage = {
-        sender: 'bot',
-        text: `🚆 **CERCANÍAS RENFE LÍNEA C1 (Utrera ↔ Sevilla)**
-
-• **Próximas salidas Utrera dirección Sevilla:**
-  - 09:35 h (Cercanías C1)
-  - 09:58 h (Media Distancia)
-  - 10:20 h (Cercanías C1)
-  - 10:50 h (Cercanías C1)
-
-📍 **Estación de Trenes de Utrera:** Plaza de la Estación, s/n
-⏱️ **Tiempo estimado a San Bernardo:** 32 min.`,
-        buttons: [
-          { label: '🗺️ Te llevo a la Estación de Renfe', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
-          { label: '📱 Consultar horarios oficiales Renfe', url: 'https://www.renfe.com' }
-        ]
-      };
-      setMessages((prev) => [...prev, userMessage, botMessage]);
+      handleRenfeQuery();
     }
   };
 
@@ -140,7 +232,7 @@ export default function Conso() {
         {loading && (
           <div className="flex justify-start">
             <div className="bg-white border p-3 rounded-2xl text-xs text-slate-500 animate-pulse">
-              Conso está pensando...
+              Conso está consultando tu ubicación y el próximo tren...
             </div>
           </div>
         )}
