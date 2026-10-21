@@ -90,7 +90,6 @@ function VistaGuiaComercial() {
     <div className="p-4 max-w-md mx-auto pb-24 space-y-4">
       <h2 className="text-xl font-bold text-slate-800">Guía Comercial de Utrera</h2>
       <p className="text-sm text-slate-600">Directorio completo de comercios locales filtrados por categoría.</p>
-      {/* Aquí irá el componente o lógica de Supabase */}
       <div className="p-6 bg-white rounded-2xl border border-slate-100 text-center text-slate-500">
         Cargando comercios desde Supabase...
       </div>
@@ -107,7 +106,9 @@ function VistaConso() {
       </div>
       <div className="p-4 bg-white rounded-2xl border border-slate-100 min-h-[300px] flex flex-col justify-between">
         <div className="text-sm text-slate-600 space-y-2">
-          <p className="bg-rose-50 p-3 rounded-xl text-rose-900">¡Hola, JuanRa! ¿En qué te puedo ayudar hoy en Utrera?</p>
+          <p className="bg-rose-50 p-3 rounded-xl text-rose-950 font-medium">
+            ¡Ey, hola! Soy Conso, tu asistente. ¿En qué te puedo ayudar hoy en Utrera?
+          </p>
         </div>
         <div className="mt-4 flex gap-2">
           <input type="text" placeholder="Escribe tu consulta..." className="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-rose-600" />
