@@ -50,7 +50,7 @@ export default function Home({ setTab }) {
   useEffect(() => {
     const timer = setInterval(() => {
       setSlideActual((prev) => (prev + 1) % avisos.length);
-    }, 5000);
+    }, 3000);
     return () => clearInterval(timer);
   }, [avisos.length]);
 
