@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Phone, Navigation, Search, MapPin } from "lucide-react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabaseClient";
 
 const COMERCIOS_DE_PRUEBA = [
   {
