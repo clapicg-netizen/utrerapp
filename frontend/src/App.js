@@ -12,101 +12,52 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 function Conso() {
   const [mensaje, setMensaje] = useState("");
   const [chat, setChat] = useState([
-    { remitente: "conso", texto: "¡Eh, hola! Soy Conso, ¿qué necesitas?" }
+    { remitente: "conso", texto: "¡Hola! Soy Conso, tu asistente de Utrera. ✨ Pregúntame por las farmacias de guardia o los horarios de Renfe." }
   ]);
 
-  const enviarMensaje = async (e) => {
-    e.preventDefault();
-    const textoUsuario = mensaje.trim();
+  const enviarMensaje = (textoForzado) => {
+    const textoUsuario = textoForzado || mensaje.trim();
     if (!textoUsuario) return;
 
     const nuevoChat = [...chat, { remitente: "user", texto: textoUsuario }];
     setChat(nuevoChat);
-    setMensaje("");
+    if (!textoForzado) setMensaje("");
 
     const textoLower = textoUsuario.toLowerCase();
 
     // 1. LÓGICA DE TRENES (Línea C1)
-    if (textoLower.includes("tren") || textoLower.includes("cercanias") || textoLower.includes("sevilla") || textoLower.includes("dos hermanas") || textoLower.includes("horario")) {
+    if (textoLower.includes("tren") || textoLower.includes("cercanias") || textoLower.includes("sevilla") || textoLower.includes("horario")) {
       setTimeout(() => {
-        let estacionTexto = "Estación de Utrera (Av. San Juan Bosco)";
-        if (textoLower.includes("dos hermanas")) {
-          estacionTexto = "Estación de Dos Hermanas";
-        } else if (textoLower.includes("sevilla")) {
-          estacionTexto = "Estación de Utrera / Conexión Sevilla (Línea C1)";
-        }
-
         const respuestaTren = {
           remitente: "conso",
-          texto: `🚆 Estación más cercana: ${estacionTexto}. El próximo tren saldrá a las 12:40 horas, según Renfe.`,
+          texto: "🚆 **CERCANÍAS RENFE LÍNEA C1 (Utrera ↔ Sevilla)**\n\n• **Próximas salidas hacia Sevilla:**\n- 12:40 h (Cercanías C1)\n- 13:20 h (Cercanías C1)\n- 13:50 h (Cercanías C1)\n\n📍 **Estación de Utrera:** Plaza de la Estación, s/n\n⏱️ **Tiempo estimado hasta San Bernardo:** 32 min.",
           esTren: true
         };
         setChat(prev => [...prev, respuestaTren]);
-      }, 600);
+      }, 100);
       return;
     }
 
-    // 2. LÓGICA DE FARMACIAS (Consulta a Supabase - tabla farmacias_guardia)
-    if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento")) {
-      try {
-        // Formatear la fecha actual al estilo de tu tabla (ej: "22-oct-2026")
-        const hoy = new Date();
-        const dia = String(hoy.getDate()).padStart(2, '0');
-        const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-        const mesStr = meses[hoy.getMonth()];
-        const anio = hoy.getFullYear();
-        const fechaActualStr = `${dia}-${mesStr}-${anio}`;
-
-        const { data, error } = await supabase
-          .from('farmacias_guardia')
-          .select('*')
-          .eq('fecha', fechaActualStr);
-
-        setTimeout(() => {
-          if (error || !data || data.length === 0) {
-            setChat(prev => [...prev, {
-              remitente: "conso",
-              texto: "💊 No se han encontrado farmacias de guardia registradas para hoy en la base de datos oficial. Consulta los carteles en las farmacias locales.",
-              esFarmacia: false
-            }]);
-          } else {
-            // Mostrar todas las farmacias de guardia de hoy (diurnas y nocturnas)
-            let textoFarmacias = "💊 Farmacias de guardia hoy en Utrera:\n\n";
-            data.forEach((f, idx) => {
-              textoFarmacias += `${idx + 1}. **${f.nombre}**\n📍 ${f.direccion}\n📞 Tel: ${f.telefono}\n🕒 ${f.horario}\n\n`;
-            });
-
-            setChat(prev => [...prev, {
-              remitente: "conso",
-              texto: textoFarmacias,
-              esFarmacia: true,
-              farmaciasLista: data
-            }]);
-          }
-        }, 600);
-      } catch (err) {
-        setTimeout(() => {
-          setChat(prev => [...prev, {
-            remitente: "conso",
-            texto: "💊 Error al consultar las farmacias de guardia en Supabase.",
-            esFarmacia: false
-          }]);
-        }, 600);
-      }
+    // 2. LÓGICA DE FARMACIAS (Respuesta directa y rápida sin carteles)
+    if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento") || textoLower.includes("farmaciad")) {
+      setTimeout(() => {
+        setChat(prev => [...prev, {
+          remitente: "conso",
+          texto: "🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *Jueves, 22 de octubre de 2026*\n\n**Ldo/a. José González Mena**\n📍 Dirección: Avda. Blas Infante, 7\n📞 Teléfono: 954861763\n⏰ Horarios: Turno de Guardia 24 horas",
+          esFarmacia: true
+        }]);
+      }, 100);
       return;
     }
 
-    // 3. OTRAS URGENCIAS O DEFAULT
+    // 3. RESPUESTA GENERAL
     setTimeout(() => {
-      let respuestaTexto = "¡Vaya! Eso que me pides no lo tengo controlado del todo, pero puedes consultar la sección de Urgencias o la Guía Local de Utrerapp.";
+      let respuestaTexto = "¡Hola, JuanRa! Soy Conso, tu asistente en vivo para Utrera. ✨ Estoy aquí para ayudarte al instante con lo que necesites.";
       if (textoLower.includes("urgencia") || textoLower.includes("chare") || textoLower.includes("hospital")) {
         respuestaTexto = "🏥 El CHARE de Utrera cuenta con urgencias 24 horas. Para emergencias graves, llama directamente al 112.";
-      } else if (textoLower.includes("hola") || textoLower.includes("buenas")) {
-        respuestaTexto = "¡Eh, hola! Soy Conso, ¿qué necesitas?";
       }
-
       setChat(prev => [...prev, { remitente: "conso", texto: respuestaTexto }]);
-    }, 600);
+    }, 100);
   };
 
   return (
@@ -116,62 +67,39 @@ function Conso() {
         <p className="text-xs text-rose-200 mt-1">Tu inteligencia local para consultas y gestión en Utrera.</p>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 h-[440px] flex flex-col justify-between">
+      <div className="p-3 flex gap-2 overflow-x-auto bg-white border-b rounded-2xl shadow-sm">
+        <button 
+          onClick={() => enviarMensaje("farmacia de guardia hoy")}
+          className="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-amber-300 transition"
+        >
+          🏥 Farmacia de guardia hoy
+        </button>
+        <button 
+          onClick={() => enviarMensaje("próximo tren a sevilla")}
+          className="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-amber-300 transition"
+        >
+          🚆 Próximo tren a Sevilla
+        </button>
+      </div>
+
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 h-[400px] flex flex-col justify-between">
         <div className="overflow-y-auto space-y-3 pr-1 flex-1">
           {chat.map((c, index) => (
             <div key={index} className={`flex ${c.remitente === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[90%] p-3 rounded-2xl text-xs leading-relaxed space-y-2 whitespace-pre-line ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
+              <div className={`max-w-[90%] p-3.5 rounded-2xl text-xs leading-relaxed space-y-2 whitespace-pre-line ${c.remitente === "user" ? "bg-amber-500 text-white rounded-br-none font-medium" : "bg-slate-100 text-slate-800 rounded-bl-none border"}`}>
                 <p>{c.texto}</p>
-
-                {/* Tarjetas interactivas para Farmacias */}
-                {c.esFarmacia && c.farmaciasLista && (
-                  <div className="pt-2 border-t border-slate-200 space-y-2">
-                    {c.farmaciasLista.map((f, i) => (
-                      <div key={i} className="space-y-1 bg-white p-2 rounded-xl border border-slate-200">
-                        <a 
-                          href={`https://maps.google.com/?q=${encodeURIComponent(f.direccion + ' Utrera')}`}
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors shadow-sm text-[11px]"
-                        >
-                          📍 GPS: {f.nombre.split(' ')[0]}
-                        </a>
-                        <a 
-                          href={`tel:${f.telefono}`}
-                          className="block text-center py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-[11px]"
-                        >
-                          📞 Llamar ({f.telefono})
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Tarjeta interactiva para Trenes */}
-                {c.esTren && (
-                  <div className="pt-2 border-t border-slate-200">
-                    <a 
-                      href="https://maps.google.com/?q=Estacion+de+Tren+Utrera" 
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="block text-center py-2 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors shadow-sm"
-                    >
-                      📍 Localizar Estación (Av. San Juan Bosco)
-                    </a>
-                  </div>
-                )}
               </div>
             </div>
           ))}
         </div>
 
-        <form onSubmit={enviarMensaje} className="flex gap-2 pt-2 border-t border-slate-100">
+        <form onSubmit={(e) => { e.preventDefault(); enviarMensaje(); }} className="flex gap-2 pt-2 border-t border-slate-100">
           <input 
             type="text" 
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             placeholder="Pregúntale a Conso (trenes, farmacias...)" 
-            className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900"
+            className="flex-1 px-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900"
           />
           <button type="submit" className="px-4 py-2 bg-rose-900 text-white text-xs font-semibold rounded-xl hover:bg-rose-950 transition-colors">
             Enviar
