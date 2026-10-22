@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Configuración de Supabase para Utrerapp
+// Configuración oficial de Supabase para Utrerapp
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://tu-proyecto.supabase.co';
 const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'tu-clave-anon';
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -26,7 +26,7 @@ function Conso() {
 
     const textoLower = textoUsuario.toLowerCase();
 
-    // 1. LÓGICA DE TRENES (Línea C1: Utrera, Sevilla, Dos Hermanas)
+    // 1. LÓGICA DE TRENES (Línea C1)
     if (textoLower.includes("tren") || textoLower.includes("cercanias") || textoLower.includes("sevilla") || textoLower.includes("dos hermanas") || textoLower.includes("horario")) {
       setTimeout(() => {
         let estacionTexto = "Estación de Utrera (Av. San Juan Bosco)";
@@ -46,33 +46,41 @@ function Conso() {
       return;
     }
 
-    // 2. LÓGICA DE FARMACIAS (Consulta a Supabase)
+    // 2. LÓGICA DE FARMACIAS (Consulta a Supabase - tabla farmacias_guardia)
     if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento")) {
       try {
-        const fechaHoy = new Date().toISOString().split('T')[0];
+        // Formatear la fecha actual al estilo de tu tabla (ej: "22-oct-2026")
+        const hoy = new Date();
+        const dia = String(hoy.getDate()).padStart(2, '0');
+        const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+        const mesStr = meses[hoy.getMonth()];
+        const anio = hoy.getFullYear();
+        const fechaActualStr = `${dia}-${mesStr}-${anio}`;
+
         const { data, error } = await supabase
           .from('farmacias_guardia')
           .select('*')
-          .lte('fecha_inicio', fechaHoy)
-          .gte('fecha_fin', fechaHoy)
-          .single();
+          .eq('fecha', fechaActualStr);
 
         setTimeout(() => {
-          if (error || !data) {
+          if (error || !data || data.length === 0) {
             setChat(prev => [...prev, {
               remitente: "conso",
-              texto: "💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre): Consulta el listado oficial y la geolocalización:",
-              esFarmacia: true,
-              farmaciaNombre: "Farmacia de Guardia Oficial"
+              texto: "💊 No se han encontrado farmacias de guardia registradas para hoy en la base de datos oficial. Consulta los carteles en las farmacias locales.",
+              esFarmacia: false
             }]);
           } else {
+            // Mostrar todas las farmacias de guardia de hoy (diurnas y nocturnas)
+            let textoFarmacias = "💊 Farmacias de guardia hoy en Utrera:\n\n";
+            data.forEach((f, idx) => {
+              textoFarmacias += `${idx + 1}. **${f.nombre}**\n📍 ${f.direccion}\n📞 Tel: ${f.telefono}\n🕒 ${f.horario}\n\n`;
+            });
+
             setChat(prev => [...prev, {
               remitente: "conso",
-              texto: `💊 Farmacia de guardia hoy: ${data.nombre} (${data.direccion}). Teléfono: ${data.telefono}.`,
+              texto: textoFarmacias,
               esFarmacia: true,
-              farmaciaNombre: data.nombre,
-              farmaciaTel: data.telefono,
-              farmaciaDir: data.direccion
+              farmaciasLista: data
             }]);
           }
         }, 600);
@@ -80,8 +88,8 @@ function Conso() {
         setTimeout(() => {
           setChat(prev => [...prev, {
             remitente: "conso",
-            texto: "💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre). Consulta la ubicación exacta:",
-            esFarmacia: true
+            texto: "💊 Error al consultar las farmacias de guardia en Supabase.",
+            esFarmacia: false
           }]);
         }, 600);
       }
@@ -112,28 +120,30 @@ function Conso() {
         <div className="overflow-y-auto space-y-3 pr-1 flex-1">
           {chat.map((c, index) => (
             <div key={index} className={`flex ${c.remitente === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed space-y-2 ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
+              <div className={`max-w-[90%] p-3 rounded-2xl text-xs leading-relaxed space-y-2 whitespace-pre-line ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
                 <p>{c.texto}</p>
 
-                {/* Tarjeta interactiva para Farmacia */}
-                {c.esFarmacia && (
+                {/* Tarjetas interactivas para Farmacias */}
+                {c.esFarmacia && c.farmaciasLista && (
                   <div className="pt-2 border-t border-slate-200 space-y-2">
-                    <a 
-                      href={`https://maps.google.com/?q=${encodeURIComponent(c.farmaciaDir || 'Farmacia de guardia en Utrera')} u+utrera`}
-                      target="_blank" 
-                      rel="noreferrer"
-                      className="block text-center py-2 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors shadow-sm"
-                    >
-                      📍 Geolocalización Farmacia de Guardia (GPS)
-                    </a>
-                    {c.farmaciaTel && (
-                      <a 
-                        href={`tel:${c.farmaciaTel}`}
-                        className="block text-center py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
-                      >
-                        📞 Llamar a la Farmacia ({c.farmaciaTel})
-                      </a>
-                    )}
+                    {c.farmaciasLista.map((f, i) => (
+                      <div key={i} className="space-y-1 bg-white p-2 rounded-xl border border-slate-200">
+                        <a 
+                          href={`https://maps.google.com/?q=${encodeURIComponent(f.direccion + ' Utrera')}`}
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors shadow-sm text-[11px]"
+                        >
+                          📍 GPS: {f.nombre.split(' ')[0]}
+                        </a>
+                        <a 
+                          href={`tel:${f.telefono}`}
+                          className="block text-center py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-[11px]"
+                        >
+                          📞 Llamar ({f.telefono})
+                        </a>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -270,7 +280,7 @@ function VistaAgenteAlta({ onAgregarComercio, setActiveTab }) {
 
           <div>
             <label className="block font-bold mb-1">Nombre detectado</label>
-            <input type="text" value={resultado.nombre} onChange={e => setResult({...resultado, nombre: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900" />
+            <input type="text" value={resultado.nombre} onChange={e => setResultado({...resultado, nombre: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -446,7 +456,7 @@ export default function App() {
       categoria: "Hostelería / Tapas",
       telefono: "955870000",
       whatsapp: "34600000000",
-      descripcion: "Establecimiento tradicional de rutina en Utrera.",
+      descripcion: "Establecimiento tradicional de referencia en Utrera.",
       etiqueta: "Socio Fundador",
       foto: "🍷"
     }
