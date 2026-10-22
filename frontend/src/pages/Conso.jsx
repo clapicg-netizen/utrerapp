@@ -1,22 +1,31 @@
 import React, { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { obtenerRespuestaConso } from '../lib/consoService';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://tu-proyecto.supabase.co';
-const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'tu-clave-anon';
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Estaciones clave de la línea C-1
 const STATIONS = [
-  { name: 'Estación de Utrera (Av. San Juan Bosco)', lat: 37.2185, lon: -5.7813 },
+  { name: 'Estación de Utrera', lat: 37.2185, lon: -5.7813 },
   { name: 'Apeadero Canta el Gallo', lat: 37.2350, lon: -5.8150 },
   { name: 'Estación de San Bernardo (Sevilla)', lat: 37.3772, lon: -5.9794 }
 ];
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371e3;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
 
 export default function Conso() {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: '¡Eh, hola! Soy Conso, ¿qué necesitas?'
+      text: '¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia o los horarios de Renfe y te llevaré directamente.'
     }
   ]);
   const [input, setInput] = useState('');
@@ -55,64 +64,31 @@ export default function Conso() {
 
     const botMessage = {
       sender: 'bot',
-      text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
+      text: `🚆 **CERCANÍAS RENFE LÍNEA C1 (Utrera ↔ Sevilla)**\n\n• **Próximas salidas Utrera dirección Sevilla:**\n- ${nextTrain} h (Cercanías C1)\n- 13:20 h (Cercanías C1)\n- 13:50 h (Cercanías C1)\n\n📍 **Estación de Trenes de Utrera:** Plaza de la Estación, s/n\n⏱️ **Tiempo estimado a San Bernardo:** 32 min.`,
       buttons: [
-        { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' }
+        { label: '🗺️ Te llevo a la Estación de Renfe', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
+        { label: '📱 Consultar horarios oficiales Renfe', url: 'https://www.renfe.com' }
       ]
     };
+
     setMessages((prev) => [...prev, userMessage, botMessage]);
     setLoading(false);
   };
 
-  const handleFarmaciaQuery = async () => {
-    setLoading(true);
-    const userMessage = { sender: 'user', text: '🏥 Farmacia de guardia hoy' };
-    setMessages((prev) => [...prev, userMessage]);
-
-    try {
-      // Consulta directa a la tabla farmacias_guardia de Supabase sin filtros estrictos de fecha para asegurar resultados
-      const { data, error } = await supabase
-        .from('farmacias_guardia')
-        .select('*')
-        .limit(4);
-
-      if (error || !data || data.length === 0) {
-        setMessages((prev) => [...prev, {
-          sender: 'bot',
-          text: '💊 Consulta los carteles oficiales de farmacias de guardia en Utrera.'
-        }]);
-      } else {
-        let textoFarmacias = "💊 Farmacias de guardia oficiales:\n\n";
-        let botonesFarmacia = [];
-
-        data.forEach((f) => {
-          textoFarmacias += `• **${f.nombre}**\n📍 ${f.direccion}\n📞 Tel: ${f.telefono}\n🕒 ${f.horario}\n\n`;
-          botonesFarmacia.push({
-            label: `📍 GPS: ${f.nombre}`,
-            url: `https://maps.google.com/?q=${encodeURIComponent(f.direccion + ' Utrera')}`
-          });
-          botonesFarmacia.push({
-            label: `📞 Llamar (${f.telefono})`,
-            url: `tel:${f.telefono}`
-          });
-        });
-
-        setMessages((prev) => [...prev, {
-          sender: 'bot',
-          text: textoFarmacias.trim(),
-          buttons: botonesFarmacia
-        }]);
-      }
-    } catch (err) {
-      setMessages((prev) => [...prev, {
+  const handleQuickAction = (action) => {
+    if (action === 'farmacia') {
+      const userMessage = { sender: 'user', text: '🏥 Farmacia de Guardia hoy' };
+      const botMessage = {
         sender: 'bot',
-        text: '💊 Farmacia de guardia en Utrera: Consulta el listado oficial y la geolocalización.',
+        text: `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *JUEVES, 22 DE OCTUBRE*\n\n**Ldo/a. José González Mena**\n📍 Dirección: Avda. Blas Infante, 7\n📞 Teléfono: 954861763\n⏰ Horarios: Turno de Guardia 24 horas`,
         buttons: [
-          { label: '📍 Geolocalización Farmacia de Guardia (GPS)', url: 'https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera' }
+          { label: '🗺️ Te llevo a José González Mena', url: 'https://maps.google.com/?q=Avda.+Blas+Infante+7+Utrera' },
+          { label: '📞 Llamar a José González Mena (954861763)', url: 'tel:954861763' }
         ]
-      }]);
-    } finally {
-      setLoading(false);
+      };
+      setMessages((prev) => [...prev, userMessage, botMessage]);
+    } else if (action === 'renfe') {
+      handleRenfeQuery();
     }
   };
 
@@ -120,48 +96,45 @@ export default function Conso() {
     const text = textToSend || input;
     if (!text.trim()) return;
 
-    const textLower = text.toLowerCase();
-    if (textLower.includes('renfe') || textLower.includes('tren') || textLower.includes('cercanias') || textLower.includes('horario')) {
-      setInput('');
-      handleRenfeQuery();
-      return;
-    }
-
-    if (textLower.includes('farmacia') || textLower.includes('guardia') || textLower.includes('medicamento')) {
-      setInput('');
-      handleFarmaciaQuery();
-      return;
-    }
-
     const userMessage = { sender: 'user', text };
-    setMessages((prev) => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     if (!textToSend) setInput('');
-    
     setLoading(true);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, {
-        sender: 'bot',
-        text: '¡Vaya! Pregúntame por el próximo tren de Cercanías Renfe C1 o por las farmacias de guardia de Utrera.'
-      }]);
-      setLoading(false);
-    }, 500);
-  };
 
-  const handleQuickAction = (action) => {
-    if (action === 'farmacia') {
-      handleFarmaciaQuery();
-    } else if (action === 'renfe') {
+    const textLower = text.toLowerCase();
+    if (textLower.includes('renfe') || textLower.includes('tren') || textLower.includes('cercanias')) {
       handleRenfeQuery();
+      setLoading(false);
+      return;
+    }
+
+    if (textLower.includes('farmacia') || textLower.includes('guardia')) {
+      handleQuickAction('farmacia');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const botReplyText = await obtenerRespuestaConso(text, updatedMessages);
+      setMessages((prev) => [...prev, { sender: 'bot', text: botReplyText }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'bot', text: 'Lo siento, ha ocurrido un error al conectar con Conso.' }
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col h-screen bg-slate-50">
       <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-red-950 text-white p-4 flex items-center shadow-md">
-        <div className="bg-rose-800 p-2 rounded-full mr-3">🤖</div>
+        <div className="bg-rose-800 p-2 rounded-full mr-3">🤝</div>
         <div>
-          <h1 className="font-bold text-lg">Asistente Conso</h1>
-          <p className="text-xs text-rose-200">Tu inteligencia local para consultas y gestión en Utrera.</p>
+          <h1 className="font-bold text-lg">Conso ✨</h1>
+          <p className="text-xs text-rose-200">Asistente Virtual de Utrera</p>
         </div>
       </div>
 
@@ -170,7 +143,7 @@ export default function Conso() {
           <button
             key={idx}
             onClick={() => handleQuickAction(qa.action)}
-            className="bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-rose-200"
+            className="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-amber-300"
           >
             {qa.label}
           </button>
@@ -186,7 +159,7 @@ export default function Conso() {
             <div
               className={`max-w-[85%] p-3 rounded-2xl text-sm ${
                 msg.sender === 'user'
-                  ? 'bg-rose-900 text-white rounded-br-none font-medium'
+                  ? 'bg-amber-500 text-white rounded-br-none font-medium'
                   : 'bg-white border text-slate-800 rounded-bl-none shadow-sm'
               }`}
             >
@@ -199,7 +172,7 @@ export default function Conso() {
                       href={btn.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full text-center bg-rose-100 hover:bg-rose-200 text-rose-900 font-bold py-2 px-3 rounded-xl text-xs shadow-sm transition"
+                      className="block w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-3 rounded-xl text-xs shadow-sm transition"
                     >
                       {btn.label}
                     </a>
@@ -212,7 +185,7 @@ export default function Conso() {
         {loading && (
           <div className="flex justify-start">
             <div className="bg-white border p-3 rounded-2xl text-xs text-slate-500 animate-pulse">
-              Conso está consultando los datos oficiales...
+              Conso está consultando la información...
             </div>
           </div>
         )}
@@ -224,14 +197,14 @@ export default function Conso() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Pregúntale a Conso (trenes, farmacias...)"
-          className="flex-1 border rounded-xl px-4 py-2 text-xs bg-slate-50 focus:outline-none focus:border-rose-900"
+          placeholder="Escribe tu consulta a Conso..."
+          className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
         <button
           onClick={() => handleSendMessage()}
-          className="bg-rose-900 hover:bg-rose-950 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition"
+          className="bg-rose-600 hover:bg-rose-700 text-white p-2.5 rounded-full shadow-md transition"
         >
-          Enviar
+          ➤
         </button>
       </div>
     </div>
