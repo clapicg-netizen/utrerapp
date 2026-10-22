@@ -9,13 +9,15 @@ export async function obtenerComercios(categoria = "Todos") {
     }
 
     const { data, error } = await query;
+    
     if (error) {
-      console.error("Error al obtener comercios:", error.message);
+      console.error("Error en Supabase al obtener comercios:", error.message);
       return [];
     }
+    
     return data || [];
   } catch (err) {
-    console.error("Excepción en obtenerComercios:", err);
+    console.error("Excepción grave en obtenerComercios:", err);
     return [];
   }
 }
