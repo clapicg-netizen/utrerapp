@@ -87,7 +87,6 @@ function VistaAltaComercio({ onAgregarComercio, setActiveTab }) {
     e.preventDefault();
     if (!formData.nombre.trim()) return;
 
-    // Convertir la galeria separada por comas en un array si existe
     const galeriaArray = formData.galeriaFotos 
       ? formData.galeriaFotos.split(',').map(url => url.trim())
       : [];
@@ -159,7 +158,6 @@ function VistaAltaComercio({ onAgregarComercio, setActiveTab }) {
           </div>
         </div>
 
-        {/* NUEVOS CAMPOS DE IMÁGENES */}
         <div className="p-3 bg-rose-50/50 rounded-2xl border border-rose-100 space-y-3">
           <h3 className="font-bold text-rose-900 flex items-center gap-1.5">🖼️ Imágenes y Galería del Comercio</h3>
           <div>
@@ -320,7 +318,6 @@ function VistaGuiaComercial({ comercios, setActiveTab }) {
                 <div className="pt-3 border-t border-slate-100 space-y-3 text-xs text-slate-700 bg-slate-50/90 p-3.5 rounded-2xl animate-fadeIn">
                   {comercio.descripcion && <p className="text-slate-600 leading-relaxed">{comercio.descripcion}</p>}
                   
-                  {/* Galería de Imágenes si la tiene */}
                   {comercio.galeria && comercio.galeria.length > 0 && (
                     <div className="space-y-1.5 pt-1">
                       <span className="font-bold text-slate-700">📸 Galería de Instalaciones / Productos:</span>
@@ -411,7 +408,7 @@ function VistaAgendaUrgencias() {
 // ==========================================
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("market");
+  const [activeTab, setActiveTab] = useState("home");
   
   const [comercios, setComercios] = useState([
     {
