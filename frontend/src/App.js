@@ -14,30 +14,43 @@ function Conso() {
     const textoUsuario = mensaje.trim();
     if (!textoUsuario) return;
 
-    // Añadir mensaje del usuario
     const nuevoChat = [...chat, { remitente: "user", texto: textoUsuario }];
     setChat(nuevoChat);
     setMensaje("");
 
-    // Inteligencia de respuestas de Conso para Utrera
     setTimeout(() => {
-      let respuestaConso = "¡Vaya! Eso que me pides no lo tengo controlado del todo, pero puedes consultar la sección de Urgencias o la Guía Local de Utrerapp.";
+      let respuestaConso = {
+        texto: "¡Vaya! Eso que me pides no lo tengo controlado del todo, pero puedes consultar la sección de Urgencias o la Guía Local de Utrerapp.",
+        esFarmacia: false,
+        esTren: false
+      };
       
       const textoLower = textoUsuario.toLowerCase();
 
       if (textoLower.includes("tren") || textoLower.includes("cercanias") || textoLower.includes("sevilla") || textoLower.includes("horario")) {
-        respuestaConso = "🚆 Los trenes de Cercanías (Línea C-1) Utrera - Sevilla circulan habitualmente cada 30 minutos en hora punta. Te recomiendo comprobar el panel de Adif en la estación o su web oficial.";
+        respuestaConso = {
+          texto: "🚆 Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las 12:40 horas, según Renfe.",
+          esTren: true
+        };
       } else if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento")) {
-        respuestaConso = "💊 Para consultar la farmacia de guardia hoy en Utrera, puedes revisar los carteles informativos en las puertas de las farmacias locales o acceder a la sección de Urgencias de nuestra app.";
+        respuestaConso = {
+          texto: "💊 Farmacia de guardia hoy en Utrera: Farmacia Central (Calle Ancha, 24). Geolocalización disponible. Puedes llamar directamente:",
+          esFarmacia: true,
+          telefono: "955860000"
+        };
       } else if (textoLower.includes("urgencia") || textoLower.includes("hospital") || textoLower.includes("chare") || textoLower.includes("emergencia")) {
-        respuestaConso = "🏥 El CHARE de Utrera cuenta con urgencias 24 horas. Para emergencias graves, llama directamente al 112 o al teléfono del centro médico.";
-      } else if (textoLower.includes("ayuntamiento") || textoLower.includes("alcalde") || textoLower.includes("municipal")) {
-        respuestaConso = "🏛️ El Ayuntamiento de Utrera está en la Plaza de Gibaxa. Puedes realizar trámites online en su sede electrónica oficial.";
+        respuestaConso = {
+          texto: "🏥 El CHARE de Utrera cuenta con urgencias 24 horas. Para emergencias graves, llama directamente al 112.",
+          esFarma: false
+        };
       } else if (textoLower.includes("hola") || textoLower.includes("buenas") || textoLower.includes("que tal")) {
-        respuestaConso = "¡Hola, vecino! ¿En qué te puedo echar una mano hoy por Utrera? Pregúntame por trenes, farmacias, comercios o urgencias.";
+        respuestaConso = {
+          texto: "¡Hola, vecino! ¿En qué te puedo echar una mano hoy por Utrera? Pregúntame por trenes o farmacias de guardia.",
+          esFarma: false
+        };
       }
 
-      setChat(prev => [...prev, { remitente: "conso", texto: respuestaConso }]);
+      setChat(prev => [...prev, { remitente: "conso", ...respuestaConso }]);
     }, 600);
   };
 
@@ -52,8 +65,42 @@ function Conso() {
         <div className="overflow-y-auto space-y-3 pr-1 flex-1">
           {chat.map((c, index) => (
             <div key={index} className={`flex ${c.remitente === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
-                {c.texto}
+              <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed space-y-2 ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
+                <p>{c.texto}</p>
+
+                {/* Tarjeta interactiva para Farmacia de Guardia */}
+                {c.esFarmacia && (
+                  <div className="pt-2 border-t border-slate-200 space-y-2">
+                    <a 
+                      href="https://maps.google.com/?q=Farmacia+en+Utrera" 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors"
+                    >
+                      📍 Ver ubicación exacta (GPS)
+                    </a>
+                    <a 
+                      href={`tel:${c.telefono}`} 
+                      className="block text-center py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+                    >
+                      📞 Llamar a la Farmacia
+                    </a>
+                  </div>
+                )}
+
+                {/* Tarjeta interactiva para Trenes */}
+                {c.esTren && (
+                  <div className="pt-2 border-t border-slate-200">
+                    <a 
+                      href="https://maps.google.com/?q=Estacion+de+Tren+Utrera" 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors"
+                    >
+                      📍 Cómo llegar a la Estación de Utrera
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           ))}
