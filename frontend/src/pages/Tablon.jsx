@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../supabaseClient'; // O la ruta correcta donde tengas configurado tu cliente de Supabase
+import { supabase } from '../Lib/supabaseClient'; // O la ruta correcta donde tengas configurado tu cliente de Supabase
 
 export default function Tablon() {
   const [anuncios, setAnuncios] = useState([]);
