@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+// Configuración de Supabase para Utrerapp
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://tu-proyecto.supabase.co';
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'tu-clave-anon';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // ==========================================
 // COMPONENTE CONSO (Cerebro Inteligente Local)
@@ -9,7 +15,7 @@ function Conso() {
     { remitente: "conso", texto: "¡Eh, hola! Soy Conso, ¿qué necesitas?" }
   ]);
 
-  const enviarMensaje = (e) => {
+  const enviarMensaje = async (e) => {
     e.preventDefault();
     const textoUsuario = mensaje.trim();
     if (!textoUsuario) return;
@@ -18,38 +24,80 @@ function Conso() {
     setChat(nuevoChat);
     setMensaje("");
 
-    setTimeout(() => {
-      let respuestaConso = {
-        texto: "¡Vaya! Eso que me pides no lo tengo controlado del todo, pero puedes consultar la sección de Urgencias o la Guía Local de Utrerapp.",
-        esFarmacia: false,
-        esTren: false
-      };
-      
-      const textoLower = textoUsuario.toLowerCase();
+    const textoLower = textoUsuario.toLowerCase();
 
-      if (textoLower.includes("tren") || textoLower.includes("cercanias") || textoLower.includes("sevilla") || textoLower.includes("horario")) {
-        respuestaConso = {
-          texto: "🚆 Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las 12:40 horas, según Renfe.",
+    // 1. LÓGICA DE TRENES (Línea C1: Utrera, Sevilla, Dos Hermanas)
+    if (textoLower.includes("tren") || textoLower.includes("cercanias") || textoLower.includes("sevilla") || textoLower.includes("dos hermanas") || textoLower.includes("horario")) {
+      setTimeout(() => {
+        let estacionTexto = "Estación de Utrera (Av. San Juan Bosco)";
+        if (textoLower.includes("dos hermanas")) {
+          estacionTexto = "Estación de Dos Hermanas";
+        } else if (textoLower.includes("sevilla")) {
+          estacionTexto = "Estación de Utrera / Conexión Sevilla (Línea C1)";
+        }
+
+        const respuestaTren = {
+          remitente: "conso",
+          texto: `🚆 Estación más cercana: ${estacionTexto}. El próximo tren saldrá a las 12:40 horas, según Renfe.`,
           esTren: true
         };
-      } else if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento")) {
-        respuestaConso = {
-          texto: "💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre): Consulta el listado oficial y geolocalización:",
-          esFarmacia: true
-        };
-      } else if (textoLower.includes("urgencia") || textoLower.includes("hospital") || textoLower.includes("chare") || textoLower.includes("emergencia")) {
-        respuestaConso = {
-          texto: "🏥 El CHARE de Utrera cuenta con urgencias 24 horas. Para emergencias graves, llama directamente al 112.",
-          esFarmacia: false
-        };
-      } else if (textoLower.includes("hola") || textoLower.includes("buenas") || textoLower.includes("que tal")) {
-        respuestaConso = {
-          texto: "¡Eh, hola! Soy Conso, ¿qué necesitas?",
-          esFarmacia: false
-        };
+        setChat(prev => [...prev, respuestaTren]);
+      }, 600);
+      return;
+    }
+
+    // 2. LÓGICA DE FARMACIAS (Consulta a Supabase)
+    if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento")) {
+      try {
+        const fechaHoy = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase
+          .from('farmacias_guardia')
+          .select('*')
+          .lte('fecha_inicio', fechaHoy)
+          .gte('fecha_fin', fechaHoy)
+          .single();
+
+        setTimeout(() => {
+          if (error || !data) {
+            setChat(prev => [...prev, {
+              remitente: "conso",
+              texto: "💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre): Consulta el listado oficial y la geolocalización:",
+              esFarmacia: true,
+              farmaciaNombre: "Farmacia de Guardia Oficial"
+            }]);
+          } else {
+            setChat(prev => [...prev, {
+              remitente: "conso",
+              texto: `💊 Farmacia de guardia hoy: ${data.nombre} (${data.direccion}). Teléfono: ${data.telefono}.`,
+              esFarmacia: true,
+              farmaciaNombre: data.nombre,
+              farmaciaTel: data.telefono,
+              farmaciaDir: data.direccion
+            }]);
+          }
+        }, 600);
+      } catch (err) {
+        setTimeout(() => {
+          setChat(prev => [...prev, {
+            remitente: "conso",
+            texto: "💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre). Consulta la ubicación exacta:",
+            esFarmacia: true
+          }]);
+        }, 600);
+      }
+      return;
+    }
+
+    // 3. OTRAS URGENCIAS O DEFAULT
+    setTimeout(() => {
+      let respuestaTexto = "¡Vaya! Eso que me pides no lo tengo controlado del todo, pero puedes consultar la sección de Urgencias o la Guía Local de Utrerapp.";
+      if (textoLower.includes("urgencia") || textoLower.includes("chare") || textoLower.includes("hospital")) {
+        respuestaTexto = "🏥 El CHARE de Utrera cuenta con urgencias 24 horas. Para emergencias graves, llama directamente al 112.";
+      } else if (textoLower.includes("hola") || textoLower.includes("buenas")) {
+        respuestaTexto = "¡Eh, hola! Soy Conso, ¿qué necesitas?";
       }
 
-      setChat(prev => [...prev, { remitente: "conso", ...respuestaConso }]);
+      setChat(prev => [...prev, { remitente: "conso", texto: respuestaTexto }]);
     }, 600);
   };
 
@@ -60,30 +108,32 @@ function Conso() {
         <p className="text-xs text-rose-200 mt-1">Tu inteligencia local para consultas y gestión en Utrera.</p>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 h-[420px] flex flex-col justify-between">
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 h-[440px] flex flex-col justify-between">
         <div className="overflow-y-auto space-y-3 pr-1 flex-1">
           {chat.map((c, index) => (
             <div key={index} className={`flex ${c.remitente === "user" ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed space-y-2 ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
                 <p>{c.texto}</p>
 
-                {/* Tarjeta interactiva para Farmacia de Guardia */}
+                {/* Tarjeta interactiva para Farmacia */}
                 {c.esFarmacia && (
                   <div className="pt-2 border-t border-slate-200 space-y-2">
                     <a 
-                      href="https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera" 
+                      href={`https://maps.google.com/?q=${encodeURIComponent(c.farmaciaDir || 'Farmacia de guardia en Utrera')} u+utrera`}
                       target="_blank" 
                       rel="noreferrer"
-                      className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors"
+                      className="block text-center py-2 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors shadow-sm"
                     >
-                      📍 Geolocalización Farmacia de Guardia
+                      📍 Geolocalización Farmacia de Guardia (GPS)
                     </a>
-                    <a 
-                      href="tel:955870000" 
-                      className="block text-center py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
-                    >
-                      📞 Llamar a la Farmacia
-                    </a>
+                    {c.farmaciaTel && (
+                      <a 
+                        href={`tel:${c.farmaciaTel}`}
+                        className="block text-center py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
+                      >
+                        📞 Llamar a la Farmacia ({c.farmaciaTel})
+                      </a>
+                    )}
                   </div>
                 )}
 
@@ -94,7 +144,7 @@ function Conso() {
                       href="https://maps.google.com/?q=Estacion+de+Tren+Utrera" 
                       target="_blank" 
                       rel="noreferrer"
-                      className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors"
+                      className="block text-center py-2 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors shadow-sm"
                     >
                       📍 Localizar Estación (Av. San Juan Bosco)
                     </a>
@@ -220,7 +270,7 @@ function VistaAgenteAlta({ onAgregarComercio, setActiveTab }) {
 
           <div>
             <label className="block font-bold mb-1">Nombre detectado</label>
-            <input type="text" value={resultado.nombre} onChange={e => setResultado({...resultado, nombre: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900" />
+            <input type="text" value={resultado.nombre} onChange={e => setResult({...resultado, nombre: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -396,7 +446,7 @@ export default function App() {
       categoria: "Hostelería / Tapas",
       telefono: "955870000",
       whatsapp: "34600000000",
-      descripcion: "Establecimiento tradicional de referencia en Utrera.",
+      descripcion: "Establecimiento tradicional de rutina en Utrera.",
       etiqueta: "Socio Fundador",
       foto: "🍷"
     }
