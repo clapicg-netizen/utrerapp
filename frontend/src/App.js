@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 function Conso() {
   const [mensaje, setMensaje] = useState("");
   const [chat, setChat] = useState([
-    { remitente: "conso", texto: "¡Hola, JuanRa! Soy Conso, tu asistente para Utrerapp. ¿En qué te puedo echar una mano hoy?" }
+    { remitente: "conso", texto: "¿Eh, hola? Soy Conso, ¿qué necesitas?" }
   ]);
 
   const enviarMensaje = (e) => {
@@ -18,7 +18,7 @@ function Conso() {
     setMensaje("");
 
     setTimeout(() => {
-      setChat(prev => [...prev, { remitente: "conso", texto: "¡Recibido! Lo reviso enseguida para dejarlo perfecto en Utrerapp." }]);
+      setChat(prev => [...prev, { remitente: "conso", texto: "¡Lo anoto! Enseguida te ayudo con eso en Utrera." }]);
     }, 1000);
   };
 
@@ -74,7 +74,6 @@ function VistaAgenteAlta({ onAgregarComercio, setActiveTab }) {
     setProcesando(true);
 
     setTimeout(() => {
-      // Simulación de análisis inteligente del texto pegado
       const lineas = textoBruto.split('\n').map(l => l.trim()).filter(Boolean);
       const nombreDetectado = lineas[0] || "Nuevo Comercio Utrera";
       
@@ -132,7 +131,7 @@ function VistaAgenteAlta({ onAgregarComercio, setActiveTab }) {
             rows="5" 
             value={textoBruto} 
             onChange={e => setTextoBruto(e.target.value)} 
-            placeholder="Ej: Bar El Turronero, abierto desde el 80. Está en calle Ancha 12. Teléfono 611223344. Tienen tapas caseras y buen ambiente..." 
+            placeholder="Ej: Bar El Turronero, abierto desde el 80. Está en calle Ancha 12. Teléfono 611223344..." 
             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900 leading-relaxed"
           ></textarea>
         </div>
