@@ -27,7 +27,7 @@ export default function Conso() {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: '¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia o los horarios de Renfe y te llevaré directamente.'
+      text: '¡Eh, hola! Soy Conso, ¿qué necesitas?'
     }
   ]);
   const [input, setInput] = useState('');
@@ -57,7 +57,7 @@ export default function Conso() {
         return timeStr;
       }
     }
-    return '06:15 (del día siguiente)';
+    return '06:15';
   };
 
   const handleRenfeQuery = () => {
@@ -68,9 +68,9 @@ export default function Conso() {
       const nextTrain = getNextTrain();
       const botMessage = {
         sender: 'bot',
-        text: `El próximo tren sale a las ${nextTrain} según Renfe. (Tu dispositivo no soporta geolocalización).`,
+        text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
         buttons: [
-          { label: '🗺️ Ir a Estación de Utrera', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
+          { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
           { label: '📱 Web oficial Renfe', url: 'https://www.renfe.com' }
         ]
       };
@@ -96,13 +96,11 @@ export default function Conso() {
         }
 
         const nextTrain = getNextTrain();
-        const distanceText = minDistance < 1000 ? `${minDistance} metros` : `${(minDistance / 1000).toFixed(1)} km`;
-
         const botMessage = {
           sender: 'bot',
-          text: `El próximo tren sale a las ${nextTrain} según Renfe, te encuentras a ${distanceText} de la ${closestStation.name}.`,
+          text: `Estación más cercana: ${closestStation.name}. El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
           buttons: [
-            { label: `🗺️ Ir a ${closestStation.name}`, url: `https://maps.google.com/?q=${encodeURIComponent(closestStation.name)}` },
+            { label: `🗺️ Localizar Estación (${closestStation.name})`, url: `https://maps.google.com/?q=${encodeURIComponent(closestStation.name)}` },
             { label: '📱 Consultar horarios oficiales Renfe', url: 'https://www.renfe.com' }
           ]
         };
@@ -114,9 +112,9 @@ export default function Conso() {
         const nextTrain = getNextTrain();
         const botMessage = {
           sender: 'bot',
-          text: `El próximo tren sale a las ${nextTrain} según Renfe. (No se pudo obtener la ubicación GPS: ${error.message}).`,
+          text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
           buttons: [
-            { label: '🗺️ Ir a Estación de Utrera', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
+            { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
             { label: '📱 Web oficial Renfe', url: 'https://www.renfe.com' }
           ]
         };
@@ -137,7 +135,9 @@ export default function Conso() {
     if (!textToSend) setInput('');
     setLoading(true);
 
-    if (text.toLowerCase().includes('renfe') || text.toLowerCase().includes('tren') || text.toLowerCase().includes('cercanias')) {
+    const textLower = text.toLowerCase();
+
+    if (textLower.includes('renfe') || textLower.includes('tren') || textLower.includes('cercanias') || textLower.includes('horario')) {
       handleRenfeQuery();
       return;
     }
@@ -155,18 +155,34 @@ export default function Conso() {
     }
   };
 
-  const handleQuickAction = (action) => {
+  const handleQuickAction = async (action) => {
     if (action === 'farmacia') {
-      const userMessage = { sender: 'user', text: '🏥 Farmacia de Guardia hoy' };
-      const botMessage = {
-        sender: 'bot',
-        text: `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *MARTES, 13 DE OCTUBRE*\n\n- **Ldo/a. Francisco Javier González Mancha**\n📍 Dirección: Real, 29\n📞 Teléfono: 954861840\n⏰ Horarios: Turno de Guardia 24 horas`,
-        buttons: [
-          { label: '🗺️ Te llevo a Francisco Javier González Mancha', url: 'https://maps.google.com/?q=Real+29+Utrera' },
-          { label: '📞 Llamar a Francisco Javier González Mancha (954861840)', url: 'tel:954861840' }
-        ]
-      };
-      setMessages((prev) => [...prev, userMessage, botMessage]);
+      const userMessage = { sender: 'user', text: '🏥 Farmacia de guardia hoy' };
+      setMessages((prev) => [...prev, userMessage]);
+      setLoading(true);
+
+      try {
+        const botReplyText = await obtenerRespuestaConso('farmacia de guardia hoy', messages);
+        const botMessage = {
+          sender: 'bot',
+          text: botReplyText || '💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre): Consulta el listado oficial y la geolocalización:',
+          buttons: [
+            { label: '📍 Geolocalización Farmacia de Guardia (GPS)', url: 'https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera' }
+          ]
+        };
+        setMessages((prev) => [...prev, botMessage]);
+      } catch (err) {
+        const botMessage = {
+          sender: 'bot',
+          text: '💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre). Consulta la ubicación exacta:',
+          buttons: [
+            { label: '📍 Geolocalización Farmacia de Guardia (GPS)', url: 'https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera' }
+          ]
+        };
+        setMessages((prev) => [...prev, botMessage]);
+      } finally {
+        setLoading(false);
+      }
     } else if (action === 'renfe') {
       handleRenfeQuery();
     }
@@ -175,11 +191,11 @@ export default function Conso() {
   return (
     <div className="flex flex-col h-screen bg-slate-50">
       {/* Cabecera */}
-      <div className="bg-amber-900 text-white p-4 flex items-center shadow-md">
-        <div className="bg-amber-700 p-2 rounded-full mr-3">🤝</div>
+      <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-red-950 text-white p-4 flex items-center shadow-md">
+        <div className="bg-rose-800 p-2 rounded-full mr-3">🤖</div>
         <div>
-          <h1 className="font-bold text-lg">Conso 🤖</h1>
-          <p className="text-xs text-amber-200">Asistente Virtual de Utrera</p>
+          <h1 className="font-bold text-lg">Asistente Conso</h1>
+          <p className="text-xs text-rose-200">Tu inteligencia local para consultas y gestión en Utrera.</p>
         </div>
       </div>
 
@@ -189,7 +205,7 @@ export default function Conso() {
           <button
             key={idx}
             onClick={() => handleQuickAction(qa.action)}
-            className="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-amber-300"
+            className="bg-rose-50 hover:bg-rose-100 text-rose-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-rose-200"
           >
             {qa.label}
           </button>
@@ -206,7 +222,7 @@ export default function Conso() {
             <div
               className={`max-w-[85%] p-3 rounded-2xl text-sm ${
                 msg.sender === 'user'
-                  ? 'bg-amber-500 text-white rounded-br-none font-medium'
+                  ? 'bg-rose-900 text-white rounded-br-none font-medium'
                   : 'bg-white border text-slate-800 rounded-bl-none shadow-sm'
               }`}
             >
@@ -219,7 +235,7 @@ export default function Conso() {
                       href={btn.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full text-center bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-3 rounded-xl text-xs shadow-sm transition"
+                      className="block w-full text-center bg-rose-100 hover:bg-rose-200 text-rose-900 font-bold py-2 px-3 rounded-xl text-xs shadow-sm transition"
                     >
                       {btn.label}
                     </a>
@@ -232,7 +248,7 @@ export default function Conso() {
         {loading && (
           <div className="flex justify-start">
             <div className="bg-white border p-3 rounded-2xl text-xs text-slate-500 animate-pulse">
-              Conso está consultando tu ubicación y el próximo tren...
+              Conso está consultando los datos oficiales...
             </div>
           </div>
         )}
@@ -245,14 +261,14 @@ export default function Conso() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Escribe tu consulta a Conso..."
-          className="flex-1 border rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          placeholder="Pregúntale a Conso (trenes, farmacias...)"
+          className="flex-1 border rounded-xl px-4 py-2 text-xs bg-slate-50 focus:outline-none focus:border-rose-900"
         />
         <button
           onClick={() => handleSendMessage()}
-          className="bg-rose-600 hover:bg-rose-700 text-white p-2.5 rounded-full shadow-md transition"
+          className="bg-rose-900 hover:bg-rose-950 text-white px-4 py-2 rounded-xl text-xs font-semibold shadow-md transition"
         >
-          ➤
+          Enviar
         </button>
       </div>
     </div>
