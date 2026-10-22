@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
-import { obtenerRespuestaConso } from '../lib/consoService';
+import { createClient } from '@supabase/supabase-js';
 
-// Coordenadas de las estaciones clave de la línea C-1
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://tu-proyecto.supabase.co';
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'tu-clave-anon';
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Estaciones clave de la línea C-1
 const STATIONS = [
-  { name: 'Estación de Utrera', lat: 37.2185, lon: -5.7813 },
+  { name: 'Estación de Utrera (Av. San Juan Bosco)', lat: 37.2185, lon: -5.7813 },
   { name: 'Apeadero Canta el Gallo', lat: 37.2350, lon: -5.8150 },
   { name: 'Estación de San Bernardo (Sevilla)', lat: 37.3772, lon: -5.9794 }
 ];
 
-// Fórmula de Haversine para calcular la distancia en metros entre dos coordenadas GPS
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3; // Radio de la tierra en metros
+  const R = 6371e3;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -38,10 +41,9 @@ export default function Conso() {
     { label: '🚆 Próximo Cercanías Renfe C1', action: 'renfe' }
   ];
 
-  // Horarios base de salida hacia Sevilla (Línea C-1)
   const trainSchedules = [
     '06:15', '06:45', '07:15', '07:45', '08:10', '08:35', '09:05', '09:35',
-    '10:20', '10:50', '11:20', '11:50', '12:20', '12:50', '13:20', '13:50',
+    '10:20', '10:50', '11:20', '11:50', '12:40', '13:20', '13:50',
     '14:20', '14:50', '15:20', '15:50', '16:20', '16:50', '17:20', '17:50',
     '18:20', '18:50', '19:20', '19:50', '20:20', '20:50', '21:30', '22:30'
   ];
@@ -57,21 +59,20 @@ export default function Conso() {
         return timeStr;
       }
     }
-    return '06:15';
+    return '12:40';
   };
 
   const handleRenfeQuery = () => {
     setLoading(true);
     const userMessage = { sender: 'user', text: '🚆 Próximo Cercanías Renfe C1' };
-    
+    const nextTrain = getNextTrain();
+
     if (!navigator.geolocation) {
-      const nextTrain = getNextTrain();
       const botMessage = {
         sender: 'bot',
         text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
         buttons: [
-          { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
-          { label: '📱 Web oficial Renfe', url: 'https://www.renfe.com' }
+          { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' }
         ]
       };
       setMessages((prev) => [...prev, userMessage, botMessage]);
@@ -83,7 +84,6 @@ export default function Conso() {
       (position) => {
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
-
         let closestStation = STATIONS[0];
         let minDistance = calculateDistance(userLat, userLon, closestStation.lat, closestStation.lon);
 
@@ -95,27 +95,22 @@ export default function Conso() {
           }
         }
 
-        const nextTrain = getNextTrain();
         const botMessage = {
           sender: 'bot',
           text: `Estación más cercana: ${closestStation.name}. El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
           buttons: [
-            { label: `🗺️ Localizar Estación (${closestStation.name})`, url: `https://maps.google.com/?q=${encodeURIComponent(closestStation.name)}` },
-            { label: '📱 Consultar horarios oficiales Renfe', url: 'https://www.renfe.com' }
+            { label: `🗺️ Localizar Estación (${closestStation.name})`, url: `https://maps.google.com/?q=${encodeURIComponent(closestStation.name)}` }
           ]
         };
-
         setMessages((prev) => [...prev, userMessage, botMessage]);
         setLoading(false);
       },
-      (error) => {
-        const nextTrain = getNextTrain();
+      () => {
         const botMessage = {
           sender: 'bot',
           text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
           buttons: [
-            { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' },
-            { label: '📱 Web oficial Renfe', url: 'https://www.renfe.com' }
+            { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' }
           ]
         };
         setMessages((prev) => [...prev, userMessage, botMessage]);
@@ -125,64 +120,94 @@ export default function Conso() {
     );
   };
 
-  const handleSendMessage = async (textToSend) => {
-    const text = textToSend || input;
-    if (!text.trim()) return;
-
-    const userMessage = { sender: 'user', text };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    if (!textToSend) setInput('');
+  const handleFarmaciaQuery = async () => {
     setLoading(true);
-
-    const textLower = text.toLowerCase();
-
-    if (textLower.includes('renfe') || textLower.includes('tren') || textLower.includes('cercanias') || textLower.includes('horario')) {
-      handleRenfeQuery();
-      return;
-    }
+    const userMessage = { sender: 'user', text: '🏥 Farmacia de guardia hoy' };
+    setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const botReplyText = await obtenerRespuestaConso(text, updatedMessages);
-      setMessages((prev) => [...prev, { sender: 'bot', text: botReplyText }]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: 'bot', text: 'Lo siento, ha ocurrido un error al conectar con Conso.' }
-      ]);
+      const hoy = new Date();
+      const dia = String(hoy.getDate()).padStart(2, '0');
+      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+      const fechaBusqueda = `${dia}-${meses[hoy.getMonth()]}-${hoy.getFullYear()}`;
+
+      // Consulta directa a la tabla farmacias_guardia de Supabase
+      const { data, error } = await supabase
+        .from('farmacias_guardia')
+        .select('*')
+        .eq('fecha', fechaBusqueda);
+
+      if (error || !data || data.length === 0) {
+        setMessages((prev) => [...prev, {
+          sender: 'bot',
+          text: `💊 No se encontraron registros exactos para hoy (${fechaBusqueda}). Consulta los carteles oficiales en las farmacias locales de Utrera.`
+        }]);
+      } else {
+        let textoFarmacias = "💊 Farmacias de guardia oficiales:\n\n";
+        let botonesFarmacia = [];
+
+        data.forEach((f) => {
+          textoFarmacias += `• **${f.nombre}**\n📍 ${f.direccion}\n📞 Tel: ${f.telefono}\n🕒 ${f.horario}\n\n`;
+          botonesFarmacia.push({
+            label: `📍 GPS: ${f.nombre}`,
+            url: `https://maps.google.com/?q=${encodeURIComponent(f.direccion + ' Utrera')}`
+          });
+          botonesFarmacia.push({
+            label: `📞 Llamar (${f.telefono})`,
+            url: `tel:${f.telefono}`
+          });
+        });
+
+        setMessages((prev) => [...prev, {
+          sender: 'bot',
+          text: textoFarmacias.trim(),
+          buttons: botonesFarmacia
+        }]);
+      }
+    } catch (err) {
+      setMessages((prev) => [...prev, {
+        sender: 'bot',
+        text: '💊 Error al consultar la base de datos de farmacias en Supabase.'
+      }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleQuickAction = async (action) => {
-    if (action === 'farmacia') {
-      const userMessage = { sender: 'user', text: '🏥 Farmacia de guardia hoy' };
-      setMessages((prev) => [...prev, userMessage]);
-      setLoading(true);
+  const handleSendMessage = async (textToSend) => {
+    const text = textToSend || input;
+    if (!text.trim()) return;
 
-      try {
-        const botReplyText = await obtenerRespuestaConso('farmacia de guardia hoy', messages);
-        const botMessage = {
-          sender: 'bot',
-          text: botReplyText || '💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre): Consulta el listado oficial y la geolocalización:',
-          buttons: [
-            { label: '📍 Geolocalización Farmacia de Guardia (GPS)', url: 'https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera' }
-          ]
-        };
-        setMessages((prev) => [...prev, botMessage]);
-      } catch (err) {
-        const botMessage = {
-          sender: 'bot',
-          text: '💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre). Consulta la ubicación exacta:',
-          buttons: [
-            { label: '📍 Geolocalización Farmacia de Guardia (GPS)', url: 'https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera' }
-          ]
-        };
-        setMessages((prev) => [...prev, botMessage]);
-      } finally {
-        setLoading(false);
-      }
+    const textLower = text.toLowerCase();
+    if (textLower.includes('renfe') || textLower.includes('tren') || textLower.includes('cercanias') || textLower.includes('horario')) {
+      setInput('');
+      handleRenfeQuery();
+      return;
+    }
+
+    if (textLower.includes('farmacia') || textLower.includes('guardia') || textLower.includes('medicamento')) {
+      setInput('');
+      handleFarmaciaQuery();
+      return;
+    }
+
+    const userMessage = { sender: 'user', text };
+    setMessages((prev) => [...prev, userMessage]);
+    if (!textToSend) setInput('');
+    
+    setLoading(true);
+    setTimeout(() => {
+      setMessages((prev) => [...prev, {
+        sender: 'bot',
+        text: '¡Vaya! Pregúntame por el próximo tren de Cercanías Renfe C1 o por las farmacias de guardia de Utrera.'
+      }]);
+      setLoading(false);
+    }, 500);
+  };
+
+  const handleQuickAction = (action) => {
+    if (action === 'farmacia') {
+      handleFarmaciaQuery();
     } else if (action === 'renfe') {
       handleRenfeQuery();
     }
@@ -190,7 +215,6 @@ export default function Conso() {
 
   return (
     <div className="flex flex-col h-screen bg-slate-50">
-      {/* Cabecera */}
       <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-red-950 text-white p-4 flex items-center shadow-md">
         <div className="bg-rose-800 p-2 rounded-full mr-3">🤖</div>
         <div>
@@ -199,7 +223,6 @@ export default function Conso() {
         </div>
       </div>
 
-      {/* Botones de acción rápida */}
       <div className="p-3 flex gap-2 overflow-x-auto bg-white border-b">
         {quickActions.map((qa, idx) => (
           <button
@@ -212,7 +235,6 @@ export default function Conso() {
         ))}
       </div>
 
-      {/* Área de Chat */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((msg, index) => (
           <div
@@ -254,7 +276,6 @@ export default function Conso() {
         )}
       </div>
 
-      {/* Entrada de texto */}
       <div className="p-3 bg-white border-t flex items-center gap-2">
         <input
           type="text"
