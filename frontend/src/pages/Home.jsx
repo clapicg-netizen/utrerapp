@@ -90,7 +90,40 @@ export default function Home({ setTab }) {
         </div>
       </div>
 
-      {/* CARRUSEL DE BANNERS EN PORTADA */}
+      {/* TARJETA DE DESTACADO DE CONSO - IA UTRERANA */}
+      <div className="px-4 mt-4 max-w-md mx-auto">
+        <div 
+          onClick={(e) => cambiarPestana(e, "conso")}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-950 via-rose-900 to-red-950 p-6 text-white shadow-xl border border-rose-800/50 cursor-pointer hover:scale-[0.99] transition-transform"
+        >
+          <div className="absolute -right-6 -top-6 w-28 h-28 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 border border-amber-400/30 rounded-full text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+                <span>✨ IA Oficial</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              </div>
+              <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                Conso, tu asistente 🤖
+              </h2>
+              <p className="text-xs text-rose-200/90 font-medium leading-relaxed max-w-[220px]">
+                Conectada en directo con inteligencia artificial. Horarios, farmacias y gestión de Utrera al instante.
+              </p>
+            </div>
+
+            {/* Logotipo distintivo IA Utrerana */}
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-rose-700 flex items-center justify-center text-3xl shadow-lg shadow-rose-950/60 border-2 border-white/20 transform hover:scale-105 transition-transform">
+                🧠✨
+              </div>
+              <span className="text-[10px] font-bold text-amber-300 mt-1.5 uppercase tracking-wider">Utrerapp</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CARRUSEL DE BANNERS EN PORTADA CORREGIDO */}
       <div className="px-4 mt-4 max-w-md mx-auto">
         <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
           <div 
