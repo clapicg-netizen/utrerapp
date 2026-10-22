@@ -34,19 +34,18 @@ function Conso() {
         };
       } else if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento")) {
         respuestaConso = {
-          texto: "💊 Farmacia de guardia hoy en Utrera: Farmacia Central (Calle Ancha, 24). Geolocalización disponible. Puedes llamar directamente:",
-          esFarmacia: true,
-          telefono: "955860000"
+          texto: "💊 Farmacia de guardia en Utrera (calendario oficial actualizado hasta el 31 de diciembre): Consulta el listado oficial y geolocalización:",
+          esFarmacia: true
         };
       } else if (textoLower.includes("urgencia") || textoLower.includes("hospital") || textoLower.includes("chare") || textoLower.includes("emergencia")) {
         respuestaConso = {
           texto: "🏥 El CHARE de Utrera cuenta con urgencias 24 horas. Para emergencias graves, llama directamente al 112.",
-          esFarma: false
+          esFarmacia: false
         };
       } else if (textoLower.includes("hola") || textoLower.includes("buenas") || textoLower.includes("que tal")) {
         respuestaConso = {
-          texto: "¡Hola, vecino! ¿En qué te puedo echar una mano hoy por Utrera? Pregúntame por trenes o farmacias de guardia.",
-          esFarma: false
+          texto: "¡Eh, hola! Soy Conso, ¿qué necesitas?",
+          esFarmacia: false
         };
       }
 
@@ -72,15 +71,15 @@ function Conso() {
                 {c.esFarmacia && (
                   <div className="pt-2 border-t border-slate-200 space-y-2">
                     <a 
-                      href="https://maps.google.com/?q=Farmacia+en+Utrera" 
+                      href="https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera" 
                       target="_blank" 
                       rel="noreferrer"
                       className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors"
                     >
-                      📍 Ver ubicación exacta (GPS)
+                      📍 Geolocalización Farmacia de Guardia
                     </a>
                     <a 
-                      href={`tel:${c.telefono}`} 
+                      href="tel:955870000" 
                       className="block text-center py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"
                     >
                       📞 Llamar a la Farmacia
@@ -97,7 +96,7 @@ function Conso() {
                       rel="noreferrer"
                       className="block text-center py-1.5 bg-rose-100 text-rose-900 font-bold rounded-lg hover:bg-rose-200 transition-colors"
                     >
-                      📍 Cómo llegar a la Estación de Utrera
+                      📍 Localizar Estación (Av. San Juan Bosco)
                     </a>
                   </div>
                 )}
