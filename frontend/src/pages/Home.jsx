@@ -123,7 +123,7 @@ export default function Home({ setTab }) {
         </div>
       </div>
 
-      {/* CARRUSEL DE BANNERS EN PORTADA CORREGIDO */}
+      {/* CARRUSEL DE BANNERS EN PORTADA */}
       <div className="px-4 mt-4 max-w-md mx-auto">
         <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
           <div 
