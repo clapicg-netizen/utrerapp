@@ -1,25 +1,44 @@
 import React, { useState } from 'react';
 
 // ==========================================
-// COMPONENTE CONSO
+// COMPONENTE CONSO (Cerebro Inteligente Local)
 // ==========================================
 function Conso() {
   const [mensaje, setMensaje] = useState("");
   const [chat, setChat] = useState([
-    { remitente: "conso", texto: "¿Eh, hola? Soy Conso, ¿qué necesitas?" }
+    { remitente: "conso", texto: "¡Eh, hola! Soy Conso, ¿qué necesitas?" }
   ]);
 
   const enviarMensaje = (e) => {
     e.preventDefault();
-    if (!mensaje.trim()) return;
+    const textoUsuario = mensaje.trim();
+    if (!textoUsuario) return;
 
-    const nuevoChat = [...chat, { remitente: "user", texto: mensaje }];
+    // Añadir mensaje del usuario
+    const nuevoChat = [...chat, { remitente: "user", texto: textoUsuario }];
     setChat(nuevoChat);
     setMensaje("");
 
+    // Inteligencia de respuestas de Conso para Utrera
     setTimeout(() => {
-      setChat(prev => [...prev, { remitente: "conso", texto: "¡Lo anoto! Enseguida te ayudo con eso en Utrera." }]);
-    }, 1000);
+      let respuestaConso = "¡Vaya! Eso que me pides no lo tengo controlado del todo, pero puedes consultar la sección de Urgencias o la Guía Local de Utrerapp.";
+      
+      const textoLower = textoUsuario.toLowerCase();
+
+      if (textoLower.includes("tren") || textoLower.includes("cercanias") || textoLower.includes("sevilla") || textoLower.includes("horario")) {
+        respuestaConso = "🚆 Los trenes de Cercanías (Línea C-1) Utrera - Sevilla circulan habitualmente cada 30 minutos en hora punta. Te recomiendo comprobar el panel de Adif en la estación o su web oficial.";
+      } else if (textoLower.includes("farmacia") || textoLower.includes("guardia") || textoLower.includes("medicamento")) {
+        respuestaConso = "💊 Para consultar la farmacia de guardia hoy en Utrera, puedes revisar los carteles informativos en las puertas de las farmacias locales o acceder a la sección de Urgencias de nuestra app.";
+      } else if (textoLower.includes("urgencia") || textoLower.includes("hospital") || textoLower.includes("chare") || textoLower.includes("emergencia")) {
+        respuestaConso = "🏥 El CHARE de Utrera cuenta con urgencias 24 horas. Para emergencias graves, llama directamente al 112 o al teléfono del centro médico.";
+      } else if (textoLower.includes("ayuntamiento") || textoLower.includes("alcalde") || textoLower.includes("municipal")) {
+        respuestaConso = "🏛️ El Ayuntamiento de Utrera está en la Plaza de Gibaxa. Puedes realizar trámites online en su sede electrónica oficial.";
+      } else if (textoLower.includes("hola") || textoLower.includes("buenas") || textoLower.includes("que tal")) {
+        respuestaConso = "¡Hola, vecino! ¿En qué te puedo echar una mano hoy por Utrera? Pregúntame por trenes, farmacias, comercios o urgencias.";
+      }
+
+      setChat(prev => [...prev, { remitente: "conso", texto: respuestaConso }]);
+    }, 600);
   };
 
   return (
@@ -29,11 +48,11 @@ function Conso() {
         <p className="text-xs text-rose-200 mt-1">Tu inteligencia local para consultas y gestión en Utrera.</p>
       </div>
 
-      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 h-[400px] flex flex-col justify-between">
+      <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3 h-[420px] flex flex-col justify-between">
         <div className="overflow-y-auto space-y-3 pr-1 flex-1">
           {chat.map((c, index) => (
             <div key={index} className={`flex ${c.remitente === "user" ? "justify-end" : "justify-start"}`}>
-              <div className={`max-w-[80%] p-3 rounded-2xl text-xs ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
+              <div className={`max-w-[85%] p-3 rounded-2xl text-xs leading-relaxed ${c.remitente === "user" ? "bg-rose-900 text-white rounded-br-none" : "bg-slate-100 text-slate-800 rounded-bl-none"}`}>
                 {c.texto}
               </div>
             </div>
@@ -45,7 +64,7 @@ function Conso() {
             type="text" 
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
-            placeholder="Pregúntale a Conso..." 
+            placeholder="Pregúntale a Conso (trenes, farmacias...)" 
             className="flex-1 px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-rose-900"
           />
           <button type="submit" className="px-4 py-2 bg-rose-900 text-white text-xs font-semibold rounded-xl hover:bg-rose-950 transition-colors">
