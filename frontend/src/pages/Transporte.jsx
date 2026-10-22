@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
-import { api } from "@/lib/api";
+import { api } from "../lib/api";
 import { Bus, Train, Clock } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
-import { api } from "@/lib/api";
-import { mergeWithLocal, safeImg, telHref, mapsHref } from "@/lib/localStore";
+import { api } from "../lib/api";
+import { mergeWithLocal, safeImg, telHref, mapsHref } from "../lib/localStore";
 import { Home as HomeIcon, KeyRound, Car, Building2, MapPin, BedDouble, Euro, Phone } from "lucide-react";
 
 const CATS = [

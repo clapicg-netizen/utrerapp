@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
-import { api } from "@/lib/api";
+import { api } from "../lib/api";
 import {
   mergeWithLocal, safeImg, cleanPhotos, telHref, whatsappHref,
   mapsHref, safeExternal,
-} from "@/lib/localStore";
+} from "../lib/localStore";
 import {
   Beer, UtensilsCrossed, Coffee, Bike, Phone, MessageCircle, Clock,
   BookOpen, MapPin, Star, FileText, Globe, Instagram, Facebook, Music2,
