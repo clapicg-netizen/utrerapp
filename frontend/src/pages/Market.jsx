@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink } from "lucide-react";
-import { obtenerComercios } from "../lib/comerciosService";
+import { Phone, Navigation, Search, MapPin } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 export default function Market() {
   const [comercios, setComercios] = useState([]);
@@ -12,15 +12,29 @@ export default function Market() {
   const categorias = ["Todos", "Hostelería", "Inmobiliarias", "Comercio", "Servicios", "Salud y Belleza"];
 
   useEffect(() => {
-    cargarDatos();
+    async function fetchData() {
+      setCargando(true);
+      try {
+        let query = supabase.from('comercios_utrera').select('*');
+        if (categoriaSel && categoriaSel !== "Todos") {
+          query = query.eq('categoria', categoriaSel);
+        }
+        const { data, error } = await query;
+        if (error) {
+          console.error("Error Supabase:", error);
+          setComercios([]);
+        } else {
+          setComercios(data || []);
+        }
+      } catch (err) {
+        console.error("Excepción:", err);
+        setComercios([]);
+      } finally {
+        setCargando(false);
+      }
+    }
+    fetchData();
   }, [categoriaSel]);
-
-  const cargarDatos = async () => {
-    setCargando(true);
-    const data = await obtenerComercios(categoriaSel);
-    setComercios(data || []);
-    setCargando(false);
-  };
 
   const comerciosFiltrados = comercios.filter((c) =>
     c.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -74,15 +88,15 @@ export default function Market() {
       {/* Lista de Comercios */}
       <div className="px-4 mt-4 space-y-4 max-w-lg mx-auto">
         {cargando ? (
-          <div className="text-center py-12 text-slate-400 text-sm">Cargando comercios...</div>
+          <div className="text-center py-12 text-slate-400 text-sm animate-pulse">Cargando comercios de Utrera...</div>
         ) : comerciosFiltrados.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6">
-            <p className="text-slate-500 font-medium text-sm">No se encontraron comercios</p>
+          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <p className="text-slate-500 font-medium text-sm">No hay comercios en esta categoría todavía.</p>
           </div>
         ) : (
           comerciosFiltrados.map((comercio) => (
             <div
-              key={comercio.id}
+              key={comercio.id || comercio.nombre}
               onClick={() => setComercioSel(comercio)}
               className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
             >
@@ -130,7 +144,7 @@ export default function Market() {
         )}
       </div>
 
-      {/* MODAL DETALLE DE COMERCIO */}
+      {/* MODAL DETALLE */}
       {comercioSel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-5">
