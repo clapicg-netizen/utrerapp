@@ -2,14 +2,37 @@ import React, { useState, useEffect } from "react";
 import { Phone, Navigation, Search, MapPin } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
+const COMERCIOS_DE_PRUEBA = [
+  {
+    id: 1,
+    nombre: "Bar Alonsi",
+    categoria: "Hostelería",
+    descripcion: "El punto de encuentro de toda la vida en Utrera para disfrutar de unas buenas tapas.",
+    direccion: "Plaza del Altozano, Utrera",
+    telefono: "600000000",
+    whatsapp: "34600000000",
+    portada_url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"
+  },
+  {
+    id: 2,
+    nombre: "Panadería Artesana La Almazara",
+    categoria: "Comercio",
+    descripcion: "Panes tradicionales de hogaza, picos artesanales y dulces caseros de Utrera.",
+    direccion: "Calle Ancha, Utrera",
+    telefono: "611111111",
+    whatsapp: "34611111111",
+    portada_url: "https://images.unsplash.com/photo-1509440159596-0249088772ff"
+  }
+];
+
 export default function Market() {
-  const [comercios, setComercios] = useState([]);
+  const [comercios, setComercios] = useState(COMERCIOS_DE_PRUEBA);
   const [categoriaSel, setCategoriaSel] = useState("Todos");
   const [comercioSel, setComercioSel] = useState(null);
   const [busqueda, setBusqueda] = useState("");
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando] = useState(false);
 
-  const categorias = ["Todos", "Hostelería", "Inmobiliarias", "Comercio", "Servicios", "Salud y Belleza"];
+  const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza"];
 
   useEffect(() => {
     async function fetchData() {
@@ -20,15 +43,11 @@ export default function Market() {
           query = query.eq('categoria', categoriaSel);
         }
         const { data, error } = await query;
-        if (error) {
-          console.error("Error Supabase:", error);
-          setComercios([]);
-        } else {
-          setComercios(data || []);
+        if (!error && data && data.length > 0) {
+          setComercios(data);
         }
       } catch (err) {
-        console.error("Excepción:", err);
-        setComercios([]);
+        console.error("Usando datos locales por error de red:", err);
       } finally {
         setCargando(false);
       }
@@ -87,11 +106,9 @@ export default function Market() {
 
       {/* Lista de Comercios */}
       <div className="px-4 mt-4 space-y-4 max-w-lg mx-auto">
-        {cargando ? (
-          <div className="text-center py-12 text-slate-400 text-sm animate-pulse">Cargando comercios de Utrera...</div>
-        ) : comerciosFiltrados.length === 0 ? (
+        {comerciosFiltrados.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <p className="text-slate-500 font-medium text-sm">No hay comercios en esta categoría todavía.</p>
+            <p className="text-slate-500 font-medium text-sm">No hay comercios en esta categoría.</p>
           </div>
         ) : (
           comerciosFiltrados.map((comercio) => (
