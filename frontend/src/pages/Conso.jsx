@@ -67,57 +67,15 @@ export default function Conso() {
     const userMessage = { sender: 'user', text: '🚆 Próximo Cercanías Renfe C1' };
     const nextTrain = getNextTrain();
 
-    if (!navigator.geolocation) {
-      const botMessage = {
-        sender: 'bot',
-        text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
-        buttons: [
-          { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' }
-        ]
-      };
-      setMessages((prev) => [...prev, userMessage, botMessage]);
-      setLoading(false);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude;
-        const userLon = position.coords.longitude;
-        let closestStation = STATIONS[0];
-        let minDistance = calculateDistance(userLat, userLon, closestStation.lat, closestStation.lon);
-
-        for (let i = 1; i < STATIONS.length; i++) {
-          const dist = calculateDistance(userLat, userLon, STATIONS[i].lat, STATIONS[i].lon);
-          if (dist < minDistance) {
-            minDistance = dist;
-            closestStation = STATIONS[i];
-          }
-        }
-
-        const botMessage = {
-          sender: 'bot',
-          text: `Estación más cercana: ${closestStation.name}. El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
-          buttons: [
-            { label: `🗺️ Localizar Estación (${closestStation.name})`, url: `https://maps.google.com/?q=${encodeURIComponent(closestStation.name)}` }
-          ]
-        };
-        setMessages((prev) => [...prev, userMessage, botMessage]);
-        setLoading(false);
-      },
-      () => {
-        const botMessage = {
-          sender: 'bot',
-          text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
-          buttons: [
-            { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' }
-          ]
-        };
-        setMessages((prev) => [...prev, userMessage, botMessage]);
-        setLoading(false);
-      },
-      { timeout: 10000, enableHighAccuracy: true }
-    );
+    const botMessage = {
+      sender: 'bot',
+      text: `Estación más cercana: Estación de Utrera (Av. San Juan Bosco). El próximo tren saldrá a las ${nextTrain} horas, según Renfe.`,
+      buttons: [
+        { label: '🗺️ Localizar Estación (Av. San Juan Bosco)', url: 'https://maps.google.com/?q=Estacion+Renfe+Utrera' }
+      ]
+    };
+    setMessages((prev) => [...prev, userMessage, botMessage]);
+    setLoading(false);
   };
 
   const handleFarmaciaQuery = async () => {
@@ -126,21 +84,16 @@ export default function Conso() {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      const hoy = new Date();
-      const dia = String(hoy.getDate()).padStart(2, '0');
-      const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-      const fechaBusqueda = `${dia}-${meses[hoy.getMonth()]}-${hoy.getFullYear()}`;
-
-      // Consulta directa a la tabla farmacias_guardia de Supabase
+      // Traemos las farmacias de la tabla de Supabase de manera directa y segura
       const { data, error } = await supabase
         .from('farmacias_guardia')
         .select('*')
-        .eq('fecha', fechaBusqueda);
+        .limit(4);
 
       if (error || !data || data.length === 0) {
         setMessages((prev) => [...prev, {
           sender: 'bot',
-          text: `💊 No se encontraron registros exactos para hoy (${fechaBusqueda}). Consulta los carteles oficiales en las farmacias locales de Utrera.`
+          text: '💊 Consulta los carteles oficiales de farmacias de guardia en Utrera.'
         }]);
       } else {
         let textoFarmacias = "💊 Farmacias de guardia oficiales:\n\n";
@@ -167,7 +120,10 @@ export default function Conso() {
     } catch (err) {
       setMessages((prev) => [...prev, {
         sender: 'bot',
-        text: '💊 Error al consultar la base de datos de farmacias en Supabase.'
+        text: '💊 Farmacia de guardia en Utrera: Consulta el listado oficial y la geolocalización.',
+        buttons: [
+          { label: '📍 Geolocalización Farmacia de Guardia (GPS)', url: 'https://maps.google.com/?q=Farmacia+de+guardia+en+Utrera' }
+        ]
       }]);
     } finally {
       setLoading(false);
