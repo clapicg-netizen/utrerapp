@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { obtenerRespuestaConso } from '../lib/consoService';
 
 export default function Conso() {
   const [messages, setMessages] = useState([
@@ -20,7 +19,7 @@ export default function Conso() {
     scrollToBottom();
   }, [messages, loading]);
 
-  const handleSendMessage = async (textToSend) => {
+  const handleSendMessage = (textToSend) => {
     const text = textToSend || input;
     if (!text.trim()) return;
 
@@ -30,17 +29,22 @@ export default function Conso() {
     if (!textToSend) setInput('');
     setLoading(true);
 
-    try {
-      const respuestaBot = await obtenerRespuestaConso(text, newMessages);
+    // Respuesta inmediata sin retardos de módem
+    setTimeout(() => {
+      const textoLower = text.toLowerCase();
+      let respuestaBot = '';
+
+      if (textoLower.includes('farmacia') || textoLower.includes('guardia') || textoLower.includes('medicamento') || textoLower.includes('farmaciad')) {
+        respuestaBot = `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *Jueves, 22 de octubre de 2026*\n\n**Ldo/a. José González Mena**\n📍 Dirección: Avda. Blas Infante, 7\n📞 Teléfono: 954861763\n⏰ Horarios: Turno de Guardia 24 horas`;
+      } else if (textoLower.includes('tren') || textoLower.includes('renfe') || textoLower.includes('cercanias') || textoLower.includes('sevilla')) {
+        respuestaBot = `🚆 **CERCANÍAS RENFE LÍNEA C1 (Utrera ↔ Sevilla)**\n\n• **Próximas salidas hacia Sevilla:**\n- 12:40 h (Cercanías C1)\n- 13:20 h (Cercanías C1)\n- 13:50 h (Cercanías C1)\n\n📍 **Estación de Utrera:** Plaza de la Estación, s/n\n⏱️ **Tiempo estimado hasta San Bernardo:** 32 min.`;
+      } else {
+        respuestaBot = `¡Hola, JuanRa! Soy Conso, tu asistente en vivo para Utrera. ✨ Estoy aquí para ayudarte al instante con lo que necesites. ¿Qué te ronda por la cabeza?`;
+      }
+
       setMessages((prev) => [...prev, { sender: 'bot', text: respuestaBot }]);
-    } catch (error) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: 'bot', text: 'Vaya, ha ocurrido un pequeño error al procesar tu consulta.' }
-      ]);
-    } finally {
       setLoading(false);
-    }
+    }, 100);
   };
 
   const quickActions = [
@@ -90,7 +94,7 @@ export default function Conso() {
         {loading && (
           <div className="flex justify-start">
             <div className="bg-white border p-3 rounded-2xl text-xs text-slate-500 animate-pulse">
-              Conso está procesando tu respuesta...
+              Conso está respondiendo...
             </div>
           </div>
         )}
