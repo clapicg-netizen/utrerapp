@@ -12,20 +12,6 @@ const STATIONS = [
   { name: 'Estación de San Bernardo (Sevilla)', lat: 37.3772, lon: -5.9794 }
 ];
 
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371e3;
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) *
-      Math.cos(lat2 * (Math.PI / 180)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return Math.round(R * c);
-}
-
 export default function Conso() {
   const [messages, setMessages] = useState([
     {
@@ -84,7 +70,7 @@ export default function Conso() {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      // Traemos las farmacias de la tabla de Supabase de manera directa y segura
+      // Consulta directa a la tabla farmacias_guardia de Supabase sin filtros estrictos de fecha para asegurar resultados
       const { data, error } = await supabase
         .from('farmacias_guardia')
         .select('*')
