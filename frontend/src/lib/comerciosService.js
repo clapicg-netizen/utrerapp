@@ -1,51 +1,21 @@
-import { supabase } from './supabaseClient';
+import { supabase } from './supabase';
 
-// Obtener todos los comercios de la nueva tabla limpia
-export const obtenerComercios = async () => {
-  const { data, error } = await supabase
-    .from('comercios_utrera')
-    .select('*');
-  
-  if (error) throw error;
-  return data;
-};
-
-// Crear un nuevo comercio
-export const crearComercio = async (comercio) => {
-  const { data, error } = await supabase
-    .from('comercios_utrera')
-    .insert([comercio]);
+export async function obtenerComercios(categoria = "Todos") {
+  try {
+    let query = supabase.from('comercios_utrera').select('*');
     
-  if (error) throw error;
-  return data;
-};
+    if (categoria && categoria !== "Todos") {
+      query = query.eq('categoria', categoria);
+    }
 
-// Actualizar un comercio existente
-export const actualizarComercio = async (id, comercio) => {
-  const { data, error } = await supabase
-    .from('comercios_utrera')
-    .update(comercio)
-    .eq('id', id);
-    
-  if (error) throw error;
-  return data;
-};
-
-// Eliminar un comercio
-export const eliminarComercio = async (id) => {
-  const { data, error } = await supabase
-    .from('comercios_utrera')
-    .delete()
-    .eq('id', id);
-    
-  if (error) throw error;
-  return data;
-};
-
-// Subir archivo al Storage de Supabase
-export const subirArchivoComercio = async (file) => {
-  const fileName = `${Date.now()}_${file.name}`;
-  const { data, error } = await supabase.storage.from('comercios').upload(fileName, file);
-  if (error) throw error;
-  return data;
-};
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error al obtener comercios:", error.message);
+      return [];
+    }
+    return data || [];
+  } catch (err) {
+    console.error("Excepción en obtenerComercios:", err);
+    return [];
+  }
+}
