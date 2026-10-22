@@ -15,7 +15,6 @@ import Admin from './pages/Admin';
 import DashboardAdmin from './pages/DashboardAdmin';
 import PanelComercio from './pages/PanelComercio';
 import Market from './pages/Market';
-import JuegoMostachon from './pages/JuegoMostachon';
 
 function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -54,8 +53,6 @@ function App() {
         return <DashboardAdmin />;
       case 'panel-comercio':
         return <PanelComercio />;
-      case 'juego':
-        return <JuegoMostachon />;
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }
