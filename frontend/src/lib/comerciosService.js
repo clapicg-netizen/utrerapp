@@ -15,10 +15,8 @@ export const comerciosService = {
   }
 };
 
-// Función comodín solicitada por los componentes de administración
-export const subirArchivoComercio = async (file) => {
-  console.warn("subirArchivoComercio simulado", file);
-  return null;
-};
+// Funciones comodín globales para satisfacer todas las importaciones pendientes
+export const obtenerComercios = async () => [];
+export const subirArchivoComercio = async () => null;
 
 export default comerciosService;
