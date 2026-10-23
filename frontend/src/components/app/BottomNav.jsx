@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Home, MessageCircle, Newspaper, Shield } from "lucide-react";
+import { Home, ShoppingBag, MessageCircle, Train } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home, testId: "nav-home" },
+  { to: "/market", label: "Guía Comercial", icon: ShoppingBag, testId: "nav-market" },
   { to: "/conso", label: "Conso", icon: MessageCircle, testId: "nav-conso" },
-  { to: "/noticias", label: "Noticias", icon: Newspaper, testId: "nav-news" },
-  { to: "/admin", label: "Admin", icon: Shield, testId: "nav-admin" },
+  { to: "/trenes", label: "Trenes", icon: Train, testId: "nav-trains" },
 ];
 
 export default function BottomNav() {
@@ -22,7 +22,7 @@ export default function BottomNav() {
             end={to === "/"}
             data-testid={testId}
             className={({ isActive }) =>
-              `flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-full text-[11px] font-semibold ${
+              `flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-full text-[10px] font-semibold ${
                 isActive
                   ? "bg-[color:var(--terracotta)] text-white"
                   : "text-muted-foreground hover:text-foreground"
@@ -30,7 +30,7 @@ export default function BottomNav() {
             }
           >
             <Icon size={18} />
-            <span>{label}</span>
+            <span className="truncate max-w-[65px]">{label}</span>
           </NavLink>
         ))}
       </div>
