@@ -1,23 +1,24 @@
-import { supabase } from './supabaseClient';
+import { supabase } from "./supabaseClient";
 
-export async function obtenerComercios(categoria = "Todos") {
-  try {
-    let query = supabase.from('comercios_utrera').select('*');
-    
-    if (categoria && categoria !== "Todos") {
-      query = query.eq('categoria', categoria);
-    }
-
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error("Error en Supabase al obtener comercios:", error.message);
-      return [];
-    }
-    
-    return data || [];
-  } catch (err) {
-    console.error("Excepción grave en obtenerComercios:", err);
-    return [];
+export const comerciosService = {
+  async get(endpoint) {
+    const table = endpoint.replace(/^\//, "");
+    const { data, error } = await supabase.from(table).select("*");
+    if (error) throw error;
+    return { data };
+  },
+  async post(endpoint, body) {
+    const table = endpoint.replace(/^\//, "");
+    const { data, error } = await supabase.from(table).insert([body]);
+    if (error) throw error;
+    return { data };
   }
-}
+};
+
+// Función comodín solicitada por los componentes de administración
+export const subirArchivoComercio = async (file) => {
+  console.warn("subirArchivoComercio simulado", file);
+  return null;
+};
+
+export default comerciosService;
