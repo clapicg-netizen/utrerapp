@@ -6,7 +6,7 @@ export default function Conso() {
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: '¡Hola! Soy Conso, tu asistente de Utrera.  👋\nPregúntame por las farmacias de guardia o los horarios de Renfe.'
+      texto: '¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia o los horarios de Renfe.'
     }
   ]);
 
@@ -14,7 +14,7 @@ export default function Conso() {
     const texto = pregunta.toLowerCase();
 
     if (texto.includes('farmacia') || texto.includes('guardia')) {
-      return '💊 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *Viernes, 23 de octubre de 2026*\n\n**Ldo/a. María Carmen Daza**\n📍 Dirección: Plaza del Altozano, 8\n📞 Teléfono: 954860012\n⏰ Horarios: Turno de Guardia 24 horas';
+      return '💊 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *Viernes, 23 de octubre de 2026*\n\n**Farmacia Morales Guerrero, CB**\n📍 Dirección: Avda. Alcalde José Dorado, 5 - Bda. El Carmen\n📞 Teléfono: 954864924\n⏰ Horario: Noche (de 22:00 a 9:30) y turnos oficiales';
     }
 
     if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
