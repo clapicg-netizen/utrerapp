@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Store, Pill, Bus, Search, MapPin, Utensils, HeartHandshake, Compass } from "lucide-react";
+import { Search, MapPin, Pill, Building2, HeartPulse, Compass, CalendarDays, Landmark, Sparkles } from "lucide-react";
 
 export default function Home({ setTab }) {
   const [slideActual, setSlideActual] = useState(0);
@@ -90,40 +90,7 @@ export default function Home({ setTab }) {
         </div>
       </div>
 
-      {/* TARJETA DE DESTACADO DE CONSO - IA UTRERANA */}
-      <div className="px-4 mt-4 max-w-md mx-auto">
-        <div 
-          onClick={(e) => cambiarPestana(e, "conso")}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-950 via-rose-900 to-red-950 p-6 text-white shadow-xl border border-rose-800/50 cursor-pointer hover:scale-[0.99] transition-transform"
-        >
-          <div className="absolute -right-6 -top-6 w-28 h-28 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
-          
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 border border-amber-400/30 rounded-full text-amber-300 text-[11px] font-bold uppercase tracking-wider">
-                <span>✨ IA Oficial</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              </div>
-              <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                Conso, tu asistente 🤖
-              </h2>
-              <p className="text-xs text-rose-200/90 font-medium leading-relaxed max-w-[220px]">
-                Conectada en directo con inteligencia artificial. Horarios, farmacias y gestión de Utrera al instante.
-              </p>
-            </div>
-
-            {/* Logotipo distintivo IA Utrerana */}
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-rose-700 flex items-center justify-center text-3xl shadow-lg shadow-rose-950/60 border-2 border-white/20 transform hover:scale-105 transition-transform">
-                🧠✨
-              </div>
-              <span className="text-[10px] font-bold text-amber-300 mt-1.5 uppercase tracking-wider">Utrerapp</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CARRUSEL DE BANNERS EN PORTADA */}
+      {/* 1. CARRUSEL DE BANNERS EN PORTADA (PRIMER LUGAR) */}
       <div className="px-4 mt-4 max-w-md mx-auto">
         <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
           <div 
@@ -166,87 +133,143 @@ export default function Home({ setTab }) {
         </div>
       </div>
 
-      {/* BANNER DESTACADO DE "LA BÚSQUEDA DEL MOSTACHÓN" */}
+      {/* 2. TARJETA DE CONSO - ASISTENTE (SEGUNDO LUGAR) */}
       <div className="px-4 mt-4 max-w-md mx-auto">
-        <button 
-          type="button"
-          onClick={(e) => cambiarPestana(e, "juego-mostachon")}
-          className="w-full text-left bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 p-4 rounded-2xl text-white shadow-md flex items-center justify-between border border-amber-400/40 active:scale-[0.98] transition-transform"
+        <div 
+          onClick={(e) => cambiarPestana(e, "conso")}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-950 via-rose-900 to-red-950 p-6 text-white shadow-xl border border-rose-800/50 cursor-pointer hover:scale-[0.99] transition-transform"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-2xl shadow-inner flex-shrink-0">
-              🧁
+          <div className="absolute -right-6 -top-6 w-28 h-28 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
+          
+          <div className="relative z-10 flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 border border-amber-400/30 rounded-full text-amber-300 text-[11px] font-bold uppercase tracking-wider">
+                <span>✨ IA Oficial</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              </div>
+              <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
+                Conso, tu asistente 🤖
+              </h2>
+              <p className="text-xs text-rose-200/90 font-medium leading-relaxed max-w-[220px]">
+                Conectada en directo con inteligencia artificial. Horarios, farmacias y gestión de Utrera al instante.
+              </p>
             </div>
-            <div>
-              <p className="text-[10px] uppercase font-black text-amber-200 tracking-wider">Juego Interactivo</p>
-              <h2 className="font-extrabold text-sm">La Búsqueda del Mostachón</h2>
-              <p className="text-[11px] text-amber-100 mt-0.5">¡Encuentra tesoros en los negocios locales!</p>
+
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-rose-700 flex items-center justify-center text-3xl shadow-lg shadow-rose-950/60 border-2 border-white/20">
+                🧠✨
+              </div>
+              <span className="text-[10px] font-bold text-amber-300 mt-1.5 uppercase tracking-wider">Utrerapp</span>
             </div>
           </div>
-          <Compass size={20} className="text-amber-200 flex-shrink-0 ml-2" />
-        </button>
+        </div>
       </div>
 
-      {/* SERVICIOS DESTACADOS */}
+      {/* SECCIÓN DE BLOQUES CUADRADOS (GRID 2 COLUMNAS) */}
       <div className="px-4 mt-5 max-w-md mx-auto">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Servicios Destacados
+          Servicios y Guía de Utrera
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
+          {/* Farmacias */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "market")}
-            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all text-left aspect-square"
           >
-            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-              <Store size={20} />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900 text-xs">Comercios</p>
-              <p className="text-[10px] text-slate-500">Guía & Ofertas</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "conso")}
-            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
-          >
-            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
-              <HeartHandshake size={20} />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900 text-xs">Conso</p>
-              <p className="text-[10px] text-slate-500">Asistente Local</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "market")}
-            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
-          >
-            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center flex-shrink-0">
-              <Utensils size={20} />
-            </div>
-            <div>
-              <p className="font-bold text-slate-900 text-xs">Hostelería</p>
-              <p className="text-[10px] text-slate-500">Bares y Tapas</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "market")}
-            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <Pill size={20} />
             </div>
             <div>
               <p className="font-bold text-slate-900 text-xs">Farmacias</p>
-              <p className="text-[10px] text-slate-500">Salud & Guardia</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Salud & Guardia</p>
+            </div>
+          </button>
+
+          {/* Salud (Centros médicos y ClicSalud+) */}
+          <button 
+            type="button"
+            onClick={(e) => window.open("https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/", "_blank")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all text-left aspect-square"
+          >
+            <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+              <HeartPulse size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Salud</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Centros & ClicSalud+</p>
+            </div>
+          </button>
+
+          {/* Agenda / Guía Útil */}
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "market")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all text-left aspect-square"
+          >
+            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Building2 size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Guía Útil</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Ayuntamiento & Colegios</p>
+            </div>
+          </button>
+
+          {/* Qué Ver (Monumentos y Turismo) */}
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "market")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all text-left aspect-square"
+          >
+            <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Landmark size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Qué Ver</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Monumentos & Turismo</p>
+            </div>
+          </button>
+
+          {/* Eventos y Teatro */}
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "market")}
+            className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition-all text-left aspect-square col-span-2"
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+                <CalendarDays size={20} />
+              </div>
+              <span className="text-[10px] font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded-lg">Teatro Municipal</span>
+            </div>
+            <div>
+              <p className="font-bold text-slate-900 text-xs">Agenda Cultural y Eventos</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">Programación y espectáculos en Utrera</p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* JUEGO DE LA BÚSQUEDA DEL MOSTACHÓN (RESERVADO ABAJO A MITAD DE ANCHO) */}
+      <div className="px-4 mt-5 max-w-md mx-auto">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+          Zona de Juegos
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "juego-mostachon")}
+            className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 rounded-2xl text-white shadow-md flex flex-col justify-between text-left aspect-square border border-amber-400/40 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-xl shadow-inner">
+              🧁
+            </div>
+            <div>
+              <p className="text-[9px] uppercase font-black text-amber-200 tracking-wider">Interactivo</p>
+              <h3 className="font-extrabold text-xs leading-tight">La Búsqueda del Mostachón</h3>
+              <p className="text-[10px] text-amber-100 mt-0.5 line-clamp-1">Encuentra pistas y gana premios</p>
             </div>
           </button>
         </div>
