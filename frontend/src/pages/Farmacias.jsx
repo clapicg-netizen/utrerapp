@@ -7,30 +7,57 @@ export default function Farmacias() {
   const farmaciasUtrera = [
     {
       id: 1,
-      nombre: "Farmacia Central Utrera",
-      boticario: "Lda. María Carmen Daza",
-      direccion: "Plaza del Altozano, 8, Utrera",
-      telefono: "954860012",
+      nombre: "Farmacia Morales Guerrero, CB",
+      boticario: "Farmacia Morales Guerrero",
+      direccion: "Avda. Alcalde José Dorado, 5 - Bda. El Carmen, Utrera",
+      telefono: "954864924",
       deGuardia: true,
-      horarioGuardia: "24 Horas (De Guardia Hoy)",
+      horarioGuardia: "De Guardia Hoy (Noche de 22:00 a 9:30)",
     },
     {
       id: 2,
-      nombre: "Farmacia San José",
-      boticario: "M. Dolores Rincón",
-      direccion: "Av. María Auxiliadora, 45, Utrera",
-      telefono: "954861234",
+      nombre: "Farmacia José Luis Algarín Pachón",
+      boticario: "José Luis Algarín Pachón",
+      direccion: "Corredera, 1, Utrera",
+      telefono: "954860448",
       deGuardia: false,
-      horarioGuardia: "08:30 a 21:30 h",
+      horarioGuardia: "09:30 a 22:00 h",
     },
     {
       id: 3,
-      nombre: "Farmacia Consolación",
-      boticario: "Ldo. Francisco Morales",
-      direccion: "Paseo de Consolación, 12, Utrera",
-      telefono: "954865678",
+      nombre: "Farmacia Rafael González",
+      boticario: "Rafael González",
+      direccion: "Cristo de los Afligidos, 74, Utrera",
+      telefono: "954860213",
       deGuardia: false,
-      horarioGuardia: "09:00 a 22:00 h",
+      horarioGuardia: "09:30 a 22:00 h",
+    },
+    {
+      id: 4,
+      nombre: "Farmacia Pablo Troncoso López",
+      boticario: "Pablo Troncoso López (El Charco)",
+      direccion: "Avda. María Auxiliadora, 95, Utrera",
+      telefono: "954860196",
+      deGuardia: false,
+      horarioGuardia: "09:30 a 22:00 h",
+    },
+    {
+      id: 5,
+      nombre: "Farmacia Ma Luz Ceballos Niebla",
+      boticario: "Ma Luz Ceballos Niebla",
+      direccion: "Avda. La Fontanilla, 38, Utrera",
+      telefono: "955864368",
+      deGuardia: false,
+      horarioGuardia: "Guardia según calendario",
+    },
+    {
+      id: 6,
+      nombre: "Farmacia Antonio Valdés Arenas",
+      boticario: "Antonio Valdés Arenas",
+      direccion: "Av. S. Juan Bosco, 96, Utrera",
+      telefono: "955864951",
+      deGuardia: false,
+      horarioGuardia: "Guardia según calendario",
     }
   ];
 
@@ -54,7 +81,7 @@ export default function Farmacias() {
           </div>
           <div>
             <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
-            <p className="text-xs text-emerald-200 mt-0.5">Utrera · Servicio de Salud</p>
+            <p className="text-xs text-emerald-200 mt-0.5">Utrera · Datos Oficiales Colegio Oficial</p>
           </div>
         </div>
 
@@ -104,7 +131,7 @@ export default function Farmacias() {
                 href={"tel:" + farmacia.telefono}
                 className="py-2.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-100"
               >
-                <Phone size={14} /> Llamar
+                <Phone size={14} /> Llamar ({farmacia.telefono})
               </a>
               <button
                 onClick={() => abrirMapa(farmacia.direccion)}
