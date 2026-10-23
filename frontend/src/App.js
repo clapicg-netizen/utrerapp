@@ -22,13 +22,14 @@ function App() {
   const renderizarPagina = () => {
     switch (paginaActual) {
       case 'home':
-        return <Home setPaginaActual={setPaginaActual} />;
+        return <Home setPaginaActual={setPaginaActual} setTab={setPaginaActual} />;
+      case 'guia':
       case 'market':
         return <Market />;
-      case 'bares':
-        return <Bares />;
       case 'farmacias':
         return <Farmacias />;
+      case 'bares':
+        return <Bares />;
       case 'eventos':
         return <Eventos />;
       case 'teatro':
@@ -52,19 +53,18 @@ function App() {
       case 'panel-comercio':
         return <PanelComercio />;
       default:
-        return <Home setPaginaActual={setPaginaActual} />;
+        return <Home setPaginaActual={setPaginaActual} setTab={setPaginaActual} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950 font-sans pb-20">
-      {/* Contenido dinámico según la sección seleccionada */}
       <main className="max-w-md mx-auto bg-white min-h-screen shadow-xl relative overflow-hidden flex flex-col justify-between">
         <div className="flex-1 overflow-y-auto">
           {renderizarPagina()}
         </div>
 
-        {/* Barra de navegación inferior fija y limpia (4 botones) */}
+        {/* Barra de navegación inferior fija */}
         <nav className="sticky bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 flex justify-around items-center z-50 shadow-lg">
           <button 
             onClick={() => setPaginaActual('home')}
@@ -76,7 +76,7 @@ function App() {
           
           <button 
             onClick={() => setPaginaActual('market')}
-            className={`flex flex-col items-center gap-1 transition-colors ${paginaActual === 'market' ? 'text-rose-900 font-bold' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex flex-col items-center gap-1 transition-colors ${paginaActual === 'market' || paginaActual === 'guia' ? 'text-rose-900 font-bold' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <span className="text-xl">🛍️</span>
             <span className="text-[10px]">Guía Comercial</span>
