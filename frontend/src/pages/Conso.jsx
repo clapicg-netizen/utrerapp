@@ -1,121 +1,108 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Send, Bot, User, Sparkles } from 'lucide-react';
 
 export default function Conso() {
-  const [messages, setMessages] = useState([
+  const [mensaje, setMensaje] = useState('');
+  const [chat, setChat] = useState([
     {
-      sender: 'bot',
-      text: '¡Hola! Soy Conso, tu asistente de Utrera. 👋 Pregúntame por las farmacias de guardia o los horarios de Renfe.'
+      origen: 'conso',
+      texto: '¡Hola! Soy Conso, tu asistente de Utrera.  👋\nPregúntame por las farmacias de guardia o los horarios de Renfe.'
     }
   ]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const procesarRespuesta = (pregunta) => {
+    const texto = pregunta.toLowerCase();
+
+    if (texto.includes('farmacia') || texto.includes('guardia')) {
+      return '💊 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *Viernes, 23 de octubre de 2026*\n\n**Ldo/a. María Carmen Daza**\n📍 Dirección: Plaza del Altozano, 8\n📞 Teléfono: 954860012\n⏰ Horarios: Turno de Guardia 24 horas';
+    }
+
+    if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
+      return '🚆 **CERCANÍAS LÍNEA C-1 (Utrera - Sevilla)**\n\n• Próximo tren hacia Sevilla Santa Justa: **12:42 h** (Directo - 25 min)\n• Siguiente tren: **13:10 h**\n\n*Recuerda consultar posibles retenciones en la estación central.*';
+    }
+
+    if (texto.includes('ayuntamiento') || texto.includes('alcalde')) {
+      return '🏛️ **Ayuntamiento de Utrera**\n📍 Plaza de Gibaxa, 1\n📞 Teléfono: 955 86 45 00\nHorario de atención al ciudadano: 09:00 a 14:00 h.';
+    }
+
+    return `¡Entendido! Como asistente virtual de Utrerapp, sigo aprendiendo para ayudarte con la gestión local. Prueba a preguntarme por la **"farmacia de guardia"** o los **"trenes"**.`;
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, loading]);
+  const enviarMensaje = (e) => {
+    e.preventDefault();
+    if (!mensaje.trim()) return;
 
-  const handleSendMessage = (textToSend) => {
-    const text = textToSend || input;
-    if (!text.trim()) return;
+    const textoUsuario = mensaje;
+    const nuevoChat = [...chat, { origen: 'usuario', texto: textoUsuario }];
+    setChat(nuevoChat);
+    setMensaje('');
 
-    const userMessage = { sender: 'user', text };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
-    if (!textToSend) setInput('');
-    setLoading(true);
-
-    // Respuesta inmediata sin retardos de módem
     setTimeout(() => {
-      const textoLower = text.toLowerCase();
-      let respuestaBot = '';
-
-      if (textoLower.includes('farmacia') || textoLower.includes('guardia') || textoLower.includes('medicamento') || textoLower.includes('farmaciad')) {
-        respuestaBot = `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *Jueves, 22 de octubre de 2026*\n\n**Ldo/a. José González Mena**\n📍 Dirección: Avda. Blas Infante, 7\n📞 Teléfono: 954861763\n⏰ Horarios: Turno de Guardia 24 horas`;
-      } else if (textoLower.includes('tren') || textoLower.includes('renfe') || textoLower.includes('cercanias') || textoLower.includes('sevilla')) {
-        respuestaBot = `🚆 **CERCANÍAS RENFE LÍNEA C1 (Utrera ↔ Sevilla)**\n\n• **Próximas salidas hacia Sevilla:**\n- 12:40 h (Cercanías C1)\n- 13:20 h (Cercanías C1)\n- 13:50 h (Cercanías C1)\n\n📍 **Estación de Utrera:** Plaza de la Estación, s/n\n⏱️ **Tiempo estimado hasta San Bernardo:** 32 min.`;
-      } else {
-        respuestaBot = `¡Hola, JuanRa! Soy Conso, tu asistente en vivo para Utrera. ✨ Estoy aquí para ayudarte al instante con lo que necesites. ¿Qué te ronda por la cabeza?`;
-      }
-
-      setMessages((prev) => [...prev, { sender: 'bot', text: respuestaBot }]);
-      setLoading(false);
-    }, 100);
+      const respuestaConso = procesarRespuesta(textoUsuario);
+      setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
+    }, 500);
   };
-
-  const quickActions = [
-    { label: '🏥 Farmacia de guardia hoy', text: 'farmacia de guardia hoy' },
-    { label: '🚆 Próximo tren a Sevilla', text: 'próximo tren a sevilla' }
-  ];
 
   return (
-    <div className="flex flex-col h-screen bg-slate-50">
-      <div className="bg-gradient-to-r from-rose-950 via-rose-900 to-red-950 text-white p-4 flex items-center shadow-md">
-        <div className="bg-rose-800 p-2 rounded-full mr-3">✨</div>
-        <div>
-          <h1 className="font-bold text-lg">Asistente Conso</h1>
-          <p className="text-xs text-rose-200">Tu inteligencia local para consultas en Utrera.</p>
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col justify-between">
+      {/* Cabecera */}
+      <div className="bg-gradient-to-r from-rose-950 to-red-900 text-white p-5 shadow-lg">
+        <div className="flex items-center gap-3 max-w-md mx-auto">
+          <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
+            <Bot size={22} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg font-bold">Conso IA</h1>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+            <p className="text-[11px] text-rose-200">Asistente Oficial de Utrera</p>
+          </div>
         </div>
       </div>
 
-      <div className="p-3 flex gap-2 overflow-x-auto bg-white border-b">
-        {quickActions.map((qa, idx) => (
-          <button
-            key={idx}
-            onClick={() => handleSendMessage(qa.text)}
-            className="bg-amber-100 hover:bg-amber-200 text-amber-900 text-xs font-semibold px-3 py-2 rounded-full whitespace-nowrap shadow-sm border border-amber-300 transition"
-          >
-            {qa.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg, index) => (
+      {/* Historial de Chat */}
+      <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full space-y-3 overflow-y-auto">
+        {chat.map((msg, index) => (
           <div
             key={index}
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex items-start gap-2.5 ${msg.origen === 'usuario' ? 'flex-row-reverse' : ''}`}
           >
-            <div
-              className={`max-w-[85%] p-3.5 rounded-2xl text-sm whitespace-pre-line shadow-sm ${
-                msg.sender === 'user'
-                  ? 'bg-amber-500 text-white rounded-br-none font-medium'
-                  : 'bg-white border text-slate-800 rounded-bl-none'
-              }`}
-            >
-              {msg.text}
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs shadow-sm ${
+              msg.origen === 'usuario' ? 'bg-rose-900 text-white' : 'bg-amber-500 text-slate-950 font-bold'
+            }`}>
+              {msg.origen === 'usuario' ? <User size={16} /> : <Sparkles size={16} />}
+            </div>
+
+            <div className={`p-3.5 rounded-2xl text-xs leading-relaxed shadow-sm max-w-[80%] whitespace-pre-line ${
+              msg.origen === 'usuario' 
+                ? 'bg-rose-900 text-white rounded-tr-none' 
+                : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
+            }`}>
+              {msg.texto}
             </div>
           </div>
         ))}
-        {loading && (
-          <div className="flex justify-start">
-            <div className="bg-white border p-3 rounded-2xl text-xs text-slate-500 animate-pulse">
-              Conso está respondiendo...
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-3 bg-white border-t flex items-center gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-          placeholder="Pregúntale a Conso (trenes, farmacias...)"
-          className="flex-1 border rounded-full px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-        />
-        <button
-          onClick={() => handleSendMessage()}
-          className="bg-rose-600 hover:bg-rose-700 text-white px-5 py-2.5 rounded-full text-sm font-semibold shadow-md transition"
-        >
-          Enviar
-        </button>
+      {/* Barra de entrada de mensaje */}
+      <div className="p-3 bg-white border-t border-slate-200 sticky bottom-0 z-10 max-w-md mx-auto w-full">
+        <form onSubmit={enviarMensaje} className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Pregúntale a Conso (trenes, farmacias...)"
+            value={mensaje}
+            onChange={(e) => setMensaje(e.target.value)}
+            className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
+          />
+          <button
+            type="submit"
+            className="bg-rose-900 text-white px-5 py-3 rounded-2xl text-xs font-bold hover:bg-rose-950 transition-colors shadow-md flex items-center gap-1.5"
+          >
+            <span>Enviar</span>
+            <Send size={14} />
+          </button>
+        </form>
       </div>
     </div>
   );
