@@ -172,10 +172,10 @@ export default function Home({ setTab }) {
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
-          {/* Farmacias */}
+          {/* Farmacias (Corregido para abrir farmacias) */}
           <button 
             type="button"
-            onClick={(e) => cambiarPestana(e, "market")}
+            onClick={(e) => cambiarPestana(e, "farmacias")}
             className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
           >
             <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
