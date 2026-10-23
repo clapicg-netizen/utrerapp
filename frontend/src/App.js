@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import Farmacias from "./pages/Farmacias";
 import Conso from "./pages/Conso";
-// Importa aquí tus otras páginas o componentes según los tengas organizados
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
 
-  // Atajo de teclado secreto: Ctrl + Shift + A para abrir el panel admin de forma oculta
+  // Atajo de teclado secreto: Cmd/Ctrl + Shift + A para abrir el panel admin
   useEffect(() => {
     const manejarAtajo = (e) => {
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
         e.preventDefault();
         setPaginaActual('dashboard-admin');
       }
@@ -19,7 +18,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', manejarAtajo);
   }, []);
 
-  // Renderizado condicional de páginas
+  // Renderizado condicional de páginas conectado correctamente
   const renderizarPagina = () => {
     switch (paginaActual) {
       case 'home':
@@ -28,6 +27,31 @@ export default function App() {
         return <Farmacias />;
       case 'conso':
         return <Conso />;
+      case 'market':
+      case 'guia':
+        return (
+          <div className="min-h-screen bg-slate-50 p-6 pb-28">
+            <div className="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+              <h1 className="text-xl font-bold text-slate-900 mb-2">🛍️ Guía Comercial de Utrera</h1>
+              <p className="text-xs text-slate-500 mb-4">Directorio oficial de comercios y establecimientos locales.</p>
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 font-medium">
+                ✨ Aquí puedes consultar y dar de alta los comercios locales.
+              </div>
+            </div>
+          </div>
+        );
+      case 'transporte':
+        return (
+          <div className="min-h-screen bg-slate-50 p-6 pb-28">
+            <div className="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+              <h1 className="text-xl font-bold text-slate-900 mb-2">🚆 Transporte y Trenes</h1>
+              <p className="text-xs text-slate-500 mb-4">Horarios oficiales de Cercanías Línea C-1 Utrera - Sevilla.</p>
+              <div className="p-4 bg-sky-50 rounded-2xl border border-sky-200 text-xs text-sky-900 font-medium">
+                • Próximo tren hacia Sevilla Santa Justa: 12:42 h (Directo)
+              </div>
+            </div>
+          </div>
+        );
       case 'dashboard-admin':
         return (
           <div className="min-h-screen bg-slate-100 p-6 pb-28">
