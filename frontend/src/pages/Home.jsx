@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Pill, Building2, HeartPulse, Compass, CalendarDays, Landmark } from "lucide-react";
+import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed } from "lucide-react";
 
 export default function Home({ setTab }) {
   const [slideActual, setSlideActual] = useState(0);
@@ -165,7 +165,7 @@ export default function Home({ setTab }) {
         </div>
       </div>
 
-      {/* SECCIÓN DE SERVICIOS Y GUÍA (TARJETAS COMPACTAS Y HORIZONTALES) */}
+      {/* SECCIÓN DE SERVICIOS Y GUÍA */}
       <div className="px-4 mt-5 max-w-md mx-auto">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
           Servicios y Guía de Utrera
@@ -252,12 +252,13 @@ export default function Home({ setTab }) {
         </div>
       </div>
 
-      {/* ZONA DE JUEGOS (MOSTACHÓN) */}
+      {/* ZONA DE OCIO, JUEGOS Y HOSTELERÍA */}
       <div className="px-4 mt-5 max-w-md mx-auto">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Zona de Juegos
+          Ocio y Entretenimiento
         </h2>
         <div className="grid grid-cols-2 gap-3">
+          {/* Búsqueda del Mostachón */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "juego-mostachon")}
@@ -268,7 +269,22 @@ export default function Home({ setTab }) {
             </div>
             <div className="min-w-0">
               <p className="text-[9px] uppercase font-black text-amber-200 tracking-wider">Interactivo</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Búsqueda del Mostachón</h3>
+              <h3 className="font-extrabold text-xs leading-tight truncate">Búsqueda Mostachón</h3>
+            </div>
+          </button>
+
+          {/* Hostelería (Bares y Copas) */}
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "market")}
+            className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform"
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
+              <UtensilsCrossed size={18} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase font-black text-orange-200 tracking-wider">Gastronomía</p>
+              <h3 className="font-extrabold text-xs leading-tight truncate">Bares, Tapas y Copas</h3>
             </div>
           </button>
         </div>
