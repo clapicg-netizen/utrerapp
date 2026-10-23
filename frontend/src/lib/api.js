@@ -1,5 +1,3 @@
-import comerciosService from "./comerciosService";
+export * as api from "./comerciosService";
 import { supabase } from "./supabaseClient";
-
-export const api = comerciosService;
 export { supabase };
