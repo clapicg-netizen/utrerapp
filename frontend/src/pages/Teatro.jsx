@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
-import { api } from "../lib/api ";
+import { api } from "../lib/api";
 import { Ticket, CalendarDays, Clock, Euro } from "lucide-react";
 import { toast } from "sonner";
 
