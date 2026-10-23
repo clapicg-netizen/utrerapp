@@ -1,24 +1,12 @@
-import React, { useState, useEffect } from "react";
-import Home from "./pages/Home";
-import Farmacias from "./pages/Farmacias";
-import Conso from "./pages/Conso";
+import React, { useState } from 'react';
+import Home from './pages/Home';
+import Farmacias from './pages/Farmacias';
+import Conso from './pages/Conso';
+import GuiaComercial from './pages/GuiaComercial'; // o la ruta que tuvieses originalmente
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
 
-  // Atajo de teclado secreto: Cmd/Ctrl + Shift + A para abrir el panel admin
-  useEffect(() => {
-    const manejarAtajo = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'a') {
-        e.preventDefault();
-        setPaginaActual('dashboard-admin');
-      }
-    };
-    window.addEventListener('keydown', manejarAtajo);
-    return () => window.removeEventListener('keydown', manejarAtajo);
-  }, []);
-
-  // Renderizado condicional de páginas conectado correctamente
   const renderizarPagina = () => {
     switch (paginaActual) {
       case 'home':
@@ -27,73 +15,6 @@ export default function App() {
         return <Farmacias />;
       case 'conso':
         return <Conso />;
-      case 'market':
-      case 'guia':
-        return (
-          <div className="min-h-screen bg-slate-50 p-6 pb-28">
-            <div className="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-              <h1 className="text-xl font-bold text-slate-900 mb-2">🛍️ Guía Comercial de Utrera</h1>
-              <p className="text-xs text-slate-500 mb-4">Directorio oficial de comercios y establecimientos locales.</p>
-              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 font-medium">
-                ✨ Aquí puedes consultar y dar de alta los comercios locales.
-              </div>
-            </div>
-          </div>
-        );
-      case 'transporte':
-        return (
-          <div className="min-h-screen bg-slate-50 p-6 pb-28">
-            <div className="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-              <h1 className="text-xl font-bold text-slate-900 mb-2">🚆 Transporte y Trenes</h1>
-              <p className="text-xs text-slate-500 mb-4">Horarios oficiales de Cercanías Línea C-1 Utrera - Sevilla.</p>
-              <div className="p-4 bg-sky-50 rounded-2xl border border-sky-200 text-xs text-sky-900 font-medium">
-                • Próximo tren hacia Sevilla Santa Justa: 12:42 h (Directo)
-              </div>
-            </div>
-          </div>
-        );
-      case 'dashboard-admin':
-        return (
-          <div className="min-h-screen bg-slate-100 p-6 pb-28">
-            <div className="max-w-2xl mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-              <h1 className="text-xl font-bold text-slate-900 mb-2">⚙️ Panel de Administración (Utrerapp)</h1>
-              <p className="text-xs text-slate-500 mb-6">Área privada de gestión de comercios e inmobiliaria.</p>
-              
-              <div className="space-y-4">
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                  <h3 className="font-bold text-sm text-slate-800 mb-1">🏪 Alta / Gestión de Comercios</h3>
-                  <p className="text-xs text-slate-500 mb-3">Añade los nuevos establecimientos y sus datos comerciales.</p>
-                  <button 
-                    onClick={() => alert("Formulario de alta de comercio listo para usar")}
-                    className="bg-rose-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-950 cursor-pointer"
-                  >
-                    + Nuevo Comercio
-                  </button>
-                </div>
-
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                  <h3 className="font-bold text-sm text-slate-800 mb-1">🏠 Gestión Inmobiliaria</h3>
-                  <p className="text-xs text-slate-500 mb-3">Publica o actualiza los inmuebles de la zona.</p>
-                  <button 
-                    onClick={() => alert("Formulario de inmobiliaria listo para usar")}
-                    className="bg-rose-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-950 cursor-pointer"
-                  >
-                    + Nuevo Inmueble
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-slate-100 flex justify-between items-center">
-                <button
-                  onClick={() => setPaginaActual('home')}
-                  className="text-xs text-slate-600 underline cursor-pointer font-medium"
-                >
-                  ← Volver a la App Principal
-                </button>
-              </div>
-            </div>
-          </div>
-        );
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }
@@ -101,7 +22,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans flex flex-col justify-between">
-      {/* Contenido principal de la página actual */}
       <div className="flex-1">
         {renderizarPagina()}
       </div>
