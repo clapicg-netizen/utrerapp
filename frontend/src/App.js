@@ -23,8 +23,6 @@ function App() {
     switch (paginaActual) {
       case 'home':
         return <Home setPaginaActual={setPaginaActual} />;
-      case 'guia':
-        return <GuiaComercial />;
       case 'market':
         return <Market />;
       case 'bares':
@@ -66,7 +64,7 @@ function App() {
           {renderizarPagina()}
         </div>
 
-        {/* Barra de navegación inferior fija */}
+        {/* Barra de navegación inferior fija y limpia (4 botones) */}
         <nav className="sticky bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 flex justify-around items-center z-50 shadow-lg">
           <button 
             onClick={() => setPaginaActual('home')}
@@ -77,19 +75,11 @@ function App() {
           </button>
           
           <button 
-            onClick={() => setPaginaActual('guia')}
-            className={`flex flex-col items-center gap-1 transition-colors ${paginaActual === 'guia' ? 'text-rose-900 font-bold' : 'text-slate-400 hover:text-slate-600'}`}
-          >
-            <span className="text-xl">🏪</span>
-            <span className="text-[10px]">Comercio</span>
-          </button>
-
-          <button 
             onClick={() => setPaginaActual('market')}
             className={`flex flex-col items-center gap-1 transition-colors ${paginaActual === 'market' ? 'text-rose-900 font-bold' : 'text-slate-400 hover:text-slate-600'}`}
           >
             <span className="text-xl">🛍️</span>
-            <span className="text-[10px]">Market</span>
+            <span className="text-[10px]">Guía Comercial</span>
           </button>
 
           <button 
