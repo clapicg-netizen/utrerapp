@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Pill, Phone, MapPin, Clock, Search } from "lucide-react";
+import { Pill, Phone, MapPin, Clock, Search, HeartPulse } from "lucide-react";
 
 export default function Farmacias() {
   const [busqueda, setBusqueda] = useState("");
@@ -131,7 +131,7 @@ export default function Farmacias() {
                 href={"tel:" + farmacia.telefono}
                 className="py-2.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-100"
               >
-                <Phone size={14} /> Llamar ({farmacia.telefono})
+                <Phone size={14} /> Llamar
               </a>
               <button
                 onClick={() => abrirMapa(farmacia.direccion)}
@@ -139,6 +139,12 @@ export default function Farmacias() {
               >
                 <MapPin size={14} /> Cómo Llegar
               </button>
+            </div>
+
+            {/* Mensaje de cortesía */}
+            <div className="mt-3 pt-2 border-t border-slate-50 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
+              <HeartPulse size={13} className="text-emerald-500" />
+              <span>¡Que haya mejoría!</span>
             </div>
           </div>
         ))}
