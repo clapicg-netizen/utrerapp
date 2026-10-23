@@ -15,8 +15,11 @@ export const comerciosService = {
   }
 };
 
-// Funciones comodín globales para satisfacer todas las importaciones pendientes
+// Funciones comodín globales para cubrir todas las importaciones de servicios antiguos
 export const obtenerComercios = async () => [];
 export const subirArchivoComercio = async () => null;
+export const actualizarComercio = async () => null;
+export const eliminarComercio = async () => null;
+export const crearComercio = async () => null;
 
 export default comerciosService;
