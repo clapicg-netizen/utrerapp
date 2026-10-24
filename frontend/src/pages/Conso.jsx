@@ -123,46 +123,47 @@ export default function Conso() {
         <div className="space-y-3">
           <div>
             <p className="font-bold text-slate-900 mb-0.5">🚆 CERCANÍAS LÍNEA C-1 (Utrera ⇄ Sevilla)</p>
-            <p className="text-[11px] text-slate-500">Seguimiento en directo y horarios oficiales</p>
+            <p className="text-[11px] text-slate-500">Horarios y trayectos directos en pantalla</p>
           </div>
 
-          {/* Tarjeta interactiva de trenes con seguimiento en tiempo real */}
+          {/* Tarjeta de Trenes con Información Directa */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
-            <div className="space-y-2 text-xs border-b border-slate-700 pb-2.5">
-              <div className="bg-slate-800/80 p-2 rounded-xl border border-slate-700">
-                <p className="font-bold text-rose-400 mb-0.5">📍 Utrera → Sevilla (Santa Justa)</p>
-                <p className="text-slate-300 text-[11px]">Frecuencia constante cada 30 min aprox.</p>
-              </div>
-              <div className="bg-slate-800/80 p-2 rounded-xl border border-slate-700">
-                <p className="font-bold text-emerald-400 mb-0.5">📍 Sevilla (Santa Justa) → Utrera</p>
-                <p className="text-slate-300 text-[11px]">Regresos frecuentes durante todo el día.</p>
-              </div>
+            
+            {/* Sentido Utrera -> Sevilla */}
+            <div className="bg-slate-800/90 p-2.5 rounded-xl border border-slate-700 space-y-1">
+              <p className="font-bold text-rose-400 text-xs flex items-center justify-between">
+                <span>📍 Utrera ➔ Sevilla (Santa Justa)</span>
+                <span className="text-[10px] bg-rose-950 text-rose-300 px-1.5 py-0.5 rounded">Línea C-1</span>
+              </p>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                • Frecuencia general: <span className="font-bold text-white">Cada 30 minutos</span>.<br/>
+                • Trayecto directo estimado: <span className="font-bold text-white">~35 minutos</span>.<br/>
+                • Primeras salidas desde las 06:00 h hasta medianoche.
+              </p>
             </div>
 
-            <p className="text-[11px] text-slate-300 leading-relaxed">
-              Consulta la posición exacta de los trenes circulando en tiempo real sobre el mapa de la Línea C-1.
-            </p>
-
-            <div className="space-y-2">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.open("https://tiempo-real.renfe.com", "_blank");
-                }}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
-              >
-                <span>🟢 Ver Seguimiento de Trenes en Vivo</span>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla", "_blank");
-                }}
-                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
-              >
-                <span>🚆 Consultar Horarios C-1 en Renfe</span>
-              </button>
+            {/* Sentido Sevilla -> Utrera */}
+            <div className="bg-slate-800/90 p-2.5 rounded-xl border border-slate-700 space-y-1">
+              <p className="font-bold text-emerald-400 text-xs flex items-center justify-between">
+                <span>📍 Sevilla (Santa Justa) ➔ Utrera</span>
+                <span className="text-[10px] bg-emerald-950 text-emerald-300 px-1.5 py-0.5 rounded">Línea C-1</span>
+              </p>
+              <p className="text-slate-300 text-[11px] leading-relaxed">
+                • Frecuencia de regreso: <span className="font-bold text-white">Cada 30 minutos</span>.<br/>
+                • Últimos trenes de vuelta desde Santa Justa habitualmente sobre las 23:30 h - 00:00 h.
+              </p>
             </div>
+
+            {/* Botón opcional secundario por si quieren ver el plano general */}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                window.open("https://tiempo-real.renfe.com", "_blank");
+              }}
+              className="w-full py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-[11px] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span>🌐 Abrir Mapa General de Renfe (Opcional)</span>
+            </button>
           </div>
 
           <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 italic">
