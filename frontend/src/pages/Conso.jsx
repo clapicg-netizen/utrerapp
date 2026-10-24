@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft, X, ExternalLink } from 'lucide-react';
+import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
@@ -10,10 +10,6 @@ export default function Conso() {
     }
   ]);
 
-  // Estado para controlar el Modal Visor de Renfe dentro de la PWA
-  const [urlModal, setUrlModal] = useState(null);
-  const [tituloModal, setTituloModal] = useState('');
-
   const abrirMapa = (e, direccion) => {
     e.preventDefault();
     window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
@@ -22,12 +18,6 @@ export default function Conso() {
   const realizarLlamada = (e, telefono) => {
     e.preventDefault();
     window.location.href = "tel:" + telefono;
-  };
-
-  const abrirVisorInterno = (e, url, titulo) => {
-    e.preventDefault();
-    setUrlModal(url);
-    setTituloModal(titulo);
   };
 
   // Procesamiento inteligente de Conso con los datos oficiales de Utrera
@@ -133,10 +123,10 @@ export default function Conso() {
         <div className="space-y-3">
           <div>
             <p className="font-bold text-slate-900 mb-0.5">🚆 CERCANÍAS LÍNEA C-1 (Utrera ⇄ Sevilla)</p>
-            <p className="text-[11px] text-slate-500">Horarios oficiales integrados en Utrerapp</p>
+            <p className="text-[11px] text-slate-500">Horarios oficiales de Renfe</p>
           </div>
 
-          {/* Tarjeta de Trenes con visor interno nativo */}
+          {/* Tarjeta de Trenes con enlaces directos oficiales */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
             
             {/* Salida Hacia Sevilla */}
@@ -150,17 +140,16 @@ export default function Conso() {
                 </span>
               </div>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Consulta los horarios exactos, vías y paradas intermedias sin salir de la app.
+                Consulta los horarios exactos en tiempo real, vías y paradas intermedias desde Utrera.
               </p>
               <button
-                onClick={(e) => abrirVisorInterno(
-                  e, 
-                  "https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51200&stationInputText=Utrera&tripPreferences=todas",
-                  "🚆 Horarios: Utrera ➔ Sevilla"
-                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51200&stationInputText=Utrera&tripPreferences=todas", "_blank");
+                }}
                 className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
               >
-                <span>📲 Ver Horarios Utrera ➔ Sevilla (En Utrerapp)</span>
+                <span>🚆 Ver Horarios: Utrera ➔ Sevilla</span>
               </button>
             </div>
 
@@ -175,17 +164,16 @@ export default function Conso() {
                 </span>
               </div>
               <p className="text-slate-300 text-[11px] leading-relaxed">
-                Consulta los trenes de vuelta y los horarios de regreso desde Santa Justa.
+                Consulta los trenes de vuelta y los horarios de regreso desde Santa Justa hacia Utrera.
               </p>
               <button
-                onClick={(e) => abrirVisorInterno(
-                  e, 
-                  "https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51100&stationInputText=Sevilla-Santa%20Justa&tripPreferences=todas",
-                  "🚆 Horarios: Sevilla ➔ Utrera"
-                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51100&stationInputText=Sevilla-Santa%20Justa&tripPreferences=todas", "_blank");
+                }}
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
               >
-                <span>📲 Ver Horarios Sevilla ➔ Utrera (En Utrerapp)</span>
+                <span>🚆 Ver Horarios: Sevilla ➔ Utrera</span>
               </button>
             </div>
 
@@ -227,10 +215,13 @@ export default function Conso() {
             </p>
 
             <button
-              onClick={(e) => abrirVisorInterno(e, "https://holautrera.com/parking", "🗺️ Mapa de Aparcamientos en Directo")}
+              onClick={(e) => {
+                e.preventDefault();
+                window.open("https://holautrera.com/parking", "_blank");
+              }}
               className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
             >
-              <span>🗺️ Ver Mapa de Plazas Libres (En Utrerapp)</span>
+              <span>🗺️ Ver Mapa de Plazas Libres (holautrera.com)</span>
             </button>
           </div>
         </div>
@@ -259,47 +250,7 @@ export default function Conso() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col justify-between relative">
-      
-      {/* 🚀 MODAL / VISOR INTERNO NATIVO DENTRO DE UTRERAPP */}
-      {urlModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex flex-col animate-fade-in">
-          {/* Cabecera del Visor Interno */}
-          <div className="bg-rose-950 text-white px-4 py-3 flex items-center justify-between shadow-md">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-              <h2 className="text-xs font-bold truncate max-w-[260px]">{tituloModal}</h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => window.open(urlModal, '_blank')}
-                className="p-1.5 bg-rose-900 hover:bg-rose-800 text-rose-200 rounded-lg text-xs flex items-center gap-1 transition-colors cursor-pointer"
-                title="Abrir en navegador externo si se prefiere"
-              >
-                <ExternalLink size={14} />
-              </button>
-              <button
-                onClick={() => setUrlModal(null)}
-                className="bg-rose-900 hover:bg-rose-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-sm"
-              >
-                <X size={16} />
-                <span>Cerrar</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Contenedor Iframe con la web oficial cargada dentro de Utrerapp */}
-          <div className="flex-1 w-full bg-white relative">
-            <iframe
-              src={urlModal}
-              title={tituloModal}
-              className="w-full h-full border-0"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-            />
-          </div>
-        </div>
-      )}
-
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col justify-between">
       {/* Cabecera */}
       <div className="bg-gradient-to-r from-rose-950 to-red-900 text-white p-5 shadow-lg">
         <div className="flex items-center gap-3 max-w-md mx-auto">
@@ -347,7 +298,7 @@ export default function Conso() {
           onClick={() => enviarMensaje("Farmacia de guardia")}
           className="bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors shadow-sm cursor-pointer"
         >
-          <Pill size5 size={14} className="text-rose-700" />
+          <Pill size={14} className="text-rose-700" />
           <span>Farmacias</span>
         </button>
         <button
