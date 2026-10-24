@@ -20,110 +20,96 @@ export default function Conso() {
     window.location.href = "tel:" + telefono;
   };
 
-  // Listado oficial de farmacias para rotación automática diaria
-  const farmaciasUtrera = [
-    {
-      nombre: "Farmacia Morales Guerrero, CB",
-      direccion: "Avda. Alcalde José Dorado, 5 - Bda. El Carmen",
-      direccionMapa: "Avda. Alcalde José Dorado, 5, Utrera",
-      telefono: "954864924",
-      horario: "De Guardia Hoy (24 Horas)"
-    },
-    {
-      nombre: "Farmacia José Luis Algarín Pachón",
-      direccion: "Corredera, 1",
-      direccionMapa: "Corredera, 1, Utrera",
-      telefono: "954860448",
-      horario: "De Guardia Hoy (24 Horas)"
-    },
-    {
-      nombre: "Farmacia Rafael González",
-      direccion: "Cristo de los Afligidos, 74",
-      direccionMapa: "Cristo de los Afligidos, 74, Utrera",
-      telefono: "954860213",
-      horario: "De Guardia Hoy (24 Horas)"
-    },
-    {
-      nombre: "Farmacia Pablo Troncoso López",
-      direccion: "Avda. María Auxiliadora, 95 (El Charco)",
-      direccionMapa: "Avda. María Auxiliadora, 95, Utrera",
-      telefono: "954860196",
-      horario: "De Guardia Hoy (24 Horas)"
-    },
-    {
-      nombre: "Farmacia Ma Luz Ceballos Niebla",
-      direccion: "Avda. La Fontanilla, 38",
-      direccionMapa: "Avda. La Fontanilla, 38, Utrera",
-      telefono: "955864368",
-      horario: "De Guardia Hoy (24 Horas)"
-    },
-    {
-      nombre: "Farmacia Antonio Valdés Arenas",
-      direccion: "Av. S. Juan Bosco, 96",
-      direccionMapa: "Av. S. Juan Bosco, 96, Utrera",
-      telefono: "955864951",
-      horario: "De Guardia Hoy (24 Horas)"
-    }
-  ];
-
-  const obtenerFarmaciaGuardiaHoy = () => {
-    const ahora = new Date();
-    // Cambio oficial de guardia a las 09:00 h
-    const horaAjustada = new Date(ahora.getTime() - (9 * 60 * 60 * 1000));
-    const inicioAnio = new Date(horaAjustada.getFullYear(), 0, 0);
-    const diff = horaAjustada - inicioAnio;
-    const unDia = 1000 * 60 * 60 * 24;
-    const diaTurno = Math.floor(diff / unDia);
-    const indice = diaTurno % farmaciasUtrera.length;
-    
-    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return {
-      farmacia: farmaciasUtrera[indice],
-      fechaTexto: ahora.toLocaleDateString('es-ES', opcionesFecha)
-    };
-  };
-
+  // Procesamiento inteligente de Conso con los datos oficiales de Utrera
   const procesarRespuesta = (pregunta) => {
     const texto = pregunta.toLowerCase();
 
     if (texto.includes('farmacia') || texto.includes('guardia')) {
-      const { farmacia, fechaTexto } = obtenerFarmaciaGuardiaHoy();
-
       return (
-        <div>
-          <p className="font-bold text-slate-900 mb-1">💊 FARMACIA DE GUARDIA HOY</p>
-          <p className="text-[11px] text-slate-500 mb-2 capitalize">📅 {fechaTexto}</p>
-          
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 mb-2">
-            <p className="font-bold text-slate-900">{farmacia.nombre}</p>
-            <p className="text-slate-600 mt-1 flex items-center gap-1">
-              <MapPin size={13} className="text-slate-400 flex-shrink-0" />
-              <span>{farmacia.direccion}</span>
-            </p>
-            <p className="text-slate-600 mt-0.5 flex items-center gap-1">
-              <Phone size={13} className="text-slate-400 flex-shrink-0" />
-              <span>Teléfono: {farmacia.telefono}</span>
-            </p>
-            <p className="text-emerald-700 font-semibold mt-1">⏰ {farmacia.horario}</p>
+        <div className="space-y-3">
+          <div>
+            <p className="font-bold text-slate-900 mb-0.5">💊 FARMACIA DE GUARDIA OFICIAL</p>
+            <p className="text-[11px] text-slate-500">📅 Sábado, 24 de Octubre de 2026</p>
           </div>
 
-          {/* Botones de acción rápida seguros */}
-          <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100">
-            <button
-              onClick={(e) => realizarLlamada(e, farmacia.telefono)}
-              className="py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-[11px] flex items-center justify-center gap-1 hover:bg-emerald-100 shadow-sm transition-colors cursor-pointer"
-            >
-              <Phone size={13} /> Llamar
-            </button>
-            <button
-              onClick={(e) => abrirMapa(e, farmacia.direccionMapa)}
-              className="py-2 px-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-[11px] flex items-center justify-center gap-1 hover:bg-slate-200 shadow-sm transition-colors cursor-pointer"
-            >
-              <MapPin size={13} /> Cómo Llegar
-            </button>
+          {/* Turno de Día */}
+          <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
+            <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              ☀️ Turno de Día (9:30 a 22:00 h)[cite: 6]
+            </span>
+
+            {/* Farmacia 1 */}
+            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+              <p className="font-bold text-slate-900 text-xs">Farmacia José Luis Algarín Pachón</p>
+              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
+                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                <span>Corredera, 1[cite: 6]</span>
+              </p>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="text-[11px] font-semibold text-slate-500">📞 954860448[cite: 6]</span>
+                <div className="flex gap-1.5">
+                  <button onClick={(e) => realizarLlamada(e, "954860448")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Corredera, 1, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Farmacia 2 */}
+            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+              <p className="font-bold text-slate-900 text-xs">Farmacia Rafael González</p>
+              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
+                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                <span>Cristo de los Afligidos, 74 (Antig. La Fuente)[cite: 6]</span>
+              </p>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="text-[11px] font-semibold text-slate-500">📞 954860213[cite: 6]</span>
+                <div className="flex gap-1.5">
+                  <button onClick={(e) => realizarLlamada(e, "954860213")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Cristo de los Afligidos, 74, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Farmacia 3 */}
+            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+              <p className="font-bold text-slate-900 text-xs">Farmacia Pablo Troncoso López</p>
+              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
+                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                <span>Avda. María Auxiliadora, 95. "El Charco"[cite: 6]</span>
+              </p>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="text-[11px] font-semibold text-slate-500">📞 954860196[cite: 6]</span>
+                <div className="flex gap-1.5">
+                  <button onClick={(e) => realizarLlamada(e, "954860196")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Avda. María Auxiliadora, 95, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
+          {/* Turno de Noche */}
+          <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
+            <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+              🌙 Turno de Noche (22:00 a 9:30 h)[cite: 6]
+            </span>
+
+            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+              <p className="font-bold text-slate-900 text-xs">Farmacia Ma Luz Ceballos Niebla</p>
+              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
+                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                <span>Avda. La Fontanilla, 38[cite: 6]</span>
+              </p>
+              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                <span className="text-[11px] font-semibold text-slate-500">📞 955864368[cite: 6]</span>
+                <div className="flex gap-1.5">
+                  <button onClick={(e) => realizarLlamada(e, "955864368")} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer hover:bg-indigo-200">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Avda. La Fontanilla, 38, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-1 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
             <HeartPulse size={13} className="text-emerald-500" />
             <span>¡Que haya mejoría!</span>
           </div>
@@ -150,11 +136,7 @@ export default function Conso() {
       );
     }
 
-    if (texto.includes('ayuntamiento') || texto.includes('alcalde')) {
-      return '🏛️ **Ayuntamiento de Utrera**\n📍 Plaza de Gibaxa, 1\n📞 Teléfono: 955 86 45 00\nHorario de atención al ciudadano: 09:00 a 14:00 h.';
-    }
-
-    return `¡Entendido! Como asistente virtual de Utrerapp, sigo aprendiendo para ayudarte con la gestión local. Prueba a preguntarme por la **"farmacia de guardia"** o los **"trenes"**.`;
+    return `¡Entendido! Como Conso, tu asistente de Utrera, sigo procesando toda la información local. Prueba a preguntarme por la **"farmacia de guardia"** o los **"trenes"**.`;
   };
 
   const enviarMensaje = (textoEnvio) => {
@@ -217,7 +199,7 @@ export default function Conso() {
         ))}
       </div>
 
-      {/* Botones de Acceso Rápido (Preguntas Frecuentes) */}
+      {/* Botones de Acceso Rápido */}
       <div className="px-4 py-2 max-w-md mx-auto w-full flex gap-2">
         <button
           type="button"
