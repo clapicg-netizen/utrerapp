@@ -41,7 +41,7 @@ export default function DashboardAdmin() {
 
   const cargarLista = async () => {
     const data = await obtenerComercios('Todos');
-    setComercios(data);
+    setComercios(data || []);
   };
 
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function DashboardAdmin() {
       if (esGaleria) {
         setFormData((prev) => ({
           ...prev,
-          galeria_urls: [...prev.galeria_urls, res.url]
+          galeria_urls: [...(prev.galeria_urls || []), res.url]
         }));
       } else {
         setFormData((prev) => ({
@@ -88,6 +88,17 @@ export default function DashboardAdmin() {
     }
   };
 
+  const limpiarDatosParaEnviar = (data) => {
+    return {
+      ...data,
+      portada_url: data.portada_url && data.portada_url.trim() !== "" ? data.portada_url.trim() : null,
+      logo_url: data.logo_url && data.logo_url.trim() !== "" ? data.logo_url.trim() : null,
+      carta_pdf_url: data.carta_pdf_url && data.carta_pdf_url.trim() !== "" ? data.carta_pdf_url.trim() : null,
+      video_story_url: data.video_story_url && data.video_story_url.trim() !== "" ? data.video_story_url.trim() : null,
+      galeria_urls: Array.isArray(data.galeria_urls) ? data.galeria_urls.filter(u => u && u.trim() !== "") : []
+    };
+  };
+
   const handleGuardar = async (e) => {
     e.preventDefault();
     if (!formData.nombre || !formData.categoria) {
@@ -98,8 +109,10 @@ export default function DashboardAdmin() {
     setGuardando(true);
     setMensaje({ tipo: '', texto: '' });
 
+    const datosLimpios = limpiarDatosParaEnviar(formData);
+
     if (editandoId) {
-      const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, formData);
+      const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, datosLimpios);
       setGuardando(false);
       if (res.success) {
         setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado!' });
@@ -110,7 +123,7 @@ export default function DashboardAdmin() {
         setMensaje({ tipo: 'error', texto: res.message });
       }
     } else {
-      const res = await crearComercio(formData);
+      const res = await crearComercio(datosLimpios);
       setGuardando(false);
       if (res.success) {
         setMensaje({ tipo: 'exito', texto: '¡Nuevo comercio creado!' });
@@ -139,11 +152,11 @@ export default function DashboardAdmin() {
       horario_texto: c.horario_texto || '',
       descripcion: c.descripcion || '',
       oferta_flash: c.oferta_flash || '',
-      portada_url: c.portada_url || '',
-      logo_url: c.logo_url || '',
-      carta_pdf_url: c.carta_pdf_url || '',
-      galeria_urls: c.galeria_urls || [],
-      video_story_url: c.video_story_url || '',
+      portada_url: c.portada_url && c.portada_url !== "EMPTY" ? c.portada_url : '',
+      logo_url: c.logo_url && c.logo_url !== "EMPTY" ? c.logo_url : '',
+      carta_pdf_url: c.carta_pdf_url && c.carta_pdf_url !== "EMPTY" ? c.carta_pdf_url : '',
+      galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
+      video_story_url: c.video_story_url && c.video_story_url !== "EMPTY" ? c.video_story_url : '',
       destacado: c.destacado ?? true,
       pin_acceso: c.pin_acceso || '1234'
     });
@@ -195,6 +208,7 @@ export default function DashboardAdmin() {
       </div>
     );
   }
+
   return (
     <div className="max-w-4xl mx-auto p-4 pb-24 space-y-8">
       <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-3xl shadow-lg">
@@ -477,7 +491,7 @@ export default function DashboardAdmin() {
           <button
             type="submit"
             disabled={guardando || subiendo}
-            className="w-full bg-blue-600 text-white font-bold text-sm py-4 rounded-2xl shadow-lg"
+            className="w-full bg-blue-600 text-white font-bold text-sm py-4 rounded-2xl shadow-lg cursor-pointer hover:bg-blue-700 transition-colors"
           >
             {guardando ? 'Guardando...' : editandoId ? '💾 Guardar Cambios' : '🚀 Dar de Alta Comercio'}
           </button>
@@ -493,7 +507,7 @@ export default function DashboardAdmin() {
           {comercios.map((c) => (
             <div key={c.id} className="py-3 flex justify-between items-center gap-4">
               <div className="flex items-center gap-3">
-                {c.portada_url ? (
+                {c.portada_url && c.portada_url !== "EMPTY" ? (
                   <img src={c.portada_url} alt={c.nombre} className="w-12 h-12 rounded-xl object-cover border" />
                 ) : (
                   <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-lg">🏪</div>
@@ -509,13 +523,13 @@ export default function DashboardAdmin() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEditar(c)}
-                  className="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl"
+                  className="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer"
                 >
                   ✏️ Editar
                 </button>
                 <button
                   onClick={() => handleEliminar(c.id, c.nombre)}
-                  className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl"
+                  className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer"
                 >
                   🗑️ Borrar
                 </button>
