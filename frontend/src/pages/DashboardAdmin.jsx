@@ -199,7 +199,7 @@ export default function DashboardAdmin() {
             />
             <button
               type="submit"
-              className="w-full bg-slate-900 hover:bg-black text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg"
+              className="w-full bg-slate-900 hover:bg-black text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg cursor-pointer"
             >
               Entrar
             </button>
@@ -218,7 +218,7 @@ export default function DashboardAdmin() {
         </div>
         <button
           onClick={() => setAutenticado(false)}
-          className="bg-white/10 text-white text-xs font-bold px-4 py-2 rounded-xl"
+          className="bg-white/10 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
         >
           Salir
         </button>
@@ -241,7 +241,7 @@ export default function DashboardAdmin() {
                 setEditandoId(null);
                 setFormData(formInicial);
               }}
-              className="text-xs bg-slate-100 font-bold px-3 py-1.5 rounded-xl text-slate-600"
+              className="text-xs bg-slate-100 font-bold px-3 py-1.5 rounded-xl text-slate-600 cursor-pointer"
             >
               Cancelar
             </button>
@@ -435,7 +435,7 @@ export default function DashboardAdmin() {
                     <button
                       type="button"
                       onClick={() => setFormData(p => ({...p, galeria_urls: p.galeria_urls.filter((_, i) => i !== idx)}))}
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold"
+                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold cursor-pointer"
                     >
                       ✕
                     </button>
@@ -480,7 +480,7 @@ export default function DashboardAdmin() {
                 id="destacado"
                 checked={formData.destacado}
                 onChange={(e) => setFormData({...formData, destacado: e.target.checked})}
-                className="w-4 h-4 text-blue-600 rounded"
+                className="w-4 h-4 text-blue-600 rounded cursor-pointer"
               />
               <label htmlFor="destacado" className="text-xs font-bold text-blue-900 cursor-pointer">
                 ⭐ Comercio Destacado / VIP
@@ -529,15 +529,4 @@ export default function DashboardAdmin() {
                 </button>
                 <button
                   onClick={() => handleEliminar(c.id, c.nombre)}
-                  className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer"
-                >
-                  🗑️ Borrar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+                  className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.
