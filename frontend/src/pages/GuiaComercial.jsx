@@ -10,10 +10,7 @@ export default function GuiaComercial() {
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
 
-  // Estado para previsualizar una foto de la galería
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
-
-  // Estado para el carrusel automático (cambia cada 2 segundos)
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
 
   const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza"];
@@ -77,11 +74,12 @@ export default function GuiaComercial() {
     return (match && match[2].length === 11) ? "https://www.youtube.com/embed/" + match[2] : null;
   };
 
+  // 🚀 FUNCIÓN SIMPLIFICADA PARA MOSTRAR LA FOTO REAL DE SUPABASE DIRECTAMENTE
   const obtenerPortadaValida = (url) => {
-    if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL" && url !== "undefined") {
+    if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL") {
       return url.trim();
     }
-    return "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4";
+    return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5"; // Imagen neutral por defecto si no hay foto
   };
 
   return (
