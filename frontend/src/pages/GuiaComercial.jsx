@@ -12,7 +12,7 @@ export default function GuiaComercial() {
   // Estado para previsualizar una foto de la galería
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
 
-  // Estado para el carrusel automático de destacados (cambia cada 2 segundos)
+  // Estado para el carrusel automático (cambia cada 2 segundos)
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
 
   const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza"];
@@ -33,16 +33,16 @@ export default function GuiaComercial() {
     }
   };
 
-  // Filtrar comercios destacados para el carrusel
-  const comerciosDestacados = comercios.filter(c => c.destacado);
+  // Carrusel: Usamos todos los comercios (o los destacados si los hay, pero garantizamos que siempre ruede)
+  const comerciosCarrusel = comercios.length > 0 ? comercios : [];
 
   useEffect(() => {
-    if (comerciosDestacados.length <= 1) return;
+    if (comerciosCarrusel.length <= 1) return;
     const intervalo = setInterval(() => {
-      setIndiceCarrusel((prev) => (prev + 1) % comerciosDestacados.length);
-    }, 2000); // Rota cada 2 segundos exactos
+      setIndiceCarrusel((prev) => (prev + 1) % comerciosCarrusel.length);
+    }, 2000); // Rota exactamente cada 2 segundos
     return () => clearInterval(intervalo);
-  }, [comerciosDestacados.length]);
+  }, [comerciosCarrusel.length]);
 
   // Función para normalizar texto (elimina tildes y convierte a minúsculas)
   const normalizar = (texto) =>
@@ -114,57 +114,6 @@ export default function GuiaComercial() {
 
       <div className="max-w-md mx-auto px-4 pt-5 space-y-6">
 
-        {/* 🎠 CARRUSEL AUTOMÁTICO DE DESTACADOS (Cada 2 segundos) */}
-        {comerciosDestacados.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                <Sparkles size={14} className="text-amber-500" /> Comercios Destacados
-              </h2>
-              <div className="flex gap-1">
-                {comerciosDestacados.map((_, idx) => (
-                  <span 
-                    key={idx} 
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      idx === indiceCarrusel ? 'w-5 bg-rose-900' : 'w-1.5 bg-slate-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Tarjeta del Carrusel Activa */}
-            <div 
-              onClick={() => setComercioSel(comerciosDestacados[indiceCarrusel])}
-              className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 transition-all duration-500 cursor-pointer hover:shadow-xl"
-            >
-              <div className="h-36 w-full relative overflow-hidden bg-slate-900">
-                <img 
-                  src={comerciosDestacados[indiceCarrusel].portada_url || comerciosDestacados[indiceCarrusel].logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"} 
-                  alt={comerciosDestacados[indiceCarrusel].nombre}
-                  className="w-full h-full object-cover opacity-85 transform hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
-                <span className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow">
-                  ⭐ PREMIUM
-                </span>
-                <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <h3 className="text-base font-bold">{comerciosDestacados[indiceCarrusel].nombre}</h3>
-                  <p className="text-[11px] text-slate-200 truncate">{comerciosDestacados[indiceCarrusel].descripcion || comerciosDestacados[indiceCarrusel].subcategoria}</p>
-                </div>
-              </div>
-              <div className="p-3 bg-white flex items-center justify-between">
-                <span className="text-[11px] text-slate-500 flex items-center gap-1 truncate">
-                  <MapPin size={12} className="text-rose-700 flex-shrink-0" /> {comerciosDestacados[indiceCarrusel].direccion || "Utrera"}
-                </span>
-                <span className="text-xs font-bold text-rose-900 bg-rose-50 px-3 py-1 rounded-xl">
-                  Ver Ficha ➔
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* 🗂️ CATEGORÍAS */}
         <div className="space-y-2">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Categorías</h2>
@@ -184,6 +133,57 @@ export default function GuiaComercial() {
             ))}
           </div>
         </div>
+
+        {/* 🎠 CARRUSEL AUTOMÁTICO (Cada 2 segundos, debajo de categorías y antes del listado) */}
+        {comerciosCarrusel.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                <Sparkles size={14} className="text-amber-500" /> Comercios Destacados Utrera
+              </h2>
+              <div className="flex gap-1">
+                {comerciosCarrusel.map((_, idx) => (
+                  <span 
+                    key={idx} 
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === indiceCarrusel ? 'w-5 bg-rose-900' : 'w-1.5 bg-slate-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Tarjeta del Carrusel Activa */}
+            <div 
+              onClick={() => setComercioSel(comerciosCarrusel[indiceCarrusel])}
+              className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 transition-all duration-500 cursor-pointer hover:shadow-xl"
+            >
+              <div className="h-36 w-full relative overflow-hidden bg-slate-900">
+                <img 
+                  src={comerciosCarrusel[indiceCarrusel].portada_url || comerciosCarrusel[indiceCarrusel].logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"} 
+                  alt={comerciosCarrusel[indiceCarrusel].nombre}
+                  className="w-full h-full object-cover opacity-85 transform hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+                <span className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow">
+                  ⭐ DESTACADO
+                </span>
+                <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <h3 className="text-base font-bold">{comerciosCarrusel[indiceCarrusel].nombre}</h3>
+                  <p className="text-[11px] text-slate-200 truncate">{comerciosCarrusel[indiceCarrusel].descripcion || comerciosCarrusel[indiceCarrusel].subcategoria || comerciosCarrusel[indiceCarrusel].categoria}</p>
+                </div>
+              </div>
+              <div className="p-3 bg-white flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 flex items-center gap-1 truncate">
+                  <MapPin size={12} className="text-rose-700 flex-shrink-0" /> {comerciosCarrusel[indiceCarrusel].direccion || "Utrera"}
+                </span>
+                <span className="text-xs font-bold text-rose-900 bg-rose-50 px-3 py-1 rounded-xl">
+                  Ver Ficha ➔
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 📋 LISTA DE COMERCIOS */}
         <div className="space-y-3">
