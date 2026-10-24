@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin } from 'lucide-react';
+import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car } from 'lucide-react';
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: '¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia o los horarios de Renfe.'
+      texto: '¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia, trenes o aparcamientos.'
     }
   ]);
 
@@ -137,7 +137,50 @@ export default function Conso() {
       );
     }
 
-    return `¡Entendido! Como Conso, tu asistente de Utrera, sigo procesando toda la información local. Prueba a preguntarme por la **"farmacia de guardia"** o los **"trenes"**.`;
+    if (texto.includes('aparcamiento') || texto.includes('parking') || texto.includes('aparcar')) {
+      return (
+        <div className="space-y-3">
+          <div>
+            <p className="font-bold text-slate-900 mb-0.5">🅿️ APARCAMIENTOS EN TIEMPO REAL</p>
+            <p className="text-[11px] text-slate-500">Red de sensores inteligentes de Utrera</p>
+          </div>
+
+          {/* Tarjeta interactiva con datos de holautrera.com/parking */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
+            <div className="flex justify-between items-center text-center border-b border-slate-700 pb-2.5">
+              <div>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Total Plazas</p>
+                <p className="text-base font-black text-white">1.060</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-emerald-400 uppercase tracking-wider">Libres</p>
+                <p className="text-base font-black text-emerald-400">47 (9%)</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-rose-400 uppercase tracking-wider">Ocupadas</p>
+                <p className="text-base font-black text-rose-400">491 (91%)</p>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              Consulta el plano interactivo oficial con el estado de los sensores y plazas libres calle a calle.
+            </p>
+
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                window.open("https://holautrera.com/parking", "_blank");
+              }}
+              className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+            >
+              <span>🗺️ Ver Mapa de Plazas Libres (holautrera.com)</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return `¡Entendido! Como Conso, tu asistente de Utrera, sigo procesando toda la información local. Prueba a preguntarme por la **"farmacia de guardia"**, los **"trenes"** o los **"aparcamientos"**.`;
   };
 
   const enviarMensaje = (textoEnvio) => {
@@ -201,22 +244,30 @@ export default function Conso() {
       </div>
 
       {/* Botones de Acceso Rápido */}
-      <div className="px-4 py-2 max-w-md mx-auto w-full flex gap-2">
+      <div className="px-4 py-2 max-w-md mx-auto w-full grid grid-cols-3 gap-1.5">
         <button
           type="button"
           onClick={() => enviarMensaje("Farmacia de guardia")}
-          className="flex-1 bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+          className="bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors shadow-sm cursor-pointer"
         >
           <Pill size={14} className="text-rose-700" />
-          <span>Farmacia de Guardia</span>
+          <span>Farmacias</span>
         </button>
         <button
           type="button"
           onClick={() => enviarMensaje("Horario de trenes")}
-          className="flex-1 bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+          className="bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors shadow-sm cursor-pointer"
         >
           <Train size={14} className="text-slate-600" />
-          <span>Horario de Trenes</span>
+          <span>Trenes</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => enviarMensaje("Aparcamientos")}
+          className="bg-sky-50 border border-sky-200 text-sky-900 hover:bg-sky-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors shadow-sm cursor-pointer"
+        >
+          <Car size={14} className="text-sky-700" />
+          <span>Aparcar</span>
         </button>
       </div>
 
@@ -225,7 +276,7 @@ export default function Conso() {
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="Pregúntale a Conso (trenes, farmacias...)"
+            placeholder="Pregúntale a Conso (trenes, farmacias, parking...)"
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
