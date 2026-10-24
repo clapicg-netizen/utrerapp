@@ -131,11 +131,11 @@ export default function PanelComercio() {
   const limpiarDatosParaEnviar = (data) => {
     return {
       ...data,
-      portada_url: data.portada_url && data.portada_url.trim() !== "" ? data.portada_url.trim() : null,
-      logo_url: data.logo_url && data.logo_url.trim() !== "" ? data.logo_url.trim() : null,
-      carta_pdf_url: data.carta_pdf_url && data.carta_pdf_url.trim() !== "" ? data.carta_pdf_url.trim() : null,
-      video_story_url: data.video_story_url && data.video_story_url.trim() !== "" ? data.video_story_url.trim() : null,
-      galeria_urls: Array.isArray(data.galeria_urls) ? data.galeria_urls.filter(u => u && u.trim() !== "") : []
+      portada_url: data.portada_url && data.portada_url.trim() !== "" ? data.portada_url.trim() : (comercioSel?.portada_url || null),
+      logo_url: data.logo_url && data.logo_url.trim() !== "" ? data.logo_url.trim() : (comercioSel?.logo_url || null),
+      carta_pdf_url: data.carta_pdf_url && data.carta_pdf_url.trim() !== "" ? data.carta_pdf_url.trim() : (comercioSel?.carta_pdf_url || null),
+      video_story_url: data.video_story_url && data.video_story_url.trim() !== "" ? data.video_story_url.trim() : (comercioSel?.video_story_url || null),
+      galeria_urls: Array.isArray(data.galeria_urls) && data.galeria_urls.length > 0 ? data.galeria_urls : (comercioSel?.galeria_urls || [])
     };
   };
 
