@@ -38,7 +38,7 @@ export default function PanelComercio() {
   useEffect(() => {
     async function cargar() {
       const data = await obtenerComercios("Todos");
-      setComercios(data);
+      setComercios(data || []);
     }
     cargar();
   }, []);
@@ -83,12 +83,12 @@ export default function PanelComercio() {
       horario_texto: c.horario_texto || '',
       telefono: c.telefono || '',
       whatsapp: c.whatsapp || '',
-      portada_url: c.portada_url || '',
-      logo_url: c.logo_url || '',
-      carta_pdf_url: c.carta_pdf_url || '',
-      galeria_urls: c.galeria_urls || [],
+      portada_url: c.portada_url && c.portada_url !== "EMPTY" ? c.portada_url : '',
+      logo_url: c.logo_url && c.logo_url !== "EMPTY" ? c.logo_url : '',
+      carta_pdf_url: c.carta_pdf_url && c.carta_pdf_url !== "EMPTY" ? c.carta_pdf_url : '',
+      galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
       oferta_flash: c.oferta_flash || '',
-      video_story_url: c.video_story_url || '',
+      video_story_url: c.video_story_url && c.video_story_url !== "EMPTY" ? c.video_story_url : '',
       pin_acceso: c.pin_acceso || '1234'
     });
   };
@@ -107,7 +107,7 @@ export default function PanelComercio() {
       if (esGaleria) {
         setFormData((prev) => ({
           ...prev,
-          galeria_urls: [...prev.galeria_urls, res.url]
+          galeria_urls: [...(prev.galeria_urls || []), res.url]
         }));
       } else {
         setFormData((prev) => ({
@@ -128,18 +128,31 @@ export default function PanelComercio() {
     }));
   };
 
+  const limpiarDatosParaEnviar = (data) => {
+    return {
+      ...data,
+      portada_url: data.portada_url && data.portada_url.trim() !== "" ? data.portada_url.trim() : null,
+      logo_url: data.logo_url && data.logo_url.trim() !== "" ? data.logo_url.trim() : null,
+      carta_pdf_url: data.carta_pdf_url && data.carta_pdf_url.trim() !== "" ? data.carta_pdf_url.trim() : null,
+      video_story_url: data.video_story_url && data.video_story_url.trim() !== "" ? data.video_story_url.trim() : null,
+      galeria_urls: Array.isArray(data.galeria_urls) ? data.galeria_urls.filter(u => u && u.trim() !== "") : []
+    };
+  };
+
   const handleGuardar = async (e) => {
     e.preventDefault();
     setGuardando(true);
     setMensaje({ tipo: '', texto: '' });
 
+    const datosLimpios = limpiarDatosParaEnviar(formData);
+
     if (modoAlta) {
-      if (!formData.nombre || !formData.categoria) {
+      if (!datosLimpios.nombre || !datosLimpios.categoria) {
         setMensaje({ tipo: 'error', texto: 'Indica el nombre y la categoría' });
         setGuardando(false);
         return;
       }
-      const res = await crearComercio(formData);
+      const res = await crearComercio(datosLimpios);
       setGuardando(false);
       if (res.success) {
         setMensaje({ tipo: 'exito', texto: '¡Comercio dado de alta correctamente!' });
@@ -148,7 +161,8 @@ export default function PanelComercio() {
         setMensaje({ tipo: 'error', texto: res.message });
       }
     } else {
-      const res = await actualizarComercio(comercioSel.id, pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput, formData);
+      const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
+      const res = await actualizarComercio(comercioSel.id, pinUsado, datosLimpios);
       setGuardando(false);
 
       if (res.success) {
@@ -181,7 +195,7 @@ export default function PanelComercio() {
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Selecciona tu comercio:</label>
               <select
-                onChange={(e) => setComercioSel(comercios.find(c => c.id === e.target.value))}
+                onChange={(e) => setComercios(comercios.find(c => c.id === e.target.value))}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium"
               >
                 <option value="">-- Seleccionar Comercio --</option>
