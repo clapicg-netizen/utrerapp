@@ -33,25 +33,22 @@ export default function GuiaComercial() {
     }
   };
 
-  // Carrusel: Usamos todos los comercios (o los destacados si los hay, pero garantizamos que siempre ruede)
   const comerciosCarrusel = comercios.length > 0 ? comercios : [];
 
   useEffect(() => {
     if (comerciosCarrusel.length <= 1) return;
     const intervalo = setInterval(() => {
       setIndiceCarrusel((prev) => (prev + 1) % comerciosCarrusel.length);
-    }, 2000); // Rota exactamente cada 2 segundos
+    }, 2000);
     return () => clearInterval(intervalo);
   }, [comerciosCarrusel.length]);
 
-  // Función para normalizar texto (elimina tildes y convierte a minúsculas)
   const normalizar = (texto) =>
     (texto || "")
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-  // Filtrado dual: por categoría seleccionada Y por texto de búsqueda
   const comerciosFiltrados = comercios.filter((c) => {
     const coincideCategoria =
       categoriaSel === "Todos" ||
@@ -98,7 +95,6 @@ export default function GuiaComercial() {
             Descubre el corazón comercial, bares y servicios de nuestra tierra en un solo lugar.
           </p>
 
-          {/* Buscador Instantáneo */}
           <div className="relative pt-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input
@@ -134,7 +130,7 @@ export default function GuiaComercial() {
           </div>
         </div>
 
-        {/* 🎠 CARRUSEL AUTOMÁTICO (Cada 2 segundos, debajo de categorías y antes del listado) */}
+        {/* 🎠 CARRUSEL AUTOMÁTICO */}
         {comerciosCarrusel.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -153,14 +149,13 @@ export default function GuiaComercial() {
               </div>
             </div>
 
-            {/* Tarjeta del Carrusel Activa */}
             <div 
               onClick={() => setComercioSel(comerciosCarrusel[indiceCarrusel])}
               className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 transition-all duration-500 cursor-pointer hover:shadow-xl"
             >
               <div className="h-36 w-full relative overflow-hidden bg-slate-900">
                 <img 
-                  src={comerciosCarrusel[indiceCarrusel].portada_url || comerciosCarrusel[indiceCarrusel].logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"} 
+                  src={comerciosCarrusel[indiceCarrusel].portada_url && comerciosCarrusel[indiceCarrusel].portada_url !== "EMPTY" && comerciosCarrusel[indiceCarrusel].portada_url !== "NULL" ? comerciosCarrusel[indiceCarrusel].portada_url : "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"} 
                   alt={comerciosCarrusel[indiceCarrusel].nombre}
                   className="w-full h-full object-cover opacity-85 transform hover:scale-105 transition-transform duration-700"
                 />
@@ -216,7 +211,7 @@ export default function GuiaComercial() {
                   <div className="flex gap-4 items-start">
                     <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100">
                       <img
-                        src={comercio.portada_url || comercio.logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
+                        src={comercio.portada_url && comercio.portada_url !== "EMPTY" && comercio.portada_url !== "NULL" ? comercio.portada_url : "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
                         alt={comercio.nombre}
                         className="w-full h-full object-cover"
                       />
@@ -275,7 +270,7 @@ export default function GuiaComercial() {
             {/* Portada Principal */}
             <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border border-slate-100">
               <img
-                src={comercioSel.portada_url || comercioSel.logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
+                src={comercioSel.portada_url && comercioSel.portada_url !== "EMPTY" && comercioSel.portada_url !== "NULL" ? comercioSel.portada_url : "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
                 alt={comercioSel.nombre}
                 className="w-full h-full object-cover"
               />
@@ -288,7 +283,7 @@ export default function GuiaComercial() {
 
             {/* Cabecera con Logo */}
             <div className="flex items-center gap-3">
-              {comercioSel.logo_url && comercioSel.logo_url !== "EMPTY" && (
+              {comercioSel.logo_url && comercioSel.logo_url !== "EMPTY" && comercioSel.logo_url !== "NULL" && (
                 <img 
                   src={comercioSel.logo_url} 
                   alt="Logo" 
@@ -376,13 +371,15 @@ export default function GuiaComercial() {
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x">
                   {comercioSel.galeria_urls.map((url, i) => (
-                    <div 
-                      key={i} 
-                      onClick={() => setFotoAmpliada(url)}
-                      className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 cursor-pointer hover:opacity-90 snap-start"
-                    >
-                      <img src={url} alt={"Imagen " + i} className="w-full h-full object-cover" />
-                    </div>
+                    url && url !== "EMPTY" && (
+                      <div 
+                        key={i} 
+                        onClick={() => setFotoAmpliada(url)}
+                        className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 cursor-pointer hover:opacity-90 snap-start"
+                      >
+                        <img src={url} alt={"Imagen " + i} className="w-full h-full object-cover" />
+                      </div>
+                    )
                   ))}
                 </div>
               </div>
@@ -404,7 +401,7 @@ export default function GuiaComercial() {
 
             {/* Contactos */}
             <div className="grid grid-cols-2 gap-2 mt-4">
-              {comercioSel.whatsapp && (
+              {comercioSel.whatsapp && comercioSel.whatsapp !== "EMPTY" && (
                 <a
                   href={"https://wa.me/" + comercioSel.whatsapp.replace("+", "").replace(/\s/g, "")}
                   target="_blank"
@@ -415,7 +412,7 @@ export default function GuiaComercial() {
                 </a>
               )}
 
-              {comercioSel.telefono && (
+              {comercioSel.telefono && comercioSel.telefono !== "EMPTY" && (
                 <a
                   href={"tel:" + comercioSel.telefono}
                   className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
@@ -433,9 +430,9 @@ export default function GuiaComercial() {
               <Navigation size={14} className="text-sky-600" /> Cómo Llegar
             </button>
 
-            {/* Web */}
+            {/* Web, Tienda Online y Redes Sociales */}
             <div className="mt-3 space-y-2">
-              {(comercioSel.web_url || comercioSel.sitio_web) && (
+              {(comercioSel.web_url || comercioSel.sitio_web) && (comercioSel.web_url !== "EMPTY" && comercioSel.sitio_web !== "EMPTY") && (
                 <a
                   href={comercioSel.web_url || comercioSel.sitio_web}
                   target="_blank"
@@ -445,6 +442,52 @@ export default function GuiaComercial() {
                   <Globe size={15} /> Sitio Web Oficial <ExternalLink size={12} />
                 </a>
               )}
+
+              {comercioSel.tienda_url && comercioSel.tienda_url !== "EMPTY" && (
+                <a
+                  href={comercioSel.tienda_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow cursor-pointer"
+                >
+                  <ShoppingBag size={15} /> Tienda Online <ExternalLink size={12} />
+                </a>
+              )}
+
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                {comercioSel.instagram_username && comercioSel.instagram_username !== "EMPTY" && (
+                  <a
+                    href={comercioSel.instagram_username.startsWith('http') ? comercioSel.instagram_username : `https://instagram.com/${comercioSel.instagram_username.replace('@','')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow cursor-pointer truncate px-2"
+                  >
+                    📸 Instagram
+                  </a>
+                )}
+
+                {comercioSel.facebook_url && comercioSel.facebook_url !== "EMPTY" && (
+                  <a
+                    href={comercioSel.facebook_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow cursor-pointer truncate px-2"
+                  >
+                    📘 Facebook
+                  </a>
+                )}
+
+                {comercioSel.tiktok_username && comercioSel.tiktok_username !== "EMPTY" && (
+                  <a
+                    href={comercioSel.tiktok_username.startsWith('http') ? comercioSel.tiktok_username : `https://tiktok.com/@${comercioSel.tiktok_username.replace('@','')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow cursor-pointer truncate px-2"
+                  >
+                    🎵 TikTok
+                  </a>
+                )}
+              </div>
             </div>
 
           </div>
