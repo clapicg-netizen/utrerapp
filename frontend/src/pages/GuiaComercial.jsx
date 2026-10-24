@@ -1,5 +1,6 @@
+// src/pages/GuiaComercial.jsx
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, Store, Utensils, ShoppingBag } from "lucide-react";
+import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag } from "lucide-react";
 import { obtenerComercios } from "../lib/comerciosService";
 
 export default function GuiaComercial() {
@@ -77,7 +78,7 @@ export default function GuiaComercial() {
   };
 
   const obtenerPortadaValida = (url) => {
-    if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL") {
+    if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL" && url !== "undefined") {
       return url.trim();
     }
     return "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4";
@@ -394,7 +395,7 @@ export default function GuiaComercial() {
 
             {/* BOTÓN CARTA / MENÚ EN PDF */}
             {(() => {
-              const cartaUrl = comercioSel.carta_pdf_url || comercioSel.carta_pdf || comercioSel.carta_url || comercioSel.menu_pdf;
+              const cartaUrl = comercioSel.carta_pdf_url;
               if (cartaUrl && typeof cartaUrl === 'string' && cartaUrl.trim() !== "" && cartaUrl !== "EMPTY" && cartaUrl !== "NULL") {
                 return (
                   <a
@@ -443,9 +444,9 @@ export default function GuiaComercial() {
 
             {/* Web, Tienda Online y Redes Sociales */}
             <div className="mt-3 space-y-2">
-              {(comercioSel.web_url || comercioSel.sitio_web) && (comercioSel.web_url !== "EMPTY" && comercioSel.sitio_web !== "EMPTY") && (
+              {comercioSel.web_url && comercioSel.web_url !== "EMPTY" && (
                 <a
-                  href={comercioSel.web_url || comercioSel.sitio_web}
+                  href={comercioSel.web_url}
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow cursor-pointer"
