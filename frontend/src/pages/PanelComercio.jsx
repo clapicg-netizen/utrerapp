@@ -7,7 +7,6 @@ const PIN_ADMIN_MAESTRO = "9999";
 export default function PanelComercio() {
   const [comercios, setComercios] = useState([]);
   const [modoAlta, setModoAlta] = useState(false);
-  const [esAdmin, setEsAdmin] = useState(false);
   const [comercioSel, setComercioSel] = useState(null);
   const [pinInput, setPinInput] = useState('');
   const [autenticado, setAutenticado] = useState(false);
@@ -50,9 +49,8 @@ export default function PanelComercio() {
     setMensaje({ tipo: '', texto: '' });
 
     if (pinInput === PIN_ADMIN_MAESTRO) {
-      setEsAdmin(true);
+      setAutenticado(true);
       if (comercioSel) {
-        setAutenticado(true);
         cargarDatosComercio(comercioSel);
       } else {
         setModoAlta(true);
@@ -93,7 +91,6 @@ export default function PanelComercio() {
     });
   };
 
-  // 🚀 SUBIDA DIRECTA A SUPABASE QUE ACTUALIZA AL INSTANTE
   const handleFileUpload = async (e, campo, esGaleria = false) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -107,8 +104,7 @@ export default function PanelComercio() {
     if (res.success) {
       let nuevoFormData = { ...formData };
       if (esGaleria) {
-        const nuevasGaleria = [...(formData.galeria_urls || []), res.url];
-        nuevoFormData.galeria_urls = nuevasGaleria;
+        nuevoFormData.galeria_urls = [...(formData.galeria_urls || []), res.url];
       } else {
         nuevoFormData[campo] = res.url;
       }
@@ -187,7 +183,7 @@ export default function PanelComercio() {
 
       datosActualizados.galeria_urls = nuevasGaleria;
       setFormData(datosActualizados);
-      setMensaje({ tipo: 'exito', texto: '¡Datos volcados y estructurados con éxito!' });
+      setMensaje({ tipo: 'exito', texto: '¡Datos volcados y estructurados con éxito en el formulario!' });
       setTextoBruto('');
     } catch (err) {
       setMensaje({ tipo: 'error', texto: 'Error al procesar el texto bruto.' });
@@ -253,7 +249,7 @@ export default function PanelComercio() {
                 onChange={(e) => setComercios(comercios.find(c => c.id === e.target.value))}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium"
               >
-                <option value="">-- Seleccionar Comercio --</option>
+                <option value="">-- Seleccionar Comercio (Opcional si usas PIN Maestro) --</option>
                 {comercios.map((c) => (
                   <option key={c.id} value={c.id}>{c.nombre}</option>
                 ))}
@@ -261,7 +257,7 @@ export default function PanelComercio() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">PIN de acceso (Usa 9999 para Admin):</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">PIN de acceso (Usa 9999 para Admin Maestro):</label>
               <input
                 type="password"
                 placeholder="****"
@@ -278,10 +274,6 @@ export default function PanelComercio() {
               Entrar al Panel
             </button>
           </form>
-
-          <p className="text-[10px] text-center text-slate-400 mt-6">
-            Para altas de nuevos negocios contacta con la administración de Utrerapp.
-          </p>
         </div>
       </div>
     );
@@ -292,17 +284,17 @@ export default function PanelComercio() {
       <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
         <div>
           <span className="text-xs text-slate-400 font-bold uppercase">
-            {modoAlta ? "Alta de Comercio (Admin)" : "Modificando"}
+            {pinInput === PIN_ADMIN_MAESTRO ? "Modo Administrador Maestro" : "Modificando"}
           </span>
           <h1 className="text-lg font-black text-slate-900">
-            {modoAlta ? "Nuevo Negocio" : comercioSel?.nombre}
+            {modoAlta ? "Nuevo Negocio" : comercioSel?.nombre || "Panel de Control"}
           </h1>
         </div>
         <button
           onClick={() => {
             setAutenticado(false);
             setModoAlta(false);
-            setEsAdmin(false);
+            setPinInput('');
           }}
           className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-xl"
         >
@@ -318,14 +310,14 @@ export default function PanelComercio() {
         </div>
       )}
 
-      {/* 🤖 AGENTE IA DE VOLCADO MASIVO A LO BRUTO (SOLO PARA ADMIN 9999) */}
-      {esAdmin && (
+      {/* 🤖 AGENTE IA DE VOLCADO MASIVO A LO BRUTO (VISIBLE AL ENTRAR CON PIN 9999) */}
+      {pinInput === PIN_ADMIN_MAESTRO && (
         <div className="mb-6 bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl border border-indigo-500/30">
           <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
             🤖 Agente IA de Volcado Masivo ("A lo Bruto")
           </h3>
           <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
-            Pega aquí la información desordenada usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Desc:</code>, etc.) y se rellenarán los campos automáticamente.
+            Pega aquí toda la información desordenada usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Desc:</code>, etc.) y pulsa el botón para rellenar la ficha automáticamente.
           </p>
           <textarea
             rows="4"
