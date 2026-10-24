@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed } from "lucide-react";
 
-export default function Home({ setTab }) {
+export default function Home({ setPaginaActual, setTab }) {
   const [slideActual, setSlideActual] = useState(0);
+
+  // Usamos setPaginaActual o setTab indistintamente para evitar fallos
+  const cambiarPestana = (e, destino) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const fnNavegacion = setPaginaActual || setTab;
+    if (typeof fnNavegacion === "function") {
+      fnNavegacion(destino);
+    }
+  };
 
   const avisos = [
     {
@@ -53,16 +65,6 @@ export default function Home({ setTab }) {
     }, 3000);
     return () => clearInterval(timer);
   }, [avisos.length]);
-
-  const cambiarPestana = (e, destino) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (typeof setTab === "function") {
-      setTab(destino);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -172,11 +174,11 @@ export default function Home({ setTab }) {
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
-          {/* Farmacias (Corregido para abrir farmacias) */}
+          {/* Farmacias */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "farmacias")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
               <Pill size={18} />
@@ -191,7 +193,7 @@ export default function Home({ setTab }) {
           <button 
             type="button"
             onClick={(e) => window.open("https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/", "_blank")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
               <HeartPulse size={18} />
@@ -206,7 +208,7 @@ export default function Home({ setTab }) {
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "market")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
               <Building2 size={18} />
@@ -221,7 +223,7 @@ export default function Home({ setTab }) {
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "market")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left"
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
               <Landmark size={18} />
@@ -232,11 +234,11 @@ export default function Home({ setTab }) {
             </div>
           </button>
 
-          {/* Eventos y Teatro (Ocupa las 2 columnas) */}
+          {/* Eventos y Teatro */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "market")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all text-left col-span-2"
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all text-left col-span-2 cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
@@ -262,7 +264,7 @@ export default function Home({ setTab }) {
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "juego-mostachon")}
-            className="bg-gradient-to-br from-amber-500 to-orange-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-400/40 active:scale-[0.98] transition-transform"
+            className="bg-gradient-to-br from-amber-500 to-orange-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-400/40 active:scale-[0.98] transition-transform cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg shadow-inner flex-shrink-0">
               🧁
@@ -273,11 +275,11 @@ export default function Home({ setTab }) {
             </div>
           </button>
 
-          {/* Hostelería (Bares y Copas) */}
+          {/* Hostelería */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "market")}
-            className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform"
+            className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
               <UtensilsCrossed size={18} />
