@@ -4,22 +4,29 @@ import { Pill, Phone, MapPin, Clock, Search, HeartPulse } from "lucide-react";
 export default function Farmacias() {
   const [busqueda, setBusqueda] = useState("");
 
+  // Datos oficiales de turnos de guardia según los listados facilitados
+  // Hoy es 24 de octubre de 2026 (Sábado)
+  const hoy = new Date();
+  const esSabado24 = hoy.getDate() === 24 && hoy.getMonth() === 9; // Octubre es mes 9
+
   const farmaciasUtrera = [
     {
       id: 1,
-      nombre: "Farmacia Morales Guerrero, CB",
-      boticario: "Farmacia Morales Guerrero",
-      direccion: "Avda. Alcalde José Dorado, 5 - Bda. El Carmen, Utrera",
-      telefono: "954864924",
-      horarioGuardia: "De Guardia Hoy (24 Horas)",
-    },
-    {
-      id: 2,
       nombre: "Farmacia José Luis Algarín Pachón",
       boticario: "José Luis Algarín Pachón",
       direccion: "Corredera, 1, Utrera",
       telefono: "954860448",
-      horarioGuardia: "De Guardia Hoy (24 Horas)",
+      deGuardia: esSabado24,
+      horarioGuardia: esSabado24 ? "De Guardia Hoy (Día: 9:30 a 22:00 h)" : "09:30 a 22:00 h",
+    },
+    {
+      id: 2,
+      nombre: "Farmacia Ma Luz Ceballos Niebla",
+      boticario: "Ma Luz Ceballos Niebla",
+      direccion: "Avda. La Fontanilla, 38, Utrera",
+      telefono: "955864368",
+      deGuardia: esSabado24,
+      horarioGuardia: esSabado24 ? "De Guardia Hoy (Noche: 22:00 a 9:30 h)" : "Guardia según calendario",
     },
     {
       id: 3,
@@ -27,7 +34,8 @@ export default function Farmacias() {
       boticario: "Rafael González",
       direccion: "Cristo de los Afligidos, 74, Utrera",
       telefono: "954860213",
-      horarioGuardia: "De Guardia Hoy (24 Horas)",
+      deGuardia: false,
+      horarioGuardia: "09:30 a 22:00 h",
     },
     {
       id: 4,
@@ -35,15 +43,17 @@ export default function Farmacias() {
       boticario: "Pablo Troncoso López (El Charco)",
       direccion: "Avda. María Auxiliadora, 95, Utrera",
       telefono: "954860196",
-      horarioGuardia: "De Guardia Hoy (24 Horas)",
+      deGuardia: false,
+      horarioGuardia: "09:30 a 22:00 h",
     },
     {
       id: 5,
-      nombre: "Farmacia Ma Luz Ceballos Niebla",
-      boticario: "Ma Luz Ceballos Niebla",
-      direccion: "Avda. La Fontanilla, 38, Utrera",
-      telefono: "955864368",
-      horarioGuardia: "De Guardia Hoy (24 Horas)",
+      nombre: "Farmacia Morales Guerrero, CB",
+      boticario: "Farmacia Morales Guerrero",
+      direccion: "Avda. Alcalde José Dorado, 5 - Bda. El Carmen, Utrera",
+      telefono: "954864924",
+      deGuardia: false,
+      horarioGuardia: "Guardia según calendario",
     },
     {
       id: 6,
@@ -51,26 +61,12 @@ export default function Farmacias() {
       boticario: "Antonio Valdés Arenas",
       direccion: "Av. S. Juan Bosco, 96, Utrera",
       telefono: "955864951",
-      horarioGuardia: "De Guardia Hoy (24 Horas)",
+      deGuardia: false,
+      horarioGuardia: "Guardia según calendario",
     }
   ];
 
-  // Cálculo preciso: ajustado para que el cambio de guardia sea a las 09:00 h
-  const ahora = new Date();
-  const horaAjustada = new Date(ahora.getTime() - (9 * 60 * 60 * 1000));
-  const inicioAnio = new Date(horaAjustada.getFullYear(), 0, 0);
-  const diff = horaAjustada - inicioAnio;
-  const unDia = 1000 * 60 * 60 * 24;
-  const diaTurno = Math.floor(diff / unDia);
-  
-  const indiceGuardiaHoy = diaTurno % farmaciasUtrera.length;
-
-  const farmaciasConGuardiaDinamica = farmaciasUtrera.map((f, index) => ({
-    ...f,
-    deGuardia: index === indiceGuardiaHoy
-  }));
-
-  const filtradas = farmaciasConGuardiaDinamica.filter(f => 
+  const filtradas = farmaciasUtrera.filter(f => 
     f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     f.direccion.toLowerCase().includes(busqueda.toLowerCase())
   );
@@ -80,7 +76,7 @@ export default function Farmacias() {
   };
 
   const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const fechaActualFormateada = ahora.toLocaleDateString('es-ES', opcionesFecha);
+  const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -121,7 +117,7 @@ export default function Farmacias() {
           >
             {farmacia.deGuardia && (
               <span className="inline-block bg-emerald-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase mb-2 shadow-sm">
-                🚨 DE GUARDIA HOY (Cambio a las 09:00h)
+                🚨 DE GUARDIA OFICIAL HOY
               </span>
             )}
 
