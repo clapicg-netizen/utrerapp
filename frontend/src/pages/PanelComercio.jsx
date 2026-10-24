@@ -6,18 +6,18 @@ const PIN_ADMIN_MAESTRO = "9999";
 
 export default function PanelComercio() {
   const [comercios, setComercios] = useState([]);
-  const [modoAlta, setModoAlta] = useState(false);
-  const [comercioSel, setComercioSel] = useState(null);
   const [pinInput, setPinInput] = useState('');
   const [autenticado, setAutenticado] = useState(false);
+  const [esAdminMaestro, setEsAdminMaestro] = useState(false);
+  const [comercioSelId, setComercioSelId] = useState('');
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // Estado para el texto del agente de volcado masivo a lo bruto
+  // Texto para el Agente de Volcado Masivo a lo Bruto
   const [textoBruto, setTextoBruto] = useState('');
-  const [procesandoBruto, setProcesandoBruto] = useState(false);
 
+  // Formulario del comercio activo
   const [formData, setFormData] = useState({
     nombre: '',
     categoria: 'Hostelería',
@@ -33,45 +33,46 @@ export default function PanelComercio() {
     galeria_urls: [],
     oferta_flash: '',
     video_story_url: '',
-    pin_acceso: '1234'
+    pin_acceso: '1234',
+    destacado: false
   });
 
   useEffect(() => {
-    async function cargar() {
-      const data = await obtenerComercios("Todos");
-      setComercios(data || []);
-    }
-    cargar();
+    cargarComerciosLista();
   }, []);
+
+  const cargarComerciosLista = async () => {
+    const data = await obtenerComercios("Todos");
+    setComercios(data || []);
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
     setMensaje({ tipo: '', texto: '' });
 
     if (pinInput === PIN_ADMIN_MAESTRO) {
+      setEsAdminMaestro(true);
       setAutenticado(true);
-      if (comercioSel) {
-        cargarDatosComercio(comercioSel);
-      } else {
-        setModoAlta(true);
-      }
       return;
     }
 
-    if (!comercioSel) {
-      setMensaje({ tipo: 'error', texto: 'Selecciona tu negocio para acceder' });
+    if (!comercioSelId) {
+      setMensaje({ tipo: 'error', texto: 'Selecciona tu comercio para acceder' });
       return;
     }
 
-    if (pinInput === (comercioSel.pin_acceso || '1234')) {
+    const comercioEncontrado = comercios.find(c => c.id === comercioSelId);
+    if (comercioEncontrado && pinInput === (comercioEncontrado.pin_acceso || '1234')) {
+      setEsAdminMaestro(false);
       setAutenticado(true);
-      cargarDatosComercio(comercioSel);
+      cargarDatosComercio(comercioEncontrado);
     } else {
       setMensaje({ tipo: 'error', texto: 'PIN incorrecto' });
     }
   };
 
   const cargarDatosComercio = (c) => {
+    setComercioSelId(c.id);
     setFormData({
       nombre: c.nombre || '',
       categoria: c.categoria || 'Hostelería',
@@ -87,7 +88,8 @@ export default function PanelComercio() {
       galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
       oferta_flash: c.oferta_flash || '',
       video_story_url: c.video_story_url || '',
-      pin_acceso: c.pin_acceso || '1234'
+      pin_acceso: c.pin_acceso || '1234',
+      destacado: c.destacado || false
     });
   };
 
@@ -108,42 +110,23 @@ export default function PanelComercio() {
       } else {
         nuevoFormData[campo] = res.url;
       }
-
       setFormData(nuevoFormData);
-
-      if (!modoAlta && comercioSel) {
-        const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
-        const resUpdate = await actualizarComercio(comercioSel.id, pinUsado, nuevoFormData);
-        if (resUpdate.success) {
-          setMensaje({ tipo: 'exito', texto: '¡Archivo subido y guardado en base de datos con éxito!' });
-          setComercioSel({ ...comercioSel, ...nuevoFormData });
-        } else {
-          setMensaje({ tipo: 'error', texto: 'Subido al storage pero falló al guardar en BD: ' + resUpdate.message });
-        }
-      } else {
-        setMensaje({ tipo: 'exito', texto: '¡Archivo añadido al formulario!' });
-      }
+      setMensaje({ tipo: 'exito', texto: '¡Archivo subido correctamente!' });
     } else {
       setMensaje({ tipo: 'error', texto: res.message });
     }
   };
 
-  const eliminarDeGaleria = async (index) => {
-    const nuevasGaleria = formData.galeria_urls.filter((_, i) => i !== index);
-    const nuevoFormData = { ...formData, galeria_urls: nuevasGaleria };
-    setFormData(nuevoFormData);
-
-    if (!modoAlta && comercioSel) {
-      const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
-      await actualizarComercio(comercioSel.id, pinUsado, nuevoFormData);
-      setComercioSel({ ...comercioSel, ...nuevoFormData });
-    }
+  const eliminarDeGaleria = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      galeria_urls: prev.galeria_urls.filter((_, i) => i !== index)
+    }));
   };
 
   // 🤖 PROCESADOR DE VOLCADO MASIVO A LO BRUTO
   const procesarVolcadoBruto = () => {
     if (!textoBruto.trim()) return;
-    setProcesandoBruto(true);
 
     try {
       const lineas = textoBruto.split('\n');
@@ -153,7 +136,7 @@ export default function PanelComercio() {
       lineas.forEach(linea => {
         const l = linea.trim();
         const lower = l.toLowerCase();
-        
+
         if (lower.startsWith('n:')) {
           datosActualizados.nombre = l.substring(2).trim();
         } else if (lower.startsWith('cat:')) {
@@ -187,8 +170,6 @@ export default function PanelComercio() {
       setTextoBruto('');
     } catch (err) {
       setMensaje({ tipo: 'error', texto: 'Error al procesar el texto bruto.' });
-    } finally {
-      setProcesandoBruto(false);
     }
   };
 
@@ -197,34 +178,39 @@ export default function PanelComercio() {
     setGuardando(true);
     setMensaje({ tipo: '', texto: '' });
 
-    if (modoAlta) {
-      if (!formData.nombre || !formData.categoria) {
-        setMensaje({ tipo: 'error', texto: 'Indica el nombre y la categoría' });
-        setGuardando(false);
-        return;
-      }
+    if (!formData.nombre || !formData.categoria) {
+      setMensaje({ tipo: 'error', texto: 'Indica al menos el nombre y la categoría' });
+      setGuardando(false);
+      return;
+    }
+
+    if (esAdminMaestro && !comercioSelId) {
+      // Crear nuevo comercio
       const res = await crearComercio(formData);
       setGuardando(false);
       if (res.success) {
         setMensaje({ tipo: 'exito', texto: '¡Comercio dado de alta correctamente!' });
-        setTimeout(() => window.location.reload(), 1500);
+        await cargarComerciosLista();
+        setComercioSelId('');
       } else {
         setMensaje({ tipo: 'error', texto: res.message });
       }
     } else {
-      const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
-      const res = await actualizarComercio(comercioSel.id, pinUsado, formData);
+      // Actualizar comercio existente
+      const idAActualizar = comercioSelId;
+      const res = await actualizarComercio(idAActualizar, PIN_ADMIN_MAESTRO, formData);
       setGuardando(false);
 
       if (res.success) {
-        setMensaje({ tipo: 'exito', texto: '¡Cambios guardados con éxito!' });
+        setMensaje({ tipo: 'exito', texto: '¡Cambios guardados con éxito en base de datos!' });
+        await cargarComerciosLista();
       } else {
         setMensaje({ tipo: 'error', texto: res.message });
       }
     }
   };
 
-  if (!autenticado && !modoAlta) {
+  if (!autenticado) {
     return (
       <div className="max-w-md mx-auto p-6 pt-8">
         <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
@@ -244,12 +230,20 @@ export default function PanelComercio() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Selecciona tu comercio:</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Selecciona tu comercio (Opcional si eres Admin):</label>
               <select
-                onChange={(e) => setComercios(comercios.find(c => c.id === e.target.value))}
+                value={comercioSelId}
+                onChange={(e) => {
+                  const selId = e.target.value;
+                  setComercioSelId(selId);
+                  if (selId) {
+                    const c = comercios.find(item => item.id === selId);
+                    if (c) cargarDatosComercio(c);
+                  }
+                }}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium"
               >
-                <option value="">-- Seleccionar Comercio (Opcional si usas PIN Maestro) --</option>
+                <option value="">-- Nuevo Comercio / Administrador Maestro --</option>
                 {comercios.map((c) => (
                   <option key={c.id} value={c.id}>{c.nombre}</option>
                 ))}
@@ -257,7 +251,7 @@ export default function PanelComercio() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">PIN de acceso (Usa 9999 para Admin Maestro):</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">PIN de acceso (Usa 9999 para Administrador):</label>
               <input
                 type="password"
                 placeholder="****"
@@ -284,17 +278,17 @@ export default function PanelComercio() {
       <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
         <div>
           <span className="text-xs text-slate-400 font-bold uppercase">
-            {pinInput === PIN_ADMIN_MAESTRO ? "Modo Administrador Maestro" : "Modificando"}
+            {esAdminMaestro ? "⭐ Panel Administrador Maestro" : "Modificando Negocio"}
           </span>
           <h1 className="text-lg font-black text-slate-900">
-            {modoAlta ? "Nuevo Negocio" : comercioSel?.nombre || "Panel de Control"}
+            {formData.nombre || "Nuevo Negocio"}
           </h1>
         </div>
         <button
           onClick={() => {
             setAutenticado(false);
-            setModoAlta(false);
             setPinInput('');
+            setEsAdminMaestro(false);
           }}
           className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-xl"
         >
@@ -310,50 +304,91 @@ export default function PanelComercio() {
         </div>
       )}
 
-      {/* 🤖 AGENTE IA DE VOLCADO MASIVO A LO BRUTO (VISIBLE AL ENTRAR CON PIN 9999) */}
-      {pinInput === PIN_ADMIN_MAESTRO && (
-        <div className="mb-6 bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl border border-indigo-500/30">
-          <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
-            🤖 Agente IA de Volcado Masivo ("A lo Bruto")
-          </h3>
-          <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
-            Pega aquí toda la información desordenada usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Desc:</code>, etc.) y pulsa el botón para rellenar la ficha automáticamente.
-          </p>
-          <textarea
-            rows="4"
-            placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;W: 34600000000&#10;Port: https://...&#10;Gl: https://..."
-            value={textoBruto}
-            onChange={(e) => setTextoBruto(e.target.value)}
-            className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/20"
-          />
-          <button
-            type="button"
-            onClick={procesarVolcadoBruto}
-            disabled={procesandoBruto}
-            className="mt-2.5 w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2.5 rounded-xl transition shadow"
+      {/* 🤖 AGENTE IA DE VOLCADO MASIVO A LO BRUTO */}
+      <div className="mb-6 bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl border border-indigo-500/30">
+        <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
+          🤖 Agente IA de Volcado Masivo ("A lo Bruto")
+        </h3>
+        <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
+          Pega aquí los datos desordenados usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Desc:</code>) y pulsa procesar para rellenar el formulario al instante.
+        </p>
+        <textarea
+          rows="4"
+          placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;W: 34600000000&#10;Port: https://...&#10;Gl: https://..."
+          value={textoBruto}
+          onChange={(e) => setTextoBruto(e.target.value)}
+          className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/20"
+        />
+        <button
+          type="button"
+          onClick={procesarVolcadoBruto}
+          className="mt-2.5 w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2.5 rounded-xl transition shadow"
+        >
+          ⚡ Procesar y Rellenar Ficha Automáticamente
+        </button>
+      </div>
+
+      {/* SELECTOR RÁPIDO DE COMERCIO PARA ADMIN */}
+      {esAdminMaestro && (
+        <div className="mb-6 bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+          <label className="block text-xs font-bold text-slate-700 mb-1.5">📂 Selecciona otro comercio para editar o crea uno nuevo:</label>
+          <select
+            value={comercioSelId}
+            onChange={(e) => {
+              const selId = e.target.value;
+              setComercioSelId(selId);
+              if (selId) {
+                const c = comercios.find(item => item.id === selId);
+                if (c) cargarDatosComercio(c);
+              } else {
+                setFormData({
+                  nombre: '',
+                  categoria: 'Hostelería',
+                  subcategoria: '',
+                  direccion: '',
+                  descripcion: '',
+                  horario_texto: '',
+                  telefono: '',
+                  whatsapp: '',
+                  portada_url: '',
+                  logo_url: '',
+                  carta_pdf_url: '',
+                  galeria_urls: [],
+                  oferta_flash: '',
+                  video_story_url: '',
+                  pin_acceso: '1234',
+                  destacado: false
+                });
+              }
+            }}
+            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
           >
-            ⚡ Procesar y Rellenar Ficha Automáticamente
-          </button>
+            <option value="">➕ Crear Nuevo Comercio / Limpiar Formulario</option>
+            {comercios.map((c) => (
+              <option key={c.id} value={c.id}>{c.nombre}</option>
+            ))}
+          </select>
         </div>
       )}
 
+      {/* FORMULARIO DE EDICIÓN / ALTA */}
       <form onSubmit={handleGuardar} className="space-y-5 bg-white p-5 rounded-3xl border border-slate-100 shadow-md">
         
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Nombre del Comercio:</label>
+          <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Nombre del Comercio (N:):</label>
           <input
             type="text"
-            placeholder="Ej. Cafetería La Plaza"
+            placeholder="Ej. Bar La Chana"
             value={formData.nombre}
             onChange={(e) => setFormData({...formData, nombre: e.target.value})}
             className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
-            required={modoAlta}
+            required
           />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Categoría:</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Categoría (Cat:):</label>
             <select
               value={formData.categoria}
               onChange={(e) => setFormData({...formData, categoria: e.target.value})}
@@ -366,22 +401,40 @@ export default function PanelComercio() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Dirección:</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría / Tipo:</label>
             <input
               type="text"
-              placeholder="Calle..."
-              value={formData.direccion}
-              onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+              placeholder="Ej. Tapas"
+              value={formData.subcategoria}
+              onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
               className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada:</label>
+          <label className="block text-xs font-bold text-slate-700 mb-1">📍 Dirección (Dir:):</label>
+          <input
+            type="text"
+            placeholder="Calle Clemente de la Cuadra, 13"
+            value={formData.direccion}
+            onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada (Port:):</label>
           {formData.portada_url && (
             <img src={formData.portada_url} alt="Portada" className="w-full h-32 object-cover rounded-2xl mb-2 border" />
           )}
+          <input
+            type="text"
+            placeholder="O pega URL de imagen aquí..."
+            value={formData.portada_url}
+            onChange={(e) => setFormData({...formData, portada_url: e.target.value})}
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-2"
+          />
           <input
             type="file"
             accept="image/*"
@@ -392,21 +445,7 @@ export default function PanelComercio() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú en PDF:</label>
-          {formData.carta_pdf_url && (
-            <p className="text-xs text-emerald-600 font-bold mb-2">✅ PDF cargado correctamente</p>
-          )}
-          <input
-            type="file"
-            accept=".pdf,application/pdf"
-            onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
-            disabled={subiendo}
-            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería (Añade varias fotos):</label>
+          <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Gl:):</label>
           <div className="grid grid-cols-3 gap-2 mb-2">
             {formData.galeria_urls.map((url, idx) => (
               <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
@@ -432,7 +471,7 @@ export default function PanelComercio() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">💬 WhatsApp:</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">💬 WhatsApp (W:):</label>
             <input
               type="text"
               placeholder="34600000000"
@@ -454,7 +493,7 @@ export default function PanelComercio() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción:</label>
+          <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción (Desc:):</label>
           <textarea
             rows="3"
             value={formData.descripcion}
@@ -463,12 +502,25 @@ export default function PanelComercio() {
           />
         </div>
 
+        <div className="flex items-center gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+          <input
+            type="checkbox"
+            id="destacadoCheck"
+            checked={formData.destacado}
+            onChange={(e) => setFormData({...formData, destacado: e.target.checked})}
+            className="w-4 h-4 text-rose-900 rounded"
+          />
+          <label htmlFor="destacadoCheck" className="text-xs font-bold text-slate-700 cursor-pointer">
+            ⭐ Comercio Destacado / VIP (Aparece en carrusel)
+          </label>
+        </div>
+
         <button
           type="submit"
           disabled={guardando || subiendo}
           className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-3.5 rounded-2xl transition shadow-md mt-4"
         >
-          {guardando ? 'Guardando...' : modoAlta ? '🚀 Dar de Alta Comercio' : '💾 Guardar Cambios'}
+          {guardando ? 'Guardando...' : comercioSelId ? '💾 Guardar Cambios en Base de Datos' : '🚀 Dar de Alta Comercio'}
         </button>
       </form>
     </div>
