@@ -11,8 +11,7 @@ export default function Farmacias() {
       boticario: "Farmacia Morales Guerrero",
       direccion: "Avda. Alcalde José Dorado, 5 - Bda. El Carmen, Utrera",
       telefono: "954864924",
-      deGuardia: true,
-      horarioGuardia: "De Guardia Hoy (Noche de 22:00 a 9:30)",
+      horarioGuardia: "De Guardia Hoy (24 Horas)",
     },
     {
       id: 2,
@@ -20,8 +19,7 @@ export default function Farmacias() {
       boticario: "José Luis Algarín Pachón",
       direccion: "Corredera, 1, Utrera",
       telefono: "954860448",
-      deGuardia: false,
-      horarioGuardia: "09:30 a 22:00 h",
+      horarioGuardia: "De Guardia Hoy (24 Horas)",
     },
     {
       id: 3,
@@ -29,8 +27,7 @@ export default function Farmacias() {
       boticario: "Rafael González",
       direccion: "Cristo de los Afligidos, 74, Utrera",
       telefono: "954860213",
-      deGuardia: false,
-      horarioGuardia: "09:30 a 22:00 h",
+      horarioGuardia: "De Guardia Hoy (24 Horas)",
     },
     {
       id: 4,
@@ -38,8 +35,7 @@ export default function Farmacias() {
       boticario: "Pablo Troncoso López (El Charco)",
       direccion: "Avda. María Auxiliadora, 95, Utrera",
       telefono: "954860196",
-      deGuardia: false,
-      horarioGuardia: "09:30 a 22:00 h",
+      horarioGuardia: "De Guardia Hoy (24 Horas)",
     },
     {
       id: 5,
@@ -47,8 +43,7 @@ export default function Farmacias() {
       boticario: "Ma Luz Ceballos Niebla",
       direccion: "Avda. La Fontanilla, 38, Utrera",
       telefono: "955864368",
-      deGuardia: false,
-      horarioGuardia: "Guardia según calendario",
+      horarioGuardia: "De Guardia Hoy (24 Horas)",
     },
     {
       id: 6,
@@ -56,12 +51,26 @@ export default function Farmacias() {
       boticario: "Antonio Valdés Arenas",
       direccion: "Av. S. Juan Bosco, 96, Utrera",
       telefono: "955864951",
-      deGuardia: false,
-      horarioGuardia: "Guardia según calendario",
+      horarioGuardia: "De Guardia Hoy (24 Horas)",
     }
   ];
 
-  const filtradas = farmaciasUtrera.filter(f => 
+  // Cálculo preciso: ajustado para que el cambio de guardia sea a las 09:00 h
+  const ahora = new Date();
+  const horaAjustada = new Date(ahora.getTime() - (9 * 60 * 60 * 1000));
+  const inicioAnio = new Date(horaAjustada.getFullYear(), 0, 0);
+  const diff = horaAjustada - inicioAnio;
+  const unDia = 1000 * 60 * 60 * 24;
+  const diaTurno = Math.floor(diff / unDia);
+  
+  const indiceGuardiaHoy = diaTurno % farmaciasUtrera.length;
+
+  const farmaciasConGuardiaDinamica = farmaciasUtrera.map((f, index) => ({
+    ...f,
+    deGuardia: index === indiceGuardiaHoy
+  }));
+
+  const filtradas = farmaciasConGuardiaDinamica.filter(f => 
     f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     f.direccion.toLowerCase().includes(busqueda.toLowerCase())
   );
@@ -69,6 +78,9 @@ export default function Farmacias() {
   const abrirMapa = (direccion) => {
     window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
   };
+
+  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const fechaActualFormateada = ahora.toLocaleDateString('es-ES', opcionesFecha);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -81,7 +93,7 @@ export default function Farmacias() {
           </div>
           <div>
             <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
-            <p className="text-xs text-emerald-200 mt-0.5">Utrera · Datos Oficiales Colegio Oficial</p>
+            <p className="text-xs text-emerald-200 mt-0.5 capitalize">Utrera · {fechaActualFormateada}</p>
           </div>
         </div>
 
@@ -109,7 +121,7 @@ export default function Farmacias() {
           >
             {farmacia.deGuardia && (
               <span className="inline-block bg-emerald-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase mb-2 shadow-sm">
-                🚨 DE GUARDIA HOY
+                🚨 DE GUARDIA HOY (Cambio a las 09:00h)
               </span>
             )}
 
