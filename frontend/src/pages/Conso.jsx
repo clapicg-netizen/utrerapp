@@ -35,7 +35,7 @@ export default function Conso() {
           {/* Turno de Día */}
           <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
             <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-              ☀️ Turno de Día (9:30 a 22:00 h)[cite: 6]
+              ☀️ Turno de Día (9:30 a 22:00 h)
             </span>
 
             {/* Farmacia 1 */}
@@ -43,10 +43,10 @@ export default function Conso() {
               <p className="font-bold text-slate-900 text-xs">Farmacia José Luis Algarín Pachón</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
                 <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Corredera, 1[cite: 6]</span>
+                <span>Corredera, 1</span>
               </p>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 954860448[cite: 6]</span>
+                <span className="text-[11px] font-semibold text-slate-500">📞 954860448</span>
                 <div className="flex gap-1.5">
                   <button onClick={(e) => realizarLlamada(e, "954860448")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
                   <button onClick={(e) => abrirMapa(e, "Corredera, 1, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
@@ -59,10 +59,10 @@ export default function Conso() {
               <p className="font-bold text-slate-900 text-xs">Farmacia Rafael González</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
                 <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Cristo de los Afligidos, 74 (Antig. La Fuente)[cite: 6]</span>
+                <span>Cristo de los Afligidos, 74 (Antig. La Fuente)</span>
               </p>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 954860213[cite: 6]</span>
+                <span className="text-[11px] font-semibold text-slate-500">📞 954860213</span>
                 <div className="flex gap-1.5">
                   <button onClick={(e) => realizarLlamada(e, "954860213")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
                   <button onClick={(e) => abrirMapa(e, "Cristo de los Afligidos, 74, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
@@ -75,10 +75,10 @@ export default function Conso() {
               <p className="font-bold text-slate-900 text-xs">Farmacia Pablo Troncoso López</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
                 <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Avda. María Auxiliadora, 95. "El Charco"[cite: 6]</span>
+                <span>Avda. María Auxiliadora, 95. "El Charco"</span>
               </p>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 954860196[cite: 6]</span>
+                <span className="text-[11px] font-semibold text-slate-500">📞 954860196</span>
                 <div className="flex gap-1.5">
                   <button onClick={(e) => realizarLlamada(e, "954860196")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
                   <button onClick={(e) => abrirMapa(e, "Avda. María Auxiliadora, 95, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
@@ -90,17 +90,17 @@ export default function Conso() {
           {/* Turno de Noche */}
           <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
             <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-              🌙 Turno de Noche (22:00 a 9:30 h)[cite: 6]
+              🌙 Turno de Noche (22:00 a 9:30 h)
             </span>
 
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
               <p className="font-bold text-slate-900 text-xs">Farmacia Ma Luz Ceballos Niebla</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
                 <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Avda. La Fontanilla, 38[cite: 6]</span>
+                <span>Avda. La Fontanilla, 38</span>
               </p>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 955864368[cite: 6]</span>
+                <span className="text-[11px] font-semibold text-slate-500">📞 955864368</span>
                 <div className="flex gap-1.5">
                   <button onClick={(e) => realizarLlamada(e, "955864368")} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer hover:bg-indigo-200">Llamar</button>
                   <button onClick={(e) => abrirMapa(e, "Avda. La Fontanilla, 38, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
@@ -109,9 +109,10 @@ export default function Conso() {
             </div>
           </div>
 
-          <div className="pt-1 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
-            <HeartPulse size={13} className="text-emerald-500" />
-            <span>¡Que haya mejoría!</span>
+          {/* Mensaje de ánimo destacado */}
+          <div className="pt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 italic">
+            <HeartPulse size={15} className="text-emerald-500" />
+            <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
           </div>
         </div>
       );
