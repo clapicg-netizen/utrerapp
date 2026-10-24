@@ -529,4 +529,15 @@ export default function DashboardAdmin() {
                 </button>
                 <button
                   onClick={() => handleEliminar(c.id, c.nombre)}
-                  className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.
+                  className="bg-red-50 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer"
+                >
+                  🗑️ Borrar
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
