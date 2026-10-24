@@ -13,6 +13,9 @@ export default function DashboardAdmin() {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
+  // Estado para el Agente IA de Volcado Masivo a lo Bruto
+  const [textoBruto, setTextoBruto] = useState('');
+
   const formInicial = {
     nombre: '',
     categoria: 'Hostelería',
@@ -85,6 +88,59 @@ export default function DashboardAdmin() {
       setMensaje({ tipo: 'exito', texto: '¡Subido correctamente!' });
     } else {
       setMensaje({ tipo: 'error', texto: res.message });
+    }
+  };
+
+  // 🤖 PROCESADOR DE VOLCADO MASIVO A LO BRUTO
+  const procesarVolcadoBruto = () => {
+    if (!textoBruto.trim()) return;
+
+    try {
+      const lineas = textoBruto.split('\n');
+      let datosActualizados = { ...formData };
+      let nuevasGaleria = [...(formData.galeria_urls || [])];
+
+      lineas.forEach(linea => {
+        const l = linea.trim();
+        const lower = l.toLowerCase();
+
+        if (lower.startsWith('n:')) {
+          datosActualizados.nombre = l.substring(2).trim();
+        } else if (lower.startsWith('cat:')) {
+          datosActualizados.categoria = l.substring(4).trim();
+        } else if (lower.startsWith('subcat:')) {
+          datosActualizados.subcategoria = l.substring(7).trim();
+        } else if (lower.startsWith('dir:')) {
+          datosActualizados.direccion = l.substring(4).trim();
+        } else if (lower.startsWith('w:')) {
+          datosActualizados.whatsapp = l.substring(2).trim();
+        } else if (lower.startsWith('tlf:') || lower.startsWith('telefono:')) {
+          datosActualizados.telefono = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('port:')) {
+          datosActualizados.portada_url = l.substring(5).trim();
+        } else if (lower.startsWith('gl:')) {
+          nuevasGaleria.push(l.substring(3).trim());
+        } else if (lower.startsWith('vd:') || lower.startsWith('video:')) {
+          datosActualizados.video_story_url = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('pdf:') || lower.startsWith('carta:')) {
+          datosActualizados.carta_pdf_url = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('desc:') || lower.startsWith('descripcion:')) {
+          datosActualizados.descripcion = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('oferta:') || lower.startsWith('flash:')) {
+          datosActualizados.oferta_flash = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('fc:') || lower.startsWith('facebook:')) {
+          datosActualizados.facebook_url = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('ig:') || lower.startsWith('instagram:')) {
+          datosActualizados.instagram_username = l.substring(l.indexOf(':') + 1).trim();
+        }
+      });
+
+      datosActualizados.galeria_urls = nuevasGaleria;
+      setFormData(datosActualizados);
+      setMensaje({ tipo: 'exito', texto: '¡Datos volcados y estructurados con éxito en el formulario!' });
+      setTextoBruto('');
+    } catch (err) {
+      setMensaje({ tipo: 'error', texto: 'Error al procesar el texto bruto.' });
     }
   };
 
@@ -230,6 +286,30 @@ export default function DashboardAdmin() {
         </div>
       )}
 
+      {/* 🤖 AGENTE IA DE VOLCADO MASIVO A LO BRUTO */}
+      <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-6 rounded-3xl shadow-xl border border-indigo-500/30">
+        <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
+          🤖 Agente IA de Volcado Masivo ("A lo Bruto")
+        </h3>
+        <p className="text-xs text-slate-300 mb-3 leading-relaxed">
+          Pega aquí los datos desordenados usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Desc:</code>, etc.) y pulsa procesar para rellenar el formulario al instante.
+        </p>
+        <textarea
+          rows="4"
+          placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;W: 34600000000&#10;Port: https://...&#10;Gl: https://..."
+          value={textoBruto}
+          onChange={(e) => setTextoBruto(e.target.value)}
+          className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/20"
+        />
+        <button
+          type="button"
+          onClick={procesarVolcadoBruto}
+          className="mt-3 w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-3 rounded-xl transition shadow cursor-pointer"
+        >
+          ⚡ Procesar y Rellenar Formulario Automáticamente
+        </button>
+      </div>
+
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-6">
         <div className="flex justify-between items-center border-b pb-4">
           <h2 className="text-lg font-black text-slate-800">
@@ -251,7 +331,7 @@ export default function DashboardAdmin() {
         <form onSubmit={handleGuardar} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Nombre del Negocio *</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Nombre del Negocio * (N:)</label>
               <input
                 type="text"
                 placeholder="Ej. Bar Alonsi"
@@ -263,7 +343,7 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📂 Categoría *</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📂 Categoría * (Cat:)</label>
               <select
                 value={formData.categoria}
                 onChange={(e) => setFormData({...formData, categoria: e.target.value})}
@@ -277,7 +357,7 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría (Subcat:)</label>
               <input
                 type="text"
                 placeholder="Ej. Tapas y Raciones"
@@ -288,7 +368,7 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📍 Dirección</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📍 Dirección (Dir:)</label>
               <input
                 type="text"
                 placeholder="Ej. Plaza del Altozano, 12"
@@ -301,7 +381,7 @@ export default function DashboardAdmin() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">💬 WhatsApp</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">💬 WhatsApp (W:)</label>
               <input
                 type="text"
                 placeholder="34600000000"
@@ -312,7 +392,7 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📞 Teléfono</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📞 Teléfono (Tlf:)</label>
               <input
                 type="text"
                 placeholder="954860000"
@@ -361,7 +441,7 @@ export default function DashboardAdmin() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">📸 Instagram</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">📸 Instagram (IG:)</label>
                 <input
                   type="text"
                   placeholder="@minegocio_utrera"
@@ -372,7 +452,7 @@ export default function DashboardAdmin() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">📘 Facebook</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">📘 Facebook (Fc:)</label>
                 <input
                   type="text"
                   placeholder="https://facebook.com/minegocio"
@@ -399,10 +479,17 @@ export default function DashboardAdmin() {
             <h3 className="text-xs font-black uppercase text-slate-400">📸 Multimedia y Carta</h3>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📸 Portada Principal</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📸 Portada Principal (Port:)</label>
               {formData.portada_url && (
                 <img src={formData.portada_url} alt="Portada" className="w-full h-36 object-cover rounded-2xl mb-2 border" />
               )}
+              <input
+                type="text"
+                placeholder="O pega URL directa aquí..."
+                value={formData.portada_url}
+                onChange={(e) => setFormData({...formData, portada_url: e.target.value})}
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-2"
+              />
               <input
                 type="file"
                 accept="image/*"
@@ -413,7 +500,7 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú (PDF / Imagen)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú (PDF / Imagen) (PDF:)</label>
               {formData.carta_pdf_url && (
                 <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ Subida: {formData.carta_pdf_url}</p>
               )}
@@ -427,7 +514,7 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Gl:)</label>
               <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-2">
                 {formData.galeria_urls.map((url, idx) => (
                   <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
@@ -454,7 +541,7 @@ export default function DashboardAdmin() {
 
           <div className="space-y-4 border-t pt-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash (Oferta:)</label>
               <input
                 type="text"
                 placeholder="Ej. 2x1 en tapas hoy"
@@ -465,7 +552,7 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción (Desc:)</label>
               <textarea
                 rows="3"
                 value={formData.descripcion}
