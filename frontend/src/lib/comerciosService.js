@@ -100,10 +100,9 @@ export const eliminarComercio = async (id) => {
 export const subirArchivoComercio = async (file) => {
   try {
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36.substring(2, 9)}.${fileExt}`;
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
     const filePath = `${fileName}`;
 
-    // Nota: Asegúrate de tener un bucket en Supabase llamado 'comercios' (público)
     const { error: uploadError } = await supabase.storage
       .from('comercios')
       .upload(filePath, file);
@@ -113,7 +112,6 @@ export const subirArchivoComercio = async (file) => {
       return { success: false, message: uploadError.message };
     }
 
-    // Obtener URL pública
     const { data } = supabase.storage
       .from('comercios')
       .getPublicUrl(filePath);
