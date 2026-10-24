@@ -20,38 +20,103 @@ export default function Conso() {
     window.location.href = "tel:" + telefono;
   };
 
+  // Listado oficial de farmacias para rotación automática diaria
+  const farmaciasUtrera = [
+    {
+      nombre: "Farmacia Morales Guerrero, CB",
+      direccion: "Avda. Alcalde José Dorado, 5 - Bda. El Carmen",
+      direccionMapa: "Avda. Alcalde José Dorado, 5, Utrera",
+      telefono: "954864924",
+      horario: "De Guardia Hoy (24 Horas)"
+    },
+    {
+      nombre: "Farmacia José Luis Algarín Pachón",
+      direccion: "Corredera, 1",
+      direccionMapa: "Corredera, 1, Utrera",
+      telefono: "954860448",
+      horario: "De Guardia Hoy (24 Horas)"
+    },
+    {
+      nombre: "Farmacia Rafael González",
+      direccion: "Cristo de los Afligidos, 74",
+      direccionMapa: "Cristo de los Afligidos, 74, Utrera",
+      telefono: "954860213",
+      horario: "De Guardia Hoy (24 Horas)"
+    },
+    {
+      nombre: "Farmacia Pablo Troncoso López",
+      direccion: "Avda. María Auxiliadora, 95 (El Charco)",
+      direccionMapa: "Avda. María Auxiliadora, 95, Utrera",
+      telefono: "954860196",
+      horario: "De Guardia Hoy (24 Horas)"
+    },
+    {
+      nombre: "Farmacia Ma Luz Ceballos Niebla",
+      direccion: "Avda. La Fontanilla, 38",
+      direccionMapa: "Avda. La Fontanilla, 38, Utrera",
+      telefono: "955864368",
+      horario: "De Guardia Hoy (24 Horas)"
+    },
+    {
+      nombre: "Farmacia Antonio Valdés Arenas",
+      direccion: "Av. S. Juan Bosco, 96",
+      direccionMapa: "Av. S. Juan Bosco, 96, Utrera",
+      telefono: "955864951",
+      horario: "De Guardia Hoy (24 Horas)"
+    }
+  ];
+
+  const obtenerFarmaciaGuardiaHoy = () => {
+    const ahora = new Date();
+    // Cambio oficial de guardia a las 09:00 h
+    const horaAjustada = new Date(ahora.getTime() - (9 * 60 * 60 * 1000));
+    const inicioAnio = new Date(horaAjustada.getFullYear(), 0, 0);
+    const diff = horaAjustada - inicioAnio;
+    const unDia = 1000 * 60 * 60 * 24;
+    const diaTurno = Math.floor(diff / unDia);
+    const indice = diaTurno % farmaciasUtrera.length;
+    
+    const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return {
+      farmacia: farmaciasUtrera[indice],
+      fechaTexto: ahora.toLocaleDateString('es-ES', opcionesFecha)
+    };
+  };
+
   const procesarRespuesta = (pregunta) => {
     const texto = pregunta.toLowerCase();
 
     if (texto.includes('farmacia') || texto.includes('guardia')) {
+      const { farmacia, fechaTexto } = obtenerFarmaciaGuardiaHoy();
+
       return (
         <div>
           <p className="font-bold text-slate-900 mb-1">💊 FARMACIA DE GUARDIA HOY</p>
-          <p className="text-[11px] text-slate-500 mb-2">📅 Viernes, 23 de octubre de 2026</p>
+          <p className="text-[11px] text-slate-500 mb-2 capitalize">📅 {fechaTexto}</p>
           
           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 mb-2">
-            <p className="font-bold text-slate-900">Farmacia Morales Guerrero, CB</p>
+            <p className="font-bold text-slate-900">{farmacia.nombre}</p>
             <p className="text-slate-600 mt-1 flex items-center gap-1">
               <MapPin size={13} className="text-slate-400 flex-shrink-0" />
-              <span>Avda. Alcalde José Dorado, 5 - Bda. El Carmen</span>
+              <span>{farmacia.direccion}</span>
             </p>
             <p className="text-slate-600 mt-0.5 flex items-center gap-1">
               <Phone size={13} className="text-slate-400 flex-shrink-0" />
-              <span>Teléfono: 954864924</span>
+              <span>Teléfono: {farmacia.telefono}</span>
             </p>
-            <p className="text-emerald-700 font-semibold mt-1">⏰ Noche (de 22:00 a 9:30) y turnos oficiales</p>
+            <p className="text-emerald-700 font-semibold mt-1">⏰ {farmacia.horario}</p>
           </div>
 
           {/* Botones de acción rápida seguros */}
           <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100">
             <button
-              onClick={(e) => realizarLlamada(e, "954864924")}
+              onClick={(e) => realizarLlamada(e, farmacia.telefono)}
               className="py-2 px-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-[11px] flex items-center justify-center gap-1 hover:bg-emerald-100 shadow-sm transition-colors cursor-pointer"
             >
               <Phone size={13} /> Llamar
             </button>
             <button
-              onClick={(e) => abrirMapa(e, "Avda. Alcalde José Dorado, 5, Utrera")}
+              onClick={(e) => abrirMapa(e, farmacia.direccionMapa)}
               className="py-2 px-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-[11px] flex items-center justify-center gap-1 hover:bg-slate-200 shadow-sm transition-colors cursor-pointer"
             >
               <MapPin size={13} /> Cómo Llegar
@@ -73,13 +138,13 @@ export default function Conso() {
           <p className="text-[11px] text-slate-500 mb-2">📅 Horarios Oficiales Actualizados</p>
           
           <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5 text-xs">
-            <p>• Dirección Sevilla Santa Justa: <span className="font-bold text-slate-900">12:42 h</span> (Directo)</p>
-            <p>• Siguiente salida: <span className="font-bold text-slate-900">13:10 h</span></p>
+            <p>• Dirección Lora del Río: <span className="font-bold text-slate-900">Vía 1 (16:07 h)</span></p>
+            <p>• Dirección Sevilla-Santa Justa: <span className="font-bold text-slate-900">Vía 3 (16:25 h)</span></p>
             <p>• Frecuencia habitual: Cada 30 min</p>
           </div>
 
           <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 italic">
-            * Recuerda validar tu abono en canceladoras antes de acceder al andén.
+            • Recuerda validar tu abono en canceladoras antes de acceder al andén.
           </div>
         </div>
       );
@@ -155,6 +220,7 @@ export default function Conso() {
       {/* Botones de Acceso Rápido (Preguntas Frecuentes) */}
       <div className="px-4 py-2 max-w-md mx-auto w-full flex gap-2">
         <button
+          type="button"
           onClick={() => enviarMensaje("Farmacia de guardia")}
           className="flex-1 bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
         >
@@ -162,6 +228,7 @@ export default function Conso() {
           <span>Farmacia de Guardia</span>
         </button>
         <button
+          type="button"
           onClick={() => enviarMensaje("Horario de trenes")}
           className="flex-1 bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
         >
@@ -171,7 +238,7 @@ export default function Conso() {
       </div>
 
       {/* Barra de entrada de mensaje */}
-      <div className="p-3 bg-white border-t border-slate-200 sticky bottom-0 z-10 max-w-md mx-auto w-full">
+      <div className="p-3 bg-white border-t border-slate-200 sticky bottom-0 z-15 max-w-md mx-auto w-full">
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
             type="text"
