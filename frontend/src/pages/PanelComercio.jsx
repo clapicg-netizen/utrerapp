@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { obtenerComercios, actualizarComercio, crearComercio, subirArchivoComercio } from '../lib/comerciosService';
 
-// PIN de control absoluto para ti como dueño de Utrerapp
 const PIN_ADMIN_MAESTRO = "9999"; 
 
 export default function PanelComercio() {
@@ -16,7 +15,6 @@ export default function PanelComercio() {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // Formulario
   const [formData, setFormData] = useState({
     nombre: '',
     categoria: 'Hostelería',
@@ -47,7 +45,6 @@ export default function PanelComercio() {
     e.preventDefault();
     setMensaje({ tipo: '', texto: '' });
 
-    // 1. Acceso Administrador JuanRa (PIN Maestro)
     if (pinInput === PIN_ADMIN_MAESTRO) {
       setEsAdmin(true);
       if (comercioSel) {
@@ -59,7 +56,6 @@ export default function PanelComercio() {
       return;
     }
 
-    // 2. Acceso Comerciante
     if (!comercioSel) {
       setMensaje({ tipo: 'error', texto: 'Selecciona tu negocio para acceder' });
       return;
@@ -83,60 +79,67 @@ export default function PanelComercio() {
       horario_texto: c.horario_texto || '',
       telefono: c.telefono || '',
       whatsapp: c.whatsapp || '',
-      portada_url: c.portada_url && c.portada_url !== "EMPTY" ? c.portada_url : '',
-      logo_url: c.logo_url && c.logo_url !== "EMPTY" ? c.logo_url : '',
-      carta_pdf_url: c.carta_pdf_url && c.carta_pdf_url !== "EMPTY" ? c.carta_pdf_url : '',
+      portada_url: c.portada_url || '',
+      logo_url: c.logo_url || '',
+      carta_pdf_url: c.carta_pdf_url || '',
       galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
       oferta_flash: c.oferta_flash || '',
-      video_story_url: c.video_story_url && c.video_story_url !== "EMPTY" ? c.video_story_url : '',
+      video_story_url: c.video_story_url || '',
       pin_acceso: c.pin_acceso || '1234'
     });
   };
 
+  // 🚀 SUBIDA DIRECTA A SUPABASE QUE ACTUALIZA AL INSTANTE
   const handleFileUpload = async (e, campo, esGaleria = false) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setSubiendo(true);
-    setMensaje({ tipo: 'exito', texto: 'Subiendo archivo...' });
+    setMensaje({ tipo: 'exito', texto: 'Subiendo archivo a Supabase...' });
 
     const res = await subirArchivoComercio(file);
     setSubiendo(false);
 
     if (res.success) {
+      let nuevoFormData = { ...formData };
       if (esGaleria) {
-        setFormData((prev) => ({
-          ...prev,
-          galeria_urls: [...(prev.galeria_urls || []), res.url]
-        }));
+        const nuevasGaleria = [...(formData.galeria_urls || []), res.url];
+        nuevoFormData.galeria_urls = nuevasGaleria;
       } else {
-        setFormData((prev) => ({
-          ...prev,
-          [campo]: res.url
-        }));
+        nuevoFormData[campo] = res.url;
       }
-      setMensaje({ tipo: 'exito', texto: '¡Archivo subido correctamente!' });
+
+      setFormData(nuevoFormData);
+
+      // Si ya estamos editando un comercio existente, guardamos en la BD automáticamente para que no se pierda
+      if (!modoAlta && comercioSel) {
+        const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
+        const resUpdate = await actualizarComercio(comercioSel.id, pinUsado, nuevoFormData);
+        if (resUpdate.success) {
+          setMensaje({ tipo: 'exito', texto: '¡Archivo subido y guardado en base de datos con éxito!' });
+          // Actualizamos el comercio seleccionado localmente
+          setComercioSel({ ...comercioSel, ...nuevoFormData });
+        } else {
+          setMensaje({ tipo: 'error', texto: 'Subido al storage pero falló al guardar en BD: ' + resUpdate.message });
+        }
+      } else {
+        setMensaje({ tipo: 'exito', texto: '¡Archivo añadido al formulario!' });
+      }
     } else {
       setMensaje({ tipo: 'error', texto: res.message });
     }
   };
 
-  const eliminarDeGaleria = (index) => {
-    setFormData((prev) => ({
-      ...prev,
-      galeria_urls: prev.galeria_urls.filter((_, i) => i !== index)
-    }));
-  };
+  const eliminarDeGaleria = async (index) => {
+    const nuevasGaleria = formData.galeria_urls.filter((_, i) => i !== index);
+    const nuevoFormData = { ...formData, galeria_urls: nuevasGaleria };
+    setFormData(nuevoFormData);
 
-  const limpiarDatosParaEnviar = (data) => {
-    return {
-      ...data,
-      portada_url: data.portada_url && data.portada_url.trim() !== "" ? data.portada_url.trim() : (comercioSel?.portada_url || null),
-      logo_url: data.logo_url && data.logo_url.trim() !== "" ? data.logo_url.trim() : (comercioSel?.logo_url || null),
-      carta_pdf_url: data.carta_pdf_url && data.carta_pdf_url.trim() !== "" ? data.carta_pdf_url.trim() : (comercioSel?.carta_pdf_url || null),
-      video_story_url: data.video_story_url && data.video_story_url.trim() !== "" ? data.video_story_url.trim() : (comercioSel?.video_story_url || null),
-      galeria_urls: Array.isArray(data.galeria_urls) && data.galeria_urls.length > 0 ? data.galeria_urls : (comercioSel?.galeria_urls || [])
-    };
+    if (!modoAlta && comercioSel) {
+      const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
+      await actualizarComercio(comercioSel.id, pinUsado, nuevoFormData);
+      setComercioSel({ ...comercioSel, ...nuevoFormData });
+    }
   };
 
   const handleGuardar = async (e) => {
@@ -144,15 +147,13 @@ export default function PanelComercio() {
     setGuardando(true);
     setMensaje({ tipo: '', texto: '' });
 
-    const datosLimpios = limpiarDatosParaEnviar(formData);
-
     if (modoAlta) {
-      if (!datosLimpios.nombre || !datosLimpios.categoria) {
+      if (!formData.nombre || !formData.categoria) {
         setMensaje({ tipo: 'error', texto: 'Indica el nombre y la categoría' });
         setGuardando(false);
         return;
       }
-      const res = await crearComercio(datosLimpios);
+      const res = await crearComercio(formData);
       setGuardando(false);
       if (res.success) {
         setMensaje({ tipo: 'exito', texto: '¡Comercio dado de alta correctamente!' });
@@ -162,7 +163,7 @@ export default function PanelComercio() {
       }
     } else {
       const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
-      const res = await actualizarComercio(comercioSel.id, pinUsado, datosLimpios);
+      const res = await actualizarComercio(comercioSel.id, pinUsado, formData);
       setGuardando(false);
 
       if (res.success) {
@@ -304,7 +305,7 @@ export default function PanelComercio() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada (Cámara o Archivo):</label>
+          <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada:</label>
           {formData.portada_url && (
             <img src={formData.portada_url} alt="Portada" className="w-full h-32 object-cover rounded-2xl mb-2 border" />
           )}
@@ -314,6 +315,20 @@ export default function PanelComercio() {
             onChange={(e) => handleFileUpload(e, 'portada_url')}
             disabled={subiendo}
             className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú en PDF:</label>
+          {formData.carta_pdf_url && (
+            <p className="text-xs text-emerald-600 font-bold mb-2">✅ PDF cargado correctamente</p>
+          )}
+          <input
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
+            disabled={subiendo}
+            className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-50 file:text-red-700 hover:file:bg-red-100"
           />
         </div>
 
