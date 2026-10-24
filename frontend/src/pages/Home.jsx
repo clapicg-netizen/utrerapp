@@ -70,14 +70,6 @@ export default function Home({ setPaginaActual, setTab }) {
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       {/* CABECERA */}
       <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative">
-        
-        {/* ACCESO SECRETO / ULTRADISCRETO AL PANEL ADMIN (Esquina superior derecha) */}
-        <button
-          onClick={(e) => cambiarPestana(e, "admin")}
-          className="absolute top-2 right-2 w-4 h-4 opacity-10 hover:opacity-100 bg-amber-400 rounded-full transition-opacity cursor-pointer z-20"
-          title="Admin"
-        ></button>
-
         <div className="flex justify-between items-center max-w-md mx-auto">
           <div>
             <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
@@ -85,8 +77,20 @@ export default function Home({ setPaginaActual, setTab }) {
             </p>
             <h1 className="text-2xl font-black mt-0.5">¡Hola, Utrera! 👋</h1>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg shadow-inner">
-            🏰
+
+          <div className="flex items-center gap-2">
+            {/* ACCESO AL PANEL DE ADMINISTRACIÓN */}
+            <button
+              onClick={(e) => cambiarPestana(e, "admin")}
+              className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base shadow-inner hover:bg-amber-500/30 transition-colors cursor-pointer"
+              title="Panel de Administración"
+            >
+              👑
+            </button>
+
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg shadow-inner">
+              🏰
+            </div>
           </div>
         </div>
 
