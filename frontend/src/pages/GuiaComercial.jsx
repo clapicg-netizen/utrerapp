@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap } from "lucide-react";
+import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, Store, Utensils, ShoppingBag } from "lucide-react";
 import { obtenerComercios } from "../lib/comerciosService";
 
 export default function GuiaComercial() {
@@ -11,6 +11,9 @@ export default function GuiaComercial() {
 
   // Estado para previsualizar una foto de la galería
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
+
+  // Estado para el carrusel automático de destacados (cambia cada 2 segundos)
+  const [indiceCarrusel, setIndiceCarrusel] = useState(0);
 
   const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza"];
 
@@ -29,6 +32,17 @@ export default function GuiaComercial() {
       setCargando(false);
     }
   };
+
+  // Filtrar comercios destacados para el carrusel
+  const comerciosDestacados = comercios.filter(c => c.destacado);
+
+  useEffect(() => {
+    if (comerciosDestacados.length <= 1) return;
+    const intervalo = setInterval(() => {
+      setIndiceCarrusel((prev) => (prev + 1) % comerciosDestacados.length);
+    }, 2000); // Rota cada 2 segundos exactos
+    return () => clearInterval(intervalo);
+  }, [comerciosDestacados.length]);
 
   // Función para normalizar texto (elimina tildes y convierte a minúsculas)
   const normalizar = (texto) =>
@@ -68,104 +82,182 @@ export default function GuiaComercial() {
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       
-      {/* Cabecera */}
-      <div className="bg-slate-900 text-white p-6 rounded-b-3xl shadow-lg">
-        <h1 className="text-2xl font-bold">Guía Comercial Utrera</h1>
-        <p className="text-xs text-slate-400 mt-1">Encuentra los mejores comercios y servicios locales</p>
-        
-        {/* Buscador */}
-        <div className="mt-4 relative">
-          <input
-            type="text"
-            placeholder="Buscar comercio, servicio o producto..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full bg-slate-800 text-white placeholder-slate-400 pl-10 pr-4 py-3 rounded-2xl text-sm border border-slate-700 focus:outline-none focus:border-amber-500 transition-colors"
-          />
-          <Search className="absolute left-3.5 top-3.5 text-slate-400" size={18} />
+      {/* 🚀 CABECERA HERO PREMIUM */}
+      <div className="bg-gradient-to-r from-rose-950 via-red-900 to-rose-900 text-white p-6 shadow-xl relative overflow-hidden rounded-b-[2.5rem]">
+        <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-rose-600/20 rounded-full blur-2xl"></div>
+        <div className="max-w-md mx-auto relative z-10 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+              <Sparkles size={12} /> Directorio Oficial
+            </span>
+            <span className="text-xs text-rose-200 font-medium">Utrera 2026</span>
+          </div>
+          
+          <h1 className="text-2xl font-black tracking-tight">Guía Comercial Utrera</h1>
+          <p className="text-xs text-rose-100 leading-relaxed">
+            Descubre el corazón comercial, bares y servicios de nuestra tierra en un solo lugar.
+          </p>
+
+          {/* Buscador Instantáneo */}
+          <div className="relative pt-1">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Busca un bar, tienda, servicio..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="w-full bg-white/10 backdrop-blur-md text-white placeholder-rose-200/70 pl-10 pr-4 py-3 rounded-2xl text-xs border border-white/20 focus:outline-none focus:bg-white focus:text-slate-900 focus:placeholder-slate-400 transition-all shadow-inner"
+            />
+          </div>
         </div>
       </div>
 
-      {/* Categorías */}
-      <div className="px-4 mt-4 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-        {categorias.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setCategoriaSel(cat)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-sm ${
-              categoriaSel === cat
-                ? "bg-slate-900 text-white"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
+      <div className="max-w-md mx-auto px-4 pt-5 space-y-6">
 
-      {/* Lista de Comercios */}
-      <div className="px-4 mt-4 space-y-4 max-w-lg mx-auto">
-        {cargando ? (
-          <div className="text-center py-12 text-slate-400 text-sm">Cargando guía comercial...</div>
-        ) : comerciosFiltrados.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6">
-            <p className="text-slate-500 font-medium text-sm">No se encontraron comercios en esta categoría</p>
-          </div>
-        ) : (
-          comerciosFiltrados.map((comercio) => (
-            <div
-              key={comercio.id}
-              onClick={() => setComercioSel(comercio)}
-              className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
+        {/* 🎠 CARRUSEL AUTOMÁTICO DE DESTACADOS (Cada 2 segundos) */}
+        {comerciosDestacados.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
+                <Sparkles size={14} className="text-amber-500" /> Comercios Destacados
+              </h2>
+              <div className="flex gap-1">
+                {comerciosDestacados.map((_, idx) => (
+                  <span 
+                    key={idx} 
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === indiceCarrusel ? 'w-5 bg-rose-900' : 'w-1.5 bg-slate-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Tarjeta del Carrusel Activa */}
+            <div 
+              onClick={() => setComercioSel(comerciosDestacados[indiceCarrusel])}
+              className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 transition-all duration-500 cursor-pointer hover:shadow-xl"
             >
-              {comercio.destacado && (
-                <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase shadow">
+              <div className="h-36 w-full relative overflow-hidden bg-slate-900">
+                <img 
+                  src={comerciosDestacados[indiceCarrusel].portada_url || comerciosDestacados[indiceCarrusel].logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"} 
+                  alt={comerciosDestacados[indiceCarrusel].nombre}
+                  className="w-full h-full object-cover opacity-85 transform hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
+                <span className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow">
                   ⭐ PREMIUM
                 </span>
-              )}
-
-              <div className="flex gap-4 items-start">
-                <div className="w-20 h-20 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100">
-                  <img
-                    src={comercio.portada_url || comercio.logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
-                    alt={comercio.nombre}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-slate-900 text-base truncate">{comercio.nombre}</h3>
-                  <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mt-0.5">
-                    {comercio.subcategoria || comercio.categoria}
-                  </p>
-                  
-                  {comercio.direccion && (
-                    <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 truncate">
-                      <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                      <span className="truncate">{comercio.direccion}</span>
-                    </p>
-                  )}
-
-                  {comercio.descripcion && (
-                    <p className="text-xs text-slate-600 mt-1.5 line-clamp-2">
-                      {comercio.descripcion}
-                    </p>
-                  )}
+                <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <h3 className="text-base font-bold">{comerciosDestacados[indiceCarrusel].nombre}</h3>
+                  <p className="text-[11px] text-slate-200 truncate">{comerciosDestacados[indiceCarrusel].descripcion || comerciosDestacados[indiceCarrusel].subcategoria}</p>
                 </div>
               </div>
-
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setComercioSel(comercio);
-                }}
-                className="mt-3 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors text-center flex items-center justify-center gap-1.5"
-              >
-                👁️ Ver Ficha Completa
-              </button>
+              <div className="p-3 bg-white flex items-center justify-between">
+                <span className="text-[11px] text-slate-500 flex items-center gap-1 truncate">
+                  <MapPin size={12} className="text-rose-700 flex-shrink-0" /> {comerciosDestacados[indiceCarrusel].direccion || "Utrera"}
+                </span>
+                <span className="text-xs font-bold text-rose-900 bg-rose-50 px-3 py-1 rounded-xl">
+                  Ver Ficha ➔
+                </span>
+              </div>
             </div>
-          ))
+          </div>
         )}
+
+        {/* 🗂️ CATEGORÍAS */}
+        <div className="space-y-2">
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Categorías</h2>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {categorias.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategoriaSel(cat)}
+                className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm cursor-pointer ${
+                  categoriaSel === cat
+                    ? "bg-rose-900 text-white shadow-md"
+                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 📋 LISTA DE COMERCIOS */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
+              Establecimientos ({comerciosFiltrados.length})
+            </h2>
+          </div>
+
+          {cargando ? (
+            <div className="text-center py-12 text-slate-400 text-sm">Cargando guía comercial...</div>
+          ) : comerciosFiltrados.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
+              <p className="text-slate-500 font-medium text-sm">No se encontraron comercios en esta categoría</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {comerciosFiltrados.map((comercio) => (
+                <div
+                  key={comercio.id}
+                  onClick={() => setComercioSel(comercio)}
+                  className="bg-white rounded-3xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
+                >
+                  {comercio.destacado && (
+                    <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shadow">
+                      ⭐ PREMIUM
+                    </span>
+                  )}
+
+                  <div className="flex gap-4 items-start">
+                    <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100">
+                      <img
+                        src={comercio.portada_url || comercio.logo_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
+                        alt={comercio.nombre}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-slate-900 text-base truncate">{comercio.nombre}</h3>
+                      <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mt-0.5">
+                        {comercio.subcategoria || comercio.categoria}
+                      </p>
+                      
+                      {comercio.direccion && (
+                        <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 truncate">
+                          <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                          <span className="truncate">{comercio.direccion}</span>
+                        </p>
+                      )}
+
+                      {comercio.descripcion && (
+                        <p className="text-xs text-slate-600 mt-1.5 line-clamp-2">
+                          {comercio.descripcion}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setComercioSel(comercio);
+                    }}
+                    className="mt-3 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors text-center flex items-center justify-center gap-1.5"
+                  >
+                    👁️ Ver Ficha Completa
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       </div>
 
       {/* MODAL FICHA DESPLEGABLE */}
@@ -175,7 +267,7 @@ export default function GuiaComercial() {
             
             <button
               onClick={() => setComercioSel(null)}
-              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold z-10"
+              className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold z-10 cursor-pointer"
             >
               ✕
             </button>
@@ -317,7 +409,7 @@ export default function GuiaComercial() {
                   href={"https://wa.me/" + comercioSel.whatsapp.replace("+", "").replace(/\s/g, "")}
                   target="_blank"
                   rel="noreferrer"
-                  className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow"
+                  className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow cursor-pointer"
                 >
                   💬 WhatsApp
                 </a>
@@ -326,7 +418,7 @@ export default function GuiaComercial() {
               {comercioSel.telefono && (
                 <a
                   href={"tel:" + comercioSel.telefono}
-                  className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5"
+                  className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <Phone size={14} className="text-emerald-600" /> Llamar
                 </a>
@@ -336,7 +428,7 @@ export default function GuiaComercial() {
             {/* Mapa */}
             <button
               onClick={() => abrirMapa(comercioSel)}
-              className="mt-2 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5"
+              className="mt-2 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Navigation size={14} className="text-sky-600" /> Cómo Llegar
             </button>
@@ -348,7 +440,7 @@ export default function GuiaComercial() {
                   href={comercioSel.web_url || comercioSel.sitio_web}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow"
+                  className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow cursor-pointer"
                 >
                   <Globe size={15} /> Sitio Web Oficial <ExternalLink size={12} />
                 </a>
@@ -371,4 +463,4 @@ export default function GuiaComercial() {
 
     </div>
   );
-} 
+}
