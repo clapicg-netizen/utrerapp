@@ -1,3 +1,4 @@
+// src/lib/comerciosService.js
 import { supabase } from "./supabaseClient";
 
 export const comerciosService = {
@@ -96,7 +97,7 @@ export const eliminarComercio = async (id) => {
   }
 };
 
-// 5. Subir archivos al Storage de Supabase
+// 5. Subir archivos al Storage de Supabase (Blindado)
 export const subirArchivoComercio = async (file) => {
   try {
     const fileExt = file.name.split('.').pop();
@@ -105,10 +106,13 @@ export const subirArchivoComercio = async (file) => {
 
     const { error: uploadError } = await supabase.storage
       .from('comercios')
-      .upload(filePath, file);
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
 
     if (uploadError) {
-      console.error("Error al subir archivo:", uploadError.message);
+      console.error("Error al subir archivo al Storage:", uploadError.message);
       return { success: false, message: uploadError.message };
     }
 
@@ -116,7 +120,14 @@ export const subirArchivoComercio = async (file) => {
       .from('comercios')
       .getPublicUrl(filePath);
 
-    return { success: true, url: data.publicUrl };
+    const publicUrl = data?.publicUrl;
+
+    if (!publicUrl) {
+      return { success: false, message: "No se pudo obtener la URL pública del archivo" };
+    }
+
+    console.log("URL pública generada con éxito:", publicUrl);
+    return { success: true, url: publicUrl };
   } catch (err) {
     console.error("Excepción en subirArchivoComercio:", err);
     return { success: false, message: err.message };
