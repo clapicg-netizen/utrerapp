@@ -15,6 +15,10 @@ export default function PanelComercio() {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
+  // Estado para el texto del agente de volcado masivo a lo bruto
+  const [textoBruto, setTextoBruto] = useState('');
+  const [procesandoBruto, setProcesandoBruto] = useState(false);
+
   const [formData, setFormData] = useState({
     nombre: '',
     categoria: 'Hostelería',
@@ -111,13 +115,11 @@ export default function PanelComercio() {
 
       setFormData(nuevoFormData);
 
-      // Si ya estamos editando un comercio existente, guardamos en la BD automáticamente para que no se pierda
       if (!modoAlta && comercioSel) {
         const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
         const resUpdate = await actualizarComercio(comercioSel.id, pinUsado, nuevoFormData);
         if (resUpdate.success) {
           setMensaje({ tipo: 'exito', texto: '¡Archivo subido y guardado en base de datos con éxito!' });
-          // Actualizamos el comercio seleccionado localmente
           setComercioSel({ ...comercioSel, ...nuevoFormData });
         } else {
           setMensaje({ tipo: 'error', texto: 'Subido al storage pero falló al guardar en BD: ' + resUpdate.message });
@@ -139,6 +141,58 @@ export default function PanelComercio() {
       const pinUsado = pinInput === PIN_ADMIN_MAESTRO ? comercioSel.pin_acceso : pinInput;
       await actualizarComercio(comercioSel.id, pinUsado, nuevoFormData);
       setComercioSel({ ...comercioSel, ...nuevoFormData });
+    }
+  };
+
+  // 🤖 PROCESADOR DE VOLCADO MASIVO A LO BRUTO
+  const procesarVolcadoBruto = () => {
+    if (!textoBruto.trim()) return;
+    setProcesandoBruto(true);
+
+    try {
+      const lineas = textoBruto.split('\n');
+      let datosActualizados = { ...formData };
+      let nuevasGaleria = [...(formData.galeria_urls || [])];
+
+      lineas.forEach(linea => {
+        const l = linea.trim();
+        const lower = l.toLowerCase();
+        
+        if (lower.startsWith('n:')) {
+          datosActualizados.nombre = l.substring(2).trim();
+        } else if (lower.startsWith('cat:')) {
+          datosActualizados.categoria = l.substring(4).trim();
+        } else if (lower.startsWith('subcat:')) {
+          datosActualizados.subcategoria = l.substring(7).trim();
+        } else if (lower.startsWith('dir:')) {
+          datosActualizados.direccion = l.substring(4).trim();
+        } else if (lower.startsWith('w:')) {
+          datosActualizados.whatsapp = l.substring(2).trim();
+        } else if (lower.startsWith('tlf:') || lower.startsWith('telefono:')) {
+          datosActualizados.telefono = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('port:')) {
+          datosActualizados.portada_url = l.substring(5).trim();
+        } else if (lower.startsWith('gl:')) {
+          nuevasGaleria.push(l.substring(3).trim());
+        } else if (lower.startsWith('vd:') || lower.startsWith('video:')) {
+          datosActualizados.video_story_url = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('pdf:') || lower.startsWith('carta:')) {
+          datosActualizados.carta_pdf_url = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('desc:') || lower.startsWith('descripcion:')) {
+          datosActualizados.descripcion = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('oferta:') || lower.startsWith('flash:')) {
+          datosActualizados.oferta_flash = l.substring(l.indexOf(':') + 1).trim();
+        }
+      });
+
+      datosActualizados.galeria_urls = nuevasGaleria;
+      setFormData(datosActualizados);
+      setMensaje({ tipo: 'exito', texto: '¡Datos volcados y estructurados con éxito!' });
+      setTextoBruto('');
+    } catch (err) {
+      setMensaje({ tipo: 'error', texto: 'Error al procesar el texto bruto.' });
+    } finally {
+      setProcesandoBruto(false);
     }
   };
 
@@ -207,7 +261,7 @@ export default function PanelComercio() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">PIN de acceso:</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">PIN de acceso (Usa 9999 para Admin):</label>
               <input
                 type="password"
                 placeholder="****"
@@ -261,6 +315,33 @@ export default function PanelComercio() {
           mensaje.tipo === 'error' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'
         }`}>
           {mensaje.texto}
+        </div>
+      )}
+
+      {/* 🤖 AGENTE IA DE VOLCADO MASIVO A LO BRUTO (SOLO PARA ADMIN 9999) */}
+      {esAdmin && (
+        <div className="mb-6 bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-3xl shadow-xl border border-indigo-500/30">
+          <h3 className="text-xs font-black uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-1.5">
+            🤖 Agente IA de Volcado Masivo ("A lo Bruto")
+          </h3>
+          <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
+            Pega aquí la información desordenada usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Desc:</code>, etc.) y se rellenarán los campos automáticamente.
+          </p>
+          <textarea
+            rows="4"
+            placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;W: 34600000000&#10;Port: https://...&#10;Gl: https://..."
+            value={textoBruto}
+            onChange={(e) => setTextoBruto(e.target.value)}
+            className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/20"
+          />
+          <button
+            type="button"
+            onClick={procesarVolcadoBruto}
+            disabled={procesandoBruto}
+            className="mt-2.5 w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2.5 rounded-xl transition shadow"
+          >
+            ⚡ Procesar y Rellenar Ficha Automáticamente
+          </button>
         </div>
       )}
 
