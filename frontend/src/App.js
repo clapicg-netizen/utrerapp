@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import Farmacias from './pages/Farmacias';
 import Conso from './pages/Conso';
 import GuiaComercial from './pages/GuiaComercial';
+import DashboardAdmin from './pages/DashboardAdmin';
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -18,6 +19,8 @@ export default function App() {
       case 'market':
       case 'guia':
         return <GuiaComercial />;
+      case 'admin':
+        return <DashboardAdmin />;
       case 'transporte':
         return (
           <div className="min-h-screen bg-slate-50 p-6 pb-28">

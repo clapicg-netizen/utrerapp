@@ -69,7 +69,15 @@ export default function Home({ setPaginaActual, setTab }) {
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       {/* CABECERA */}
-      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg">
+      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative">
+        
+        {/* ACCESO SECRETO / ULTRADISCRETO AL PANEL ADMIN (Esquina superior derecha) */}
+        <button
+          onClick={(e) => cambiarPestana(e, "admin")}
+          className="absolute top-2 right-2 w-4 h-4 opacity-10 hover:opacity-100 bg-amber-400 rounded-full transition-opacity cursor-pointer z-20"
+          title="Admin"
+        ></button>
+
         <div className="flex justify-between items-center max-w-md mx-auto">
           <div>
             <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
