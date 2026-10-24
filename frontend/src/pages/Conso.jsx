@@ -120,18 +120,53 @@ export default function Conso() {
 
     if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
       return (
-        <div>
-          <p className="font-bold text-slate-900 mb-1">🚆 CERCANÍAS LÍNEA C-1 (Utrera - Sevilla)</p>
-          <p className="text-[11px] text-slate-500 mb-2">📅 Horarios Oficiales Actualizados</p>
-          
-          <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 space-y-1.5 text-xs">
-            <p>• Dirección Lora del Río: <span className="font-bold text-slate-900">Vía 1 (16:07 h)</span></p>
-            <p>• Dirección Sevilla-Santa Justa: <span className="font-bold text-slate-900">Vía 3 (16:25 h)</span></p>
-            <p>• Frecuencia habitual: Cada 30 min</p>
+        <div className="space-y-3">
+          <div>
+            <p className="font-bold text-slate-900 mb-0.5">🚆 CERCANÍAS LÍNEA C-1 (Utrera ⇄ Sevilla)</p>
+            <p className="text-[11px] text-slate-500">Seguimiento en directo y horarios oficiales</p>
+          </div>
+
+          {/* Tarjeta interactiva de trenes con seguimiento en tiempo real */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
+            <div className="space-y-2 text-xs border-b border-slate-700 pb-2.5">
+              <div className="bg-slate-800/80 p-2 rounded-xl border border-slate-700">
+                <p className="font-bold text-rose-400 mb-0.5">📍 Utrera → Sevilla (Santa Justa)</p>
+                <p className="text-slate-300 text-[11px]">Frecuencia constante cada 30 min aprox.</p>
+              </div>
+              <div className="bg-slate-800/80 p-2 rounded-xl border border-slate-700">
+                <p className="font-bold text-emerald-400 mb-0.5">📍 Sevilla (Santa Justa) → Utrera</p>
+                <p className="text-slate-300 text-[11px]">Regresos frecuentes durante todo el día.</p>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-300 leading-relaxed">
+              Consulta la posición exacta de los trenes circulando en tiempo real sobre el mapa de la Línea C-1.
+            </p>
+
+            <div className="space-y-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open("https://tiempo-real.renfe.com", "_blank");
+                }}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+              >
+                <span>🟢 Ver Seguimiento de Trenes en Vivo</span>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla", "_blank");
+                }}
+                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+              >
+                <span>🚆 Consultar Horarios C-1 en Renfe</span>
+              </button>
+            </div>
           </div>
 
           <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 italic">
-            • Recuerda validar tu abono en canceladoras antes de acceder al andén.
+            • Recuerda validar tu abono en las canceladoras automáticas antes de acceder al andén.
           </div>
         </div>
       );
