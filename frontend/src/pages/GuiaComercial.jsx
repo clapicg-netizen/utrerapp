@@ -76,6 +76,13 @@ export default function GuiaComercial() {
     return (match && match[2].length === 11) ? "https://www.youtube.com/embed/" + match[2] : null;
   };
 
+  const obtenerPortadaValida = (url) => {
+    if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL") {
+      return url.trim();
+    }
+    return "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4";
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       
@@ -155,7 +162,7 @@ export default function GuiaComercial() {
             >
               <div className="h-36 w-full relative overflow-hidden bg-slate-900">
                 <img 
-                  src={comerciosCarrusel[indiceCarrusel].portada_url && comerciosCarrusel[indiceCarrusel].portada_url !== "EMPTY" && comerciosCarrusel[indiceCarrusel].portada_url !== "NULL" ? comerciosCarrusel[indiceCarrusel].portada_url : "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"} 
+                  src={obtenerPortadaValida(comerciosCarrusel[indiceCarrusel].portada_url)} 
                   alt={comerciosCarrusel[indiceCarrusel].nombre}
                   className="w-full h-full object-cover opacity-85 transform hover:scale-105 transition-transform duration-700"
                 />
@@ -211,7 +218,7 @@ export default function GuiaComercial() {
                   <div className="flex gap-4 items-start">
                     <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100">
                       <img
-                        src={comercio.portada_url && comercio.portada_url !== "EMPTY" && comercio.portada_url !== "NULL" ? comercio.portada_url : "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
+                        src={obtenerPortadaValida(comercio.portada_url)}
                         alt={comercio.nombre}
                         className="w-full h-full object-cover"
                       />
@@ -270,7 +277,7 @@ export default function GuiaComercial() {
             {/* Portada Principal */}
             <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border border-slate-100">
               <img
-                src={comercioSel.portada_url && comercioSel.portada_url !== "EMPTY" && comercioSel.portada_url !== "NULL" ? comercioSel.portada_url : "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4"}
+                src={obtenerPortadaValida(comercioSel.portada_url)}
                 alt={comercioSel.nombre}
                 className="w-full h-full object-cover"
               />
@@ -364,20 +371,20 @@ export default function GuiaComercial() {
             )}
 
             {/* GALERÍA DE FOTOS */}
-            {comercioSel.galeria_urls && Array.isArray(comercioSel.galeria_urls) && comercioSel.galeria_urls.filter(url => url && url !== "EMPTY").length > 0 && (
+            {comercioSel.galeria_urls && Array.isArray(comercioSel.galeria_urls) && comercioSel.galeria_urls.filter(url => url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY").length > 0 && (
               <div className="mt-4">
                 <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
                   <Image size={14} /> Fotos de las instalaciones y productos
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x">
                   {comercioSel.galeria_urls.map((url, i) => (
-                    url && url !== "EMPTY" && (
+                    url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && (
                       <div 
                         key={i} 
-                        onClick={() => setFotoAmpliada(url)}
+                        onClick={() => setFotoAmpliada(url.trim())}
                         className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 cursor-pointer hover:opacity-90 snap-start"
                       >
-                        <img src={url} alt={"Imagen " + i} className="w-full h-full object-cover" />
+                        <img src={url.trim()} alt={"Imagen " + i} className="w-full h-full object-cover" />
                       </div>
                     )
                   ))}
@@ -386,18 +393,22 @@ export default function GuiaComercial() {
             )}
 
             {/* BOTÓN CARTA / MENÚ EN PDF */}
-            {(comercioSel.carta_pdf_url || comercioSel.carta_pdf || comercioSel.carta_url || comercioSel.menu_pdf) && 
-             (comercioSel.carta_pdf_url !== "EMPTY" && comercioSel.carta_pdf !== "EMPTY" && comercioSel.carta_url !== "EMPTY" && comercioSel.menu_pdf !== "EMPTY") && 
-             (comercioSel.carta_pdf_url !== "NULL" && comercioSel.carta_pdf !== "NULL") && (
-              <a
-                href={comercioSel.carta_pdf_url || comercioSel.carta_pdf || comercioSel.carta_url || comercioSel.menu_pdf}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-colors"
-              >
-                <FileText size={16} /> Ver Carta / Menú en PDF <ExternalLink size={12} />
-              </a>
-            )}
+            {(() => {
+              const cartaUrl = comercioSel.carta_pdf_url || comercioSel.carta_pdf || comercioSel.carta_url || comercioSel.menu_pdf;
+              if (cartaUrl && typeof cartaUrl === 'string' && cartaUrl.trim() !== "" && cartaUrl !== "EMPTY" && cartaUrl !== "NULL") {
+                return (
+                  <a
+                    href={cartaUrl.trim()}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-4 w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-colors"
+                  >
+                    <FileText size={16} /> Ver Carta / Menú en PDF <ExternalLink size={12} />
+                  </a>
+                );
+              }
+              return null;
+            })()}
 
             {/* Contactos */}
             <div className="grid grid-cols-2 gap-2 mt-4">
