@@ -15,12 +15,12 @@ export const comerciosService = {
   }
 };
 
-// --- FUNCIONES REALES CONECTADAS A SUPABASE ---
+// --- FUNCIONES REALES CONECTADAS A SUPABASE (TABLA: comercios_utrera) ---
 
 // 1. Obtener todos los comercios
 export const obtenerComercios = async (categoria = 'Todos') => {
   try {
-    let query = supabase.from('comercios').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('comercios_utrera').select('*').order('created_at', { ascending: false });
     
     if (categoria && categoria !== 'Todos') {
       query = query.eq('categoria', categoria);
@@ -42,7 +42,7 @@ export const obtenerComercios = async (categoria = 'Todos') => {
 export const crearComercio = async (formData) => {
   try {
     const { data, error } = await supabase
-      .from('comercios')
+      .from('comercios_utrera')
       .insert([formData])
       .select();
 
@@ -61,7 +61,7 @@ export const crearComercio = async (formData) => {
 export const actualizarComercio = async (id, pinMaestro, formData) => {
   try {
     const { data, error } = await supabase
-      .from('comercios')
+      .from('comercios_utrera')
       .update(formData)
       .eq('id', id)
       .select();
@@ -81,7 +81,7 @@ export const actualizarComercio = async (id, pinMaestro, formData) => {
 export const eliminarComercio = async (id) => {
   try {
     const { error } = await supabase
-      .from('comercios')
+      .from('comercios_utrera')
       .delete()
       .eq('id', id);
 
