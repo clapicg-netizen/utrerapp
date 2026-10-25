@@ -47,11 +47,10 @@ export default function Home({ setPaginaActual, setTab }) {
     }
   ]);
 
-  // Cargar anuncios desde Supabase en tiempo real
   useEffect(() => {
     async function cargarAnuncios() {
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('anuncios')
           .select('*')
           .eq('activo', true)
@@ -123,7 +122,7 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* CARRUSEL DE BANNERS */}
+      {/* CARRUSEL */}
       <div className="px-4 mt-4 max-w-md mx-auto">
         <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
           <div 
@@ -166,7 +165,7 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* TARJETA DE CONSO */}
+      {/* TARJETA CONSO */}
       <div className="px-4 mt-4 max-w-md mx-auto">
         <div 
           onClick={(e) => cambiarPestana(e, "conso")}
@@ -250,10 +249,10 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Qué Ver */}
+          {/* Qué Ver (Enlazado a la nueva sección visual) */}
           <button 
             type="button"
-            onClick={(e) => cambiarPestana(e, "market")}
+            onClick={(e) => cambiarPestana(e, "que-ver")}
             className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">

@@ -7,6 +7,7 @@ import DashboardAdmin from './pages/DashboardAdmin';
 import Transporte from './pages/Transporte';
 import Salud from './pages/Salud';
 import AgendaGestiones from './pages/AgendaGestiones';
+import QueVer from './pages/QueVer';
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -30,6 +31,8 @@ export default function App() {
         return <Salud setPaginaActual={setPaginaActual} />;
       case 'agenda-gestiones':
         return <AgendaGestiones setPaginaActual={setPaginaActual} />;
+      case 'que-ver':
+        return <QueVer setPaginaActual={setPaginaActual} />;
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }
