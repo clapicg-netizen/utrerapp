@@ -74,18 +74,17 @@ export default function GuiaComercial() {
     return (match && match[2].length === 11) ? "https://www.youtube.com/embed/" + match[2] : null;
   };
 
-  // 🚀 FUNCIÓN SIMPLIFICADA PARA MOSTRAR LA FOTO REAL DE SUPABASE DIRECTAMENTE
   const obtenerPortadaValida = (url) => {
     if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL") {
       return url.trim();
     }
-    return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5"; // Imagen neutral por defecto si no hay foto
+    return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5";
   };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       
-      {/* 🚀 CABECERA HERO PREMIUM */}
+      {/* CABECERA HERO PREMIUM */}
       <div className="bg-gradient-to-r from-rose-950 via-red-900 to-rose-900 text-white p-6 shadow-xl relative overflow-hidden rounded-b-[2.5rem]">
         <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-rose-600/20 rounded-full blur-2xl"></div>
         <div className="max-w-md mx-auto relative z-10 space-y-3">
@@ -116,7 +115,7 @@ export default function GuiaComercial() {
 
       <div className="max-w-md mx-auto px-4 pt-5 space-y-6">
 
-        {/* 🗂️ CATEGORÍAS */}
+        {/* CATEGORÍAS */}
         <div className="space-y-2">
           <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">Categorías</h2>
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -136,7 +135,7 @@ export default function GuiaComercial() {
           </div>
         </div>
 
-        {/* 🎠 CARRUSEL AUTOMÁTICO */}
+        {/* CARRUSEL AUTOMÁTICO */}
         {comerciosCarrusel.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -186,7 +185,7 @@ export default function GuiaComercial() {
           </div>
         )}
 
-        {/* 📋 LISTA DE COMERCIOS */}
+        {/* LISTA DE COMERCIOS */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
@@ -340,6 +339,89 @@ export default function GuiaComercial() {
               <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
                 {comercioSel.descripcion}
               </p>
+            )}
+
+            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS */}
+            {comercioSel.tipo_ficha === 'especial1' && comercioSel.datos_especiales && (
+              <div className="mt-6 space-y-4 border-t pt-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-base font-black text-slate-900">
+                    🏠 {comercioSel.datos_especiales.titulo_seccion_catalogo || 'Inmuebles Destacados'}
+                  </h3>
+                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    Inmobiliaria Verificada
+                  </span>
+                </div>
+
+                {/* LISTADO DE INMUEBLES DEL JSON */}
+                <div className="grid grid-cols-1 gap-4">
+                  {comercioSel.datos_especiales.items && comercioSel.datos_especiales.items.map((inmueble, idx) => {
+                    const mensajeWhatsApp = encodeURIComponent(
+                      `¡Hola! Estoy interesado en el inmueble con referencia *${inmueble.referencia_interna || 'REF'}* (${inmueble.titulo}) que he visto en Utrerapp. ¿Podrían darme más información?`
+                    );
+                    const urlWhatsApp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajeWhatsApp}`;
+
+                    return (
+                      <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+                        {inmueble.etiqueta_destacado && (
+                          <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
+                            {inmueble.etiqueta_destacado}
+                          </span>
+                        )}
+
+                        <div className="flex justify-between items-start mb-2 pr-12">
+                          <div>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                              {inmueble.modalidad || 'Venta'} • Ref: {inmueble.referencia_interna || 'N/A'}
+                            </span>
+                            <h4 className="text-sm font-black text-slate-900 mt-0.5">{inmueble.titulo}</h4>
+                            <p className="text-xs text-slate-500">{inmueble.subtitulo_zona}</p>
+                          </div>
+                        </div>
+
+                        <div className="my-3">
+                          <span className="text-lg font-black text-blue-600">{inmueble.precio}</span>
+                        </div>
+
+                        {inmueble.caracteristicas_clave && (
+                          <div className="flex flex-wrap gap-2 my-3 text-[11px] font-semibold text-slate-600 bg-white p-2.5 rounded-xl border border-slate-100">
+                            {Object.entries(inmueble.caracteristicas_clave).map(([clave, valor], i) => (
+                              <span key={i} className="bg-slate-100 px-2 py-1 rounded-lg">
+                                {clave}: <strong className="text-slate-900">{valor}</strong>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-slate-600 mb-4 line-clamp-2">{inmueble.descripcion}</p>
+
+                        <a
+                          href={urlWhatsApp}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                        >
+                          <span>💬 Preguntar por este inmueble</span>
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {comercioSel.datos_especiales.mostrar_boton_captacion && (
+                  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center space-y-2 mt-4">
+                    <p className="text-xs font-bold text-blue-900">¿Quieres vender o alquilar tu casa en Utrera?</p>
+                    <a
+                      href={`https://wa.me/${comercioSel.whatsapp}?text=${encodeURIComponent(`Hola, me gustaría solicitar más información sobre vuestros servicios de tasación y captación visto en Utrerapp.`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow cursor-pointer"
+                    >
+                      {comercioSel.datos_especiales.texto_boton_captacion || 'Solicitar valoración gratuita'}
+                    </a>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* VÍDEO PROMOCIONAL */}
