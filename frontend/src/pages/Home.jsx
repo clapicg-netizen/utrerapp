@@ -201,10 +201,10 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Salud (ClicSalud+) */}
+          {/* Salud (Centros de Utrera) */}
           <button 
             type="button"
-            onClick={(e) => window.open("https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/", "_blank")}
+            onClick={(e) => cambiarPestana(e, "salud")}
             className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
@@ -212,7 +212,7 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
             <div className="min-w-0">
               <p className="font-bold text-slate-900 text-xs truncate">Salud</p>
-              <p className="text-[10px] text-slate-500 truncate">Centros & ClicSalud+</p>
+              <p className="text-[10px] text-slate-500 truncate">Centros & Urgencias</p>
             </div>
           </button>
 
