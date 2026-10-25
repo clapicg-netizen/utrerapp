@@ -60,7 +60,7 @@ export default function DashboardAdmin() {
     if (!file) return;
 
     setSubiendo(true);
-    setMensaje({ tipo: 'exito', texto: 'Subiendo archivo...' });
+    setMensaje({ tipo: 'exito', texto: 'Subiendo archivo a Supabase...' });
 
     const res = await subirArchivoComercio(file);
     setSubiendo(false);
@@ -77,7 +77,7 @@ export default function DashboardAdmin() {
           [campo]: res.url
         }));
       }
-      setMensaje({ tipo: 'exito', texto: '¡Archivo subido con éxito!' });
+      setMensaje({ tipo: 'exito', texto: '¡Archivo subido correctamente!' });
     } else {
       setMensaje({ tipo: 'error', texto: res?.message || 'Error al subir el archivo' });
     }
@@ -93,19 +93,23 @@ export default function DashboardAdmin() {
     setGuardando(true);
     setMensaje({ tipo: '', texto: '' });
 
+    // Nos aseguramos de que galeria_urls sea siempre un array limpio
+    const datosAEnviar = {
+      ...formData,
+      galeria_urls: Array.isArray(formData.galeria_urls) ? formData.galeria_urls.filter(u => typeof u === 'string' && u.trim() !== '') : []
+    };
+
     if (editandoId) {
-      const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, formData);
+      const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, datosAEnviar);
       setGuardando(false);
       if (res && res.success) {
-        setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado correctamente!' });
-        setEditandoId(null);
-        setFormData(formInicial);
+        setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado con su galería múltiple y PDF!' });
         cargarLista();
       } else {
         setMensaje({ tipo: 'error', texto: 'Error al guardar: ' + (res?.message || 'Desconocido') });
       }
     } else {
-      const res = await crearComercio(formData);
+      const res = await crearComercio(datosAEnviar);
       setGuardando(false);
       if (res && res.success) {
         setMensaje({ tipo: 'exito', texto: '¡Comercio creado con éxito!' });
@@ -254,23 +258,16 @@ export default function DashboardAdmin() {
             <h3 className="text-xs font-black uppercase text-slate-400">📸 Portada, Galería y Carta PDF</h3>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📸 Portada Principal (URL o Subir archivo)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📸 Portada Principal</label>
               {formData.portada_url && typeof formData.portada_url === 'string' && (
                 <img src={formData.portada_url} alt="Portada" className="w-full h-36 object-cover rounded-2xl mb-2 border" />
               )}
-              <input
-                type="text"
-                placeholder="https://..."
-                value={formData.portada_url}
-                onChange={(e) => setFormData({...formData, portada_url: e.target.value})}
-                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-2"
-              />
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => handleFileUpload(e, 'portada_url')}
                 disabled={subiendo}
-                className="w-full text-xs text-slate-500"
+                className="w-full text-xs text-slate-500 mb-2"
               />
             </div>
 
@@ -280,23 +277,16 @@ export default function DashboardAdmin() {
                 <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ PDF cargado: {formData.carta_pdf_url}</p>
               )}
               <input
-                type="text"
-                placeholder="https://..."
-                value={formData.carta_pdf_url}
-                onChange={(e) => setFormData({...formData, carta_pdf_url: e.target.value})}
-                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-2"
-              />
-              <input
                 type="file"
                 accept="image/*,application/pdf"
                 onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
                 disabled={subiendo}
-                className="w-full text-xs text-slate-500"
+                className="w-full text-xs text-slate-500 mb-2"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Varias imágenes)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Sube tantas como quieras)</label>
               <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-2">
                 {Array.isArray(formData.galeria_urls) && formData.galeria_urls.map((url, idx) => (
                   <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
