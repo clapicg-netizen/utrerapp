@@ -341,7 +341,7 @@ export default function GuiaComercial() {
               </p>
             )}
 
-            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS (CON FOTO EN CADA VIVIENDA) */}
+            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS (CON FOTO GARANTIZADA) */}
             {comercioSel.tipo_ficha === 'especial1' && comercioSel.datos_especiales && (
               <div className="mt-6 space-y-4 border-t pt-6">
                 <div className="flex justify-between items-center">
@@ -361,41 +361,31 @@ export default function GuiaComercial() {
                     );
                     const urlWhatsApp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajeWhatsApp}`;
 
+                    // Foto por defecto si el inmueble no trae imagen especificada
+                    const imagenInmueble = inmueble.imagen || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2";
+
                     return (
                       <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm relative">
                         
-                        {/* 📸 FOTO DEL INMUEBLE */}
-                        {inmueble.imagen && (
-                          <div className="h-40 w-full relative bg-slate-100 overflow-hidden">
-                            <img 
-                              src={inmueble.imagen} 
-                              alt={inmueble.titulo} 
-                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-                            />
-                            {inmueble.etiqueta_destacado && (
-                              <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow">
-                                {inmueble.etiqueta_destacado}
-                              </span>
-                            )}
-                            <span className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
-                              {inmueble.modalidad || 'Venta'} • Ref: {inmueble.referencia_interna || 'N/A'}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="p-4">
-                          {!inmueble.imagen && inmueble.etiqueta_destacado && (
-                            <span className="float-right bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm mb-2">
+                        {/* 📸 FOTO DEL INMUEBLE (SIEMPRE PRESENTE) */}
+                        <div className="h-40 w-full relative bg-slate-100 overflow-hidden">
+                          <img 
+                            src={imagenInmueble} 
+                            alt={inmueble.titulo} 
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                          />
+                          {inmueble.etiqueta_destacado && (
+                            <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow">
                               {inmueble.etiqueta_destacado}
                             </span>
                           )}
+                          <span className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
+                            {inmueble.modalidad || 'Venta'} • Ref: {inmueble.referencia_interna || 'N/A'}
+                          </span>
+                        </div>
 
+                        <div className="p-4">
                           <div className="mb-2">
-                            {!inmueble.imagen && (
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                {inmueble.modalidad || 'Venta'} • Ref: {inmueble.referencia_interna || 'N/A'}
-                              </span>
-                            )}
                             <h4 className="text-sm font-black text-slate-900 mt-0.5">{inmueble.titulo}</h4>
                             <p className="text-xs text-slate-500">{inmueble.subtitulo_zona}</p>
                           </div>
