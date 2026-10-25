@@ -13,6 +13,13 @@ export default function AgendaGestiones({ setPaginaActual }) {
       web: "https://www.utrera.org"
     },
     {
+      nombre: "Aguas del Huesna",
+      tipo: "Suministro - Agua",
+      telefono: "954 50 03 00",
+      direccion: "Gestión del ciclo integral del agua en Utrera",
+      web: "https://www.aguasdelhuesna.com/es/"
+    },
+    {
       nombre: "Seguridad Social (INSS & TGSS)",
       tipo: "Estatal",
       telefono: "901 16 65 65",
@@ -48,13 +55,6 @@ export default function AgendaGestiones({ setPaginaActual }) {
       web: "https://www.registradores.org"
     },
     {
-      nombre: "Acciona (Agua Potable - Giahsa / EMASÚ)",
-      tipo: "Suministro - Agua",
-      telefono: "900 81 28 12",
-      direccion: "Averías, altas y gestiones del agua",
-      web: ""
-    },
-    {
       nombre: "Endesa / e-distribución",
       tipo: "Suministro - Luz",
       telefono: "800 76 07 06",
@@ -74,27 +74,27 @@ export default function AgendaGestiones({ setPaginaActual }) {
     {
       categoria: "Guarderías y Escuelas Infantiles",
       items: [
-        "Escuela Infantil Municipal",
-        "Centros de Educación Infantil autorizados en Utrera"
+        { nombre: "Escuela Infantil Municipal", telefono: "955 86 00 00", direccion: "Utrera" },
+        { nombre: "Centros de Educación Infantil autorizados", telefono: "954 86 00 00", direccion: "Utrera" }
       ]
     },
     {
       categoria: "Colegios de Educación Primaria (CEIP)",
       items: [
-        "CEIP Álvarez Quintero",
-        "CEIP Al-Ándalus",
-        "CEIP Rodrigo Caro",
-        "CEIP Sagrada Familia",
-        "CEIP La Fontanilla"
+        { nombre: "CEIP Álvarez Quintero", telefono: "955 97 96 00", direccion: "Av. San Juan Bosco" },
+        { nombre: "CEIP Al-Ándalus", telefono: "955 59 78 00", direccion: "Barriada La Mulata" },
+        { nombre: "CEIP Rodrigo Caro", telefono: "955 97 96 10", direccion: "C. María Auxiliadora" },
+        { nombre: "CEIP Sagrada Familia", telefono: "955 86 12 34", direccion: "Utrera" },
+        { nombre: "CEIP La Fontanilla", telefono: "955 97 96 20", direccion: "Zona La Fontanilla" }
       ]
     },
     {
       categoria: "Institutos de Educación Secundaria (IES) y Bachillerato",
       items: [
-        "IES Ruiz Gijón",
-        "IES Ponce de León",
-        "IES José María Infantes",
-        "IES Maestro Juan Calero"
+        { nombre: "IES Ruiz Gijón", telefono: "955 83 95 30", direccion: "C. Ruiz Gijón" },
+        { nombre: "IES Ponce de León", telefono: "955 83 95 40", direccion: "Utrera" },
+        { nombre: "IES José María Infantes", telefono: "955 83 95 50", direccion: "Utrera" },
+        { nombre: "IES Maestro Juan Calero", telefono: "955 83 95 60", direccion: "Utrera" }
       ]
     }
   ];
@@ -194,7 +194,7 @@ export default function AgendaGestiones({ setPaginaActual }) {
         </div>
       )}
 
-      {/* SECCIÓN 2: EDUCACIÓN */}
+      {/* SECCIÓN 2: EDUCACIÓN (Con tarjetas interactivas y botones de llamada) */}
       {seccionActiva === 'educacion' && (
         <div className="space-y-4 animate-fadeIn">
           <div className="px-1 flex justify-between items-center">
@@ -202,18 +202,33 @@ export default function AgendaGestiones({ setPaginaActual }) {
             <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">Sección 2</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {educacion.map((edu, idx) => (
-              <div key={idx} className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-2">
-                <h3 className="text-xs font-black text-purple-900 uppercase tracking-wide">{edu.categoria}</h3>
-                <ul className="space-y-1.5 pt-1">
-                  {edu.items.map((item, i) => (
-                    <li key={i} className="text-xs text-slate-700 flex items-center justify-between bg-purple-50/50 p-2.5 rounded-xl border border-purple-100/50">
-                      <span className="font-medium">{item}</span>
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md">Utrera</span>
-                    </li>
+              <div key={idx} className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm space-y-3">
+                <h3 className="text-xs font-black text-purple-900 uppercase tracking-wide border-b border-slate-100 pb-2">
+                  {edu.categoria}
+                </h3>
+                <div className="space-y-2">
+                  {edu.items.map((cole, i) => (
+                    <div key={i} className="bg-purple-50/40 p-3 rounded-2xl border border-purple-100/60 flex items-center justify-between gap-3">
+                      <div className="min-w-0 space-y-0.5">
+                        <h4 className="text-xs font-bold text-slate-900 truncate">{cole.nombre}</h4>
+                        <p className="text-[10px] text-slate-500 flex items-center gap-1">
+                          <MapPin size={10} className="text-purple-400 shrink-0" />
+                          <span>{cole.direccion}</span>
+                        </p>
+                      </div>
+
+                      <a
+                        href={`tel:${cole.telefono.replace(/\s+/g, '')}`}
+                        className="w-8 h-8 rounded-xl bg-purple-600 hover:bg-purple-700 text-white flex items-center justify-center shadow-sm transition-colors shrink-0"
+                        title="Llamar al centro"
+                      >
+                        <Phone size={13} />
+                      </a>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             ))}
           </div>
