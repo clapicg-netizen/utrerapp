@@ -152,21 +152,19 @@ export default function QueVer({ setPaginaActual }) {
         <p className="text-xs text-amber-100/90 relative z-10">{t.subtituloCabecera}</p>
       </div>
 
-      {/* ENLACE INSPIRACIÓN INSTAGRAM */}
-      <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 p-4 rounded-2xl text-white shadow-md flex items-center justify-between">
+      {/* ENLACE INTERNO AL MURO COMUNITARIO */}
+      <div 
+        onClick={() => setPaginaActual("muro-comunidad")}
+        className="bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 p-4 rounded-2xl text-white shadow-md flex items-center justify-between cursor-pointer hover:opacity-95 transition-opacity"
+      >
         <div className="space-y-0.5">
           <p className="text-[10px] uppercase font-black tracking-wider text-pink-200">{t.instaTitulo}</p>
           <h3 className="font-extrabold text-xs">{t.instaSub}</h3>
         </div>
-        <a
-          href="https://www.instagram.com/explore/tags/utrera/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-white text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl shadow hover:bg-slate-100 transition-colors flex items-center gap-1.5 shrink-0"
-        >
+        <div className="bg-white text-slate-950 font-black text-xs px-3.5 py-2 rounded-xl shadow flex items-center gap-1.5 shrink-0">
           <span>{t.instaBtn}</span>
           <ExternalLink size={13} />
-        </a>
+        </div>
       </div>
 
       {/* GALERÍA DE MONUMENTOS */}
