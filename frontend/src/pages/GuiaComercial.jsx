@@ -1,6 +1,6 @@
 // src/pages/GuiaComercial.jsx
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike } from "lucide-react";
+import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike, Plus, Minus, ShoppingCart, Trash2 } from "lucide-react";
 import { obtenerComercios } from "../lib/comerciosService";
 
 export default function GuiaComercial() {
@@ -9,6 +9,9 @@ export default function GuiaComercial() {
   const [comercioSel, setComercioSel] = useState(null);
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
+
+  // Estados para el Carrito de la Ficha Especial 2
+  const [carrito, setCarrito] = useState({});
 
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
@@ -79,6 +82,57 @@ export default function GuiaComercial() {
       return url.trim();
     }
     return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5";
+  };
+
+  // Funciones de gestión del carrito
+  const agregarAlCarrito = (producto) => {
+    setCarrito((prev) => {
+      const actual = prev[producto.id] ? prev[producto.id].cantidad : 0;
+      return {
+        ...prev,
+        [producto.id]: { ...producto, cantidad: actual + 1 }
+      };
+    });
+  };
+
+  const quitarDelCarrito = (productoId) => {
+    setCarrito((prev) => {
+      const actual = prev[productoId] ? prev[productoId].cantidad : 0;
+      if (actual <= 1) {
+        const copia = { ...prev };
+        delete copia[productoId];
+        return copia;
+      }
+      return {
+        ...prev,
+        [productoId]: { ...prev[productoId], cantidad: actual - 1 }
+      };
+    });
+  };
+
+  const calcularTotalItems = () => {
+    return Object.values(carrito).reduce((acc, item) => acc + item.cantidad, 0);
+  };
+
+  const calcularPrecioTotal = () => {
+    return Object.values(carrito).reduce((acc, item) => {
+      const precioNum = parseFloat(item.precio.replace("€", "").replace(",", ".").trim()) || 0;
+      return acc + (precioNum * item.cantidad);
+    }, 0).toFixed(2);
+  };
+
+  const enviarPedidoWhatsApp = (comercio) => {
+    const itemsArray = Object.values(carrito);
+    if (itemsArray.length === 0) return;
+
+    let mensaje = `¡Hola! Me gustaría hacer el siguiente pedido a domicilio desde Utrerapp:\n\n`;
+    itemsArray.forEach((item) => {
+      mensaje += `• ${item.cantidad}x ${item.nombre} (${item.precio})\n`;
+    });
+    mensaje += `\n*Total estimado: ${calcularPrecioTotal()} €*\n¿Me confirmáis el pedido y el tiempo de entrega? ¡Gracias!`;
+
+    const urlWpp = `https://wa.me/${comercio.whatsapp}?text=${encodeURIComponent(mensaje)}`;
+    window.open(urlWpp, "_blank");
   };
 
   return (
@@ -155,7 +209,7 @@ export default function GuiaComercial() {
             </div>
 
             <div 
-              onClick={() => setComercioSel(comerciosCarrusel[indiceCarrusel])}
+              onClick={() => { setComercioSel(comerciosCarrusel[indiceCarrusel]); setCarrito({}); }}
               className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 transition-all duration-500 cursor-pointer hover:shadow-xl"
             >
               <div className="h-36 w-full relative overflow-hidden bg-slate-900">
@@ -204,7 +258,7 @@ export default function GuiaComercial() {
               {comerciosFiltrados.map((comercio) => (
                 <div
                   key={comercio.id}
-                  onClick={() => setComercioSel(comercio)}
+                  onClick={() => { setComercioSel(comercio); setCarrito({}); }}
                   className="bg-white rounded-3xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
                 >
                   {comercio.destacado && (
@@ -247,6 +301,7 @@ export default function GuiaComercial() {
                     onClick={(e) => {
                       e.stopPropagation();
                       setComercioSel(comercio);
+                      setCarrito({});
                     }}
                     className="mt-3 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors text-center flex items-center justify-center gap-1.5"
                   >
@@ -263,10 +318,10 @@ export default function GuiaComercial() {
       {/* MODAL FICHA DESPLEGABLE */}
       {comercioSel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl relative p-5 pb-24 sm:pb-8">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl relative p-5 pb-32 sm:pb-12">
             
             <button
-              onClick={() => setComercioSel(null)}
+              onClick={() => { setComercioSel(null); setCarrito({}); }}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold z-10 cursor-pointer"
             >
               ✕
@@ -413,19 +468,19 @@ export default function GuiaComercial() {
               </div>
             )}
 
-            {/* 🍕 RENDERIZADO ESPECIAL 2: COMIDA A DOMICILIO / DELIVERY */}
+            {/* 🍕 RENDERIZADO ESPECIAL 2: COMIDA A DOMICILIO (CON CARRITO INTERACTIVO) */}
             {comercioSel.tipo_ficha === 'especial2' && comercioSel.datos_especiales && (
-              <div className="mt-6 space-y-4 border-t pt-6">
+              <div className="mt-6 space-y-4 border-t pt-6 relative">
                 <div className="flex justify-between items-center">
                   <h3 className="text-base font-black text-slate-900 flex items-center gap-1.5">
                     <Utensils size={18} className="text-orange-600" /> {comercioSel.datos_especiales.titulo_seccion_catalogo || 'Carta a Domicilio'}
                   </h3>
                   <span className="text-[10px] font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    Delivery Oficial
+                    Delivery Interactivo
                   </span>
                 </div>
 
-                {/* Banner de Logística (Horario, Envío, Pago) */}
+                {/* Banner de Logística */}
                 <div className="bg-orange-50 border border-orange-100 rounded-2xl p-3.5 space-y-2 text-xs text-orange-950">
                   {comercioSel.datos_especiales.horario_reparto && (
                     <div className="flex items-center gap-2 font-medium">
@@ -447,7 +502,7 @@ export default function GuiaComercial() {
                   )}
                 </div>
 
-                {/* Categorías y Platos de la Carta */}
+                {/* Categorías y Platos */}
                 {comercioSel.datos_especiales.categorias_carta && comercioSel.datos_especiales.categorias_carta.map((cat, idxCat) => (
                   <div key={idxCat} className="space-y-3 pt-2">
                     <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider bg-slate-100 px-3 py-1.5 rounded-xl">
@@ -456,10 +511,7 @@ export default function GuiaComercial() {
 
                     <div className="grid grid-cols-1 gap-3">
                       {cat.productos && cat.productos.map((prod, idxProd) => {
-                        const mensajePedido = encodeURIComponent(
-                          `¡Hola! Me gustaría hacer un pedido a domicilio:\n- *${prod.nombre}* (${prod.precio})\n¿Me confirmáis disponibilidad?`
-                        );
-                        const urlPedidoWpp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajePedido}`;
+                        const enCarrito = carrito[prod.id] ? carrito[prod.id].cantidad : 0;
                         const imgProd = prod.imagen || "https://images.unsplash.com/photo-1545231027-637d2f6210f8";
 
                         return (
@@ -470,16 +522,37 @@ export default function GuiaComercial() {
                             <div className="flex-1 min-w-0">
                               <h5 className="text-xs font-black text-slate-900 truncate">{prod.nombre}</h5>
                               <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{prod.descripcion}</p>
-                              <div className="flex items-center justify-between mt-1.5">
+                              
+                              <div className="flex items-center justify-between mt-2">
                                 <span className="text-xs font-black text-orange-600">{prod.precio}</span>
-                                <a
-                                  href={urlPedidoWpp}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
-                                >
-                                  <span>🛒 Pedir</span>
-                                </a>
+
+                                {/* Selector de cantidad interactivo (+ / -) */}
+                                <div className="flex items-center gap-2">
+                                  {enCarrito > 0 ? (
+                                    <div className="flex items-center bg-orange-50 border border-orange-200 rounded-xl px-2 py-1 gap-2">
+                                      <button 
+                                        onClick={() => quitarDelCarrito(prod.id)}
+                                        className="text-orange-700 hover:text-orange-900 cursor-pointer"
+                                      >
+                                        <Minus size={12} />
+                                      </button>
+                                      <span className="text-xs font-black text-orange-900">{enCarrito}</span>
+                                      <button 
+                                        onClick={() => agregarAlCarrito(prod)}
+                                        className="text-orange-700 hover:text-orange-900 cursor-pointer"
+                                      >
+                                        <Plus size={12} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => agregarAlCarrito(prod)}
+                                      className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
+                                    >
+                                      <Plus size={14} /> Añadir
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -488,6 +561,22 @@ export default function GuiaComercial() {
                     </div>
                   </div>
                 ))}
+
+                {/* BARRA FLOTANTE DE CARRITO SI HAY PRODUCTOS SELECCIONADOS */}
+                {calcularTotalItems() > 0 && (
+                  <div className="sticky bottom-2 left-0 right-0 bg-slate-900 text-white p-4 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between z-20 mt-6 animate-bounce-short">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">Cesta ({calcularTotalItems()} platos)</p>
+                      <p className="text-base font-black text-amber-400">{calcularPrecioTotal()} €</p>
+                    </div>
+                    <button
+                      onClick={() => enviarPedidoWhatsApp(comercioSel)}
+                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs py-2.5 px-5 rounded-xl flex items-center gap-2 shadow-lg transition-all cursor-pointer"
+                    >
+                      <ShoppingCart size={16} /> Enviar Pedido ➔
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
