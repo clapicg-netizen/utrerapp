@@ -56,6 +56,7 @@ export default function QueVer({ setPaginaActual }) {
 
   const t = uiTextos[idioma];
 
+  // Imágenes de arquitectura monumental andaluza e histórica de gran calidad y neutras
   const monumentos = [
     {
       id: "santuario",
@@ -75,7 +76,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Sanctuaire historique d'une profonde dévotion mariane et joyau spirituel de la basse Andalousie. Maison de la Patronne d'Utrera."
       },
       horarios: "L-D: 9:00 - 13:30 y 17:00 - 20:30",
-      imagen: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80",
+      imagen: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=800&q=80",
       instaTag: "#SantuarioConsolacionUtrera"
     },
     {
@@ -96,7 +97,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Forteresse médiévale construite sur un ancien alcázar arabe, située sur une haute colline surplombant la campagne."
       },
       horarios: "Consultar visitas guiadas en oficina de turismo",
-      imagen: "https://images.unsplash.com/photo-1584646098378-0874589d76b1?auto=format&fit=crop&w=800&q=80",
+      imagen: "https://images.unsplash.com/photo-1599806388711-4099433d73b2?auto=format&fit=crop&w=800&q=80",
       instaTag: "#CastilloDeUtrera"
     },
     {
@@ -138,7 +139,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Endroit andalou typique du centre historique, avec son arc d'entrée et ses ruelles blanches imprégnées d'histoire."
       },
       horarios: "Acceso libre 24h",
-      imagen: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80",
+      imagen: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80",
       instaTag: "#UtreraHistorica"
     }
   ];
@@ -249,7 +250,7 @@ export default function QueVer({ setPaginaActual }) {
         </a>
       </div>
 
-      {/* GALERÍA DE MONUMENTOS (AHORA CLICABLES PARA ABRIR FICHA) */}
+      {/* GALERÍA DE MONUMENTOS */}
       <div className="space-y-3">
         <div className="px-1 flex items-center gap-1.5">
           <Landmark size={16} className="text-amber-600" />
@@ -293,7 +294,7 @@ export default function QueVer({ setPaginaActual }) {
         </div>
       </div>
 
-      {/* MODAL / FICHA COMPLETA AL HACER CLIC */}
+      {/* MODAL / FICHA COMPLETA */}
       {monumentoSeleccionado && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
           <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-5 space-y-4">
@@ -324,7 +325,7 @@ export default function QueVer({ setPaginaActual }) {
               <p className="text-slate-600">{monumentoSeleccionado.horarios}</p>
             </div>
 
-            {/* BOTÓN DE AUDIOGUÍA EN EL MODAL */}
+            {/* BOTÓN DE AUDIOGUÍA */}
             <button
               type="button"
               onClick={(e) => toggleAudio(monumentoSeleccionado, e)}
