@@ -4,7 +4,7 @@ import Farmacias from './pages/Farmacias';
 import Conso from './pages/Conso';
 import GuiaComercial from './pages/GuiaComercial';
 import DashboardAdmin from './pages/DashboardAdmin';
-import Transporte from './pages/Transporte'; // <-- Importamos nuestro componente modular de Transporte
+import Transporte from './pages/Transporte';
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -23,7 +23,7 @@ export default function App() {
       case 'admin':
         return <DashboardAdmin />;
       case 'transporte':
-        return <Transporte />; // <-- Cargamos la vista completa de transporte con sus pestañas y Moovit
+        return <Transporte setPaginaActual={setPaginaActual} />;
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }

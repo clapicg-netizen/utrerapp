@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Train, Clock, ArrowRight, ExternalLink, Compass, Bus, Navigation, MapPin } from "lucide-react";
+import { Train, Clock, ArrowRight, ExternalLink, Compass, Bus, Navigation, MapPin, Sparkles, MessageSquare } from "lucide-react";
 
-export default function Transporte() {
+export default function Transporte({ setPaginaActual }) {
   const [subSeccion, setSubSeccion] = useState("renfe");
   const [sentido, setSentido] = useState("sevilla");
 
@@ -121,17 +121,22 @@ export default function Transporte() {
             ))}
           </div>
 
-          <a
-            href="https://www.renfe.com/es/es/cercanias/cercanias-sevilla"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full bg-white hover:bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold text-slate-800 shadow-sm transition-colors cursor-pointer"
-          >
-            <span className="flex items-center gap-2">
-              <Train size={16} className="text-rose-600" /> Web Oficial Renfe Cercanías
-            </span>
-            <ExternalLink size={14} className="text-slate-400" />
-          </a>
+          {/* BOTÓN CONSO TE INFORMA (ENLAZADO A CONSO IA) */}
+          {setPaginaActual && (
+            <button
+              onClick={() => setPaginaActual("conso")}
+              className="w-full bg-gradient-to-r from-rose-950 to-rose-900 text-white hover:from-rose-900 hover:to-rose-800 p-4 rounded-2xl flex items-center justify-between text-xs font-black shadow-md transition-all cursor-pointer group"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="bg-amber-400 text-slate-950 p-1.5 rounded-xl text-sm shadow">🤖</span>
+                <div className="text-left">
+                  <p className="text-sm font-black text-white">Conso te informa</p>
+                  <p className="text-[10px] text-rose-200 font-medium">Asistencia IA y horarios detallados en directo</p>
+                </div>
+              </span>
+              <Sparkles size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
+            </button>
+          )}
         </div>
       )}
 
