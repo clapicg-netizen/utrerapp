@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { ArrowLeft, Landmark, Camera, ExternalLink, Compass, Volume2 } from "lucide-react";
+import { ArrowLeft, Landmark, Camera, ExternalLink, Compass, Volume2, X, ChevronRight } from "lucide-react";
 
 export default function QueVer({ setPaginaActual }) {
   const [idioma, setIdioma] = useState('es'); // 'es', 'en', 'fr'
   const [reproduciendoId, setReproduciendoId] = useState(null);
+  const [monumentoSeleccionado, setMonumentoSeleccionado] = useState(null);
 
   const uiTextos = {
     es: {
@@ -17,6 +18,8 @@ export default function QueVer({ setPaginaActual }) {
       audioBtn: "Escuchar Audioguía",
       audioParar: "Pausar",
       horarioLabel: "Horarios:",
+      verMas: "Toca para abrir ficha completa",
+      cerrar: "Cerrar",
       fuente: "Información basada en Turismo de la Provincia de Sevilla (Prodetur)"
     },
     en: {
@@ -30,6 +33,8 @@ export default function QueVer({ setPaginaActual }) {
       audioBtn: "Listen Audioguide",
       audioParar: "Pause",
       horarioLabel: "Opening Hours:",
+      verMas: "Tap to open full card",
+      cerrar: "Close",
       fuente: "Information based on Tourism of the Province of Seville (Prodetur)"
     },
     fr: {
@@ -43,6 +48,8 @@ export default function QueVer({ setPaginaActual }) {
       audioBtn: "Écouter l'audioguide",
       audioParar: "Pause",
       horarioLabel: "Horaires :",
+      verMas: "Appuyez pour ouvrir la fiche complète",
+      cerrar: "Fermer",
       fuente: "Informations basées sur le Tourisme de la Province de Séville (Prodetur)"
     }
   };
@@ -68,7 +75,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Sanctuaire historique d'une profonde dévotion mariane et joyau spirituel de la basse Andalousie. Maison de la Patronne d'Utrera."
       },
       horarios: "L-D: 9:00 - 13:30 y 17:00 - 20:30",
-      imagen: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80",
       instaTag: "#SantuarioConsolacionUtrera"
     },
     {
@@ -89,7 +96,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Forteresse médiévale construite sur un ancien alcázar arabe, située sur une haute colline surplombant la campagne."
       },
       horarios: "Consultar visitas guiadas en oficina de turismo",
-      imagen: "https://images.unsplash.com/photo-1599806388711-4099433d73b2?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1584646098378-0874589d76b1?auto=format&fit=crop&w=800&q=80",
       instaTag: "#CastilloDeUtrera"
     },
     {
@@ -110,7 +117,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Majestueux temple déclaré Monument Historique et Artistique National. Il se distingue par sa magnifique Porte du Pardon et sa tour de plus de 60 mètres."
       },
       horarios: "L-V: 9:00-13:00 y 17:00-20:00 | S-D: 10:00-14:00 y 17:00-20:00",
-      imagen: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=800&q=80",
       instaTag: "#SantaMariaUtrera"
     },
     {
@@ -131,7 +138,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Endroit andalou typique du centre historique, avec son arc d'entrée et ses ruelles blanches imprégnées d'histoire."
       },
       horarios: "Acceso libre 24h",
-      imagen: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=800&q=80",
       instaTag: "#UtreraHistorica"
     }
   ];
@@ -165,7 +172,8 @@ export default function QueVer({ setPaginaActual }) {
     }
   ];
 
-  const toggleAudio = (monumento) => {
+  const toggleAudio = (monumento, e) => {
+    if (e) e.stopPropagation();
     if ('speechSynthesis' in window) {
       if (reproduciendoId === monumento.id) {
         window.speechSynthesis.cancel();
@@ -241,7 +249,7 @@ export default function QueVer({ setPaginaActual }) {
         </a>
       </div>
 
-      {/* GALERÍA DE MONUMENTOS CON AUDIOGUÍA */}
+      {/* GALERÍA DE MONUMENTOS (AHORA CLICABLES PARA ABRIR FICHA) */}
       <div className="space-y-3">
         <div className="px-1 flex items-center gap-1.5">
           <Landmark size={16} className="text-amber-600" />
@@ -250,9 +258,13 @@ export default function QueVer({ setPaginaActual }) {
 
         <div className="space-y-4">
           {monumentos.map((mon) => (
-            <div key={mon.id} className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-3">
+            <div 
+              key={mon.id} 
+              onClick={() => setMonumentoSeleccionado(mon)}
+              className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-3 cursor-pointer hover:shadow-md hover:border-amber-400 transition-all group"
+            >
               <div className="relative h-44 w-full bg-slate-100">
-                <img src={mon.imagen} alt={mon.nombre[idioma]} className="w-full h-full object-cover" />
+                <img src={mon.imagen} alt={mon.nombre[idioma]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 <span className="absolute top-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[9px] font-black uppercase px-2.5 py-1 rounded-full tracking-wider">
                   {mon.tipo[idioma]}
                 </span>
@@ -263,32 +275,79 @@ export default function QueVer({ setPaginaActual }) {
 
               <div className="p-4 pt-0 space-y-2.5">
                 <div className="space-y-1">
-                  <h3 className="text-sm font-black text-slate-900">{mon.nombre[idioma]}</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed">{mon.descripcion[idioma]}</p>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-black text-slate-900 group-hover:text-amber-700 transition-colors">{mon.nombre[idioma]}</h3>
+                    <ChevronRight size={16} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{mon.descripcion[idioma]}</p>
                 </div>
 
-                <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-100 text-[11px] text-slate-500">
-                  <span className="font-bold text-slate-700">{t.horarioLabel}</span> {mon.horarios}
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[10px] text-amber-600 font-bold bg-amber-50 px-2.5 py-1 rounded-lg">
+                    {t.verMas}
+                  </span>
                 </div>
-
-                {/* BOTÓN DE AUDIOGUÍA */}
-                <button
-                  type="button"
-                  onClick={() => toggleAudio(mon)}
-                  className={`w-full py-2.5 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
-                    reproduciendoId === mon.id
-                      ? 'bg-rose-600 text-white animate-pulse'
-                      : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                  }`}
-                >
-                  <Volume2 size={16} />
-                  <span>{reproduciendoId === mon.id ? t.audioParar : t.audioBtn}</span>
-                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* MODAL / FICHA COMPLETA AL HACER CLIC */}
+      {monumentoSeleccionado && (
+        <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-5 space-y-4">
+            
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <span className="text-[10px] font-black uppercase px-2.5 py-1 bg-amber-100 text-amber-900 rounded-full">
+                {monumentoSeleccionado.tipo[idioma]}
+              </span>
+              <button 
+                onClick={() => setMonumentoSeleccionado(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 hover:bg-slate-200 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="relative h-56 rounded-2xl overflow-hidden shadow-md">
+              <img src={monumentoSeleccionado.imagen} alt={monumentoSeleccionado.nombre[idioma]} className="w-full h-full object-cover" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-lg font-black text-slate-900">{monumentoSeleccionado.nombre[idioma]}</h2>
+              <p className="text-xs text-slate-700 leading-relaxed">{monumentoSeleccionado.descripcion[idioma]}</p>
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-1">
+              <p className="font-bold text-slate-900">{t.horarioLabel}</p>
+              <p className="text-slate-600">{monumentoSeleccionado.horarios}</p>
+            </div>
+
+            {/* BOTÓN DE AUDIOGUÍA EN EL MODAL */}
+            <button
+              type="button"
+              onClick={(e) => toggleAudio(monumentoSeleccionado, e)}
+              className={`w-full py-3 px-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md ${
+                reproduciendoId === monumentoSeleccionado.id
+                  ? 'bg-rose-600 text-white animate-pulse'
+                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
+            >
+              <Volume2 size={18} />
+              <span>{reproduciendoId === monumentoSeleccionado.id ? t.audioParar : t.audioBtn}</span>
+            </button>
+
+            <button
+              onClick={() => setMonumentoSeleccionado(null)}
+              className="w-full py-2.5 bg-slate-100 text-slate-800 font-bold text-xs rounded-xl hover:bg-slate-200 cursor-pointer"
+            >
+              {t.cerrar}
+            </button>
+
+          </div>
+        </div>
+      )}
 
       {/* RUTAS TURÍSTICAS */}
       <div className="space-y-3 pt-2">
