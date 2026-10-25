@@ -1,22 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed } from "lucide-react";
+import { supabase } from "../lib/supabase"; // Asegúrate de que la ruta a tu cliente supabase sea correcta
 
 export default function Home({ setPaginaActual, setTab }) {
   const [slideActual, setSlideActual] = useState(0);
-
-  // Usamos setPaginaActual o setTab indistintamente para evitar fallos
-  const cambiarPestana = (e, destino) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    const fnNavegacion = setPaginaActual || setTab;
-    if (typeof fnNavegacion === "function") {
-      fnNavegacion(destino);
-    }
-  };
-
-  const avisos = [
+  const [avisos, setAvisos] = useState([
     {
       id: 1,
       tipo: "CONSO TE AYUDA 🤝",
@@ -57,9 +45,42 @@ export default function Home({ setPaginaActual, setTab }) {
       icono: "📢",
       accion_tab: "market"
     }
-  ];
+  ]);
+
+  // Cargar anuncios desde Supabase
+  useEffect(() => {
+    async function cargarAnuncios() {
+      try {
+        const { data, error } = await supabase
+          .from('anuncios')
+          .select('*')
+          .eq('activo', true)
+          .order('orden', { ascending: true });
+
+        if (data && data.length > 0) {
+          setAvisos(data);
+        }
+      } catch (err) {
+        console.error("Error cargando anuncios de Supabase:", err);
+      }
+    }
+    cargarAnuncios();
+  }, []);
+
+  // Usamos setPaginaActual o setTab indistintamente para evitar fallos
+  const cambiarPestana = (e, destino) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const fnNavegacion = setPaginaActual || setTab;
+    if (typeof fnNavegacion === "function") {
+      fnNavegacion(destino);
+    }
+  };
 
   useEffect(() => {
+    if (avisos.length === 0) return;
     const timer = setInterval(() => {
       setSlideActual((prev) => (prev + 1) % avisos.length);
     }, 3000);
