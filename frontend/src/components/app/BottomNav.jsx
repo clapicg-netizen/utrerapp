@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { Home, ShoppingBag, MessageCircle, Train } from "lucide-react";
+import { Home, ShoppingBag, MessageCircle, Compass } from "lucide-react";
 
 const tabs = [
   { to: "/", label: "Inicio", icon: Home, testId: "nav-home" },
   { to: "/market", label: "Guía Comercial", icon: ShoppingBag, testId: "nav-market" },
   { to: "/conso", label: "Conso", icon: MessageCircle, testId: "nav-conso" },
-  { to: "/trenes", label: "Trenes", icon: Train, testId: "nav-trains" },
+  { to: "/transporte", label: "Transporte", icon: Compass, testId: "nav-transporte" },
 ];
 
 export default function BottomNav() {
