@@ -24,11 +24,16 @@ export const monumentosUtrera = [
       en: "Monday to Friday from 9:00 to 13:00 and 17:30 to 20:30.\nSaturdays and Sundays from 10:00 to 14:00 and 17:30 to 20:30.",
       fr: "Lundi au vendredi de 9h00 à 13h00 et de 17h30 à 20h30.\nSamedis et dimanches de 10h00 à 14h00 et de 17h30 à 20h30."
     },
-    imagen: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
+    direccion: "P.º de Consolación, S/N, 41710 Utrera, Sevilla",
+    telefono: "954 86 19 20",
+    // Portada (la primera imagen de la fachada exterior)
+    imagen: "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.fachada.jpg?h=c88833d3&itok=sABZ2oyG",
+    // Galería completa con las 6 capturas oficiales aportadas
     galeria: [
-      "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80"
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.fachada.jpg?h=c88833d3&itok=sABZ2oyG",
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario_0.jpg",
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.altar.jpg",
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.interior.jpg"
     ],
     instaTag: "#SantuarioConsolacionUtrera",
     fuente: "Información basada en Turismo de la Provincia de Sevilla (Prodetur)"
