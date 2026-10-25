@@ -26,16 +26,16 @@ export const monumentosUtrera = [
     },
     direccion: "P.º de Consolación, S/N, 41710 Utrera, Sevilla",
     telefono: "954 86 19 20",
-    // Portada: la primera foto de la fachada que me pasaste
-    imagen: "/assets/monumentos/santuario-1.jpg",
+    // Portada: la primera foto de la fachada local
+    imagen: "/monumentos/santuario-1.jpg",
     // Galería con las 6 capturas locales exactas
     galeria: [
-      "/assets/monumentos/santuario-1.jpg",
-      "/assets/monumentos/santuario-2.jpg",
-      "/assets/monumentos/santuario-3.jpg",
-      "/assets/monumentos/santuario-4.jpg",
-      "/assets/monumentos/santuario-5.jpg",
-      "/assets/monumentos/santuario-6.jpg"
+      "/monumentos/santuario-1.jpg",
+      "/monumentos/santuario-2.jpg",
+      "/monumentos/santuario-3.jpg",
+      "/monumentos/santuario-4.jpg",
+      "/monumentos/santuario-5.jpg",
+      "/monumentos/santuario-6.jpg"
     ],
     instaTag: "#SantuarioConsolacionUtrera",
     fuente: "Información basada en Turismo de la Provincia de Sevilla (Prodetur)"
