@@ -249,7 +249,7 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Qué Ver (Enlazado a la nueva sección visual) */}
+          {/* Visita Utrera */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "que-ver")}
@@ -259,8 +259,8 @@ export default function Home({ setPaginaActual, setTab }) {
               <Landmark size={18} />
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Qué Ver</p>
-              <p className="text-[10px] text-slate-500 truncate">Monumentos & Turismo</p>
+              <p className="font-bold text-slate-900 text-xs truncate">Visita Utrera</p>
+              <p className="text-[10px] text-slate-500 truncate">Monumentos y Patrimonio</p>
             </div>
           </button>
 
