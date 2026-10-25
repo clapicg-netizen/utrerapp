@@ -341,7 +341,7 @@ export default function GuiaComercial() {
               </p>
             )}
 
-            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS (CON FOTO GARANTIZADA) */}
+            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS (CON FOTO VISIBLE Y CONTENEDOR SEGURO) */}
             {comercioSel.tipo_ficha === 'especial1' && comercioSel.datos_especiales && (
               <div className="mt-6 space-y-4 border-t pt-6">
                 <div className="flex justify-between items-center">
@@ -361,21 +361,21 @@ export default function GuiaComercial() {
                     );
                     const urlWhatsApp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajeWhatsApp}`;
 
-                    // Foto por defecto si el inmueble no trae imagen especificada
+                    // Imagen garantizada para cada inmueble
                     const imagenInmueble = inmueble.imagen || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2";
 
                     return (
-                      <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm relative">
+                      <div key={idx} className="bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden">
                         
-                        {/* 📸 FOTO DEL INMUEBLE (SIEMPRE PRESENTE) */}
-                        <div className="h-40 w-full relative bg-slate-100 overflow-hidden">
+                        {/* 📸 FOTO SUPERIOR VISIBLE */}
+                        <div className="h-44 w-full relative bg-slate-200">
                           <img 
                             src={imagenInmueble} 
                             alt={inmueble.titulo} 
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            className="w-full h-full object-cover"
                           />
                           {inmueble.etiqueta_destacado && (
-                            <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow">
+                            <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">
                               {inmueble.etiqueta_destacado}
                             </span>
                           )}
@@ -384,18 +384,19 @@ export default function GuiaComercial() {
                           </span>
                         </div>
 
-                        <div className="p-4">
-                          <div className="mb-2">
-                            <h4 className="text-sm font-black text-slate-900 mt-0.5">{inmueble.titulo}</h4>
+                        {/* CONTENIDO DE LA TARJETA */}
+                        <div className="p-4 space-y-3">
+                          <div>
+                            <h4 className="text-sm font-black text-slate-900">{inmueble.titulo}</h4>
                             <p className="text-xs text-slate-500">{inmueble.subtitulo_zona}</p>
                           </div>
 
-                          <div className="my-3">
+                          <div>
                             <span className="text-lg font-black text-blue-600">{inmueble.precio}</span>
                           </div>
 
                           {inmueble.caracteristicas_clave && (
-                            <div className="flex flex-wrap gap-2 my-3 text-[11px] font-semibold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                               {Object.entries(inmueble.caracteristicas_clave).map(([clave, valor], i) => (
                                 <span key={i} className="bg-white px-2 py-1 rounded-lg border border-slate-200">
                                   {clave}: <strong className="text-slate-900">{valor}</strong>
@@ -404,7 +405,7 @@ export default function GuiaComercial() {
                             </div>
                           )}
 
-                          <p className="text-xs text-slate-600 mb-4 line-clamp-2">{inmueble.descripcion}</p>
+                          <p className="text-xs text-slate-600 line-clamp-2">{inmueble.descripcion}</p>
 
                           <a
                             href={urlWhatsApp}
