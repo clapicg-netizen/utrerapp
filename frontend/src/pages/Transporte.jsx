@@ -1,104 +1,170 @@
-import { useEffect, useState } from "react";
-import TopBar from "@/components/app/TopBar";
-import BottomNav from "@/components/app/BottomNav";
-import { api } from "../lib/api";
-import { Bus, Train, Clock, ExternalLink, Compass, Navigation } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import React, { useState } from "react";
+import { Train, Clock, ArrowRight, ExternalLink, Compass, Bus, Navigation, MapPin } from "lucide-react";
 
 export default function Transporte() {
-  const [lines, setLines] = useState([]);
-  useEffect(() => {
-    api.get("/transit").then((r) => setLines(r.data)).catch((e) => console.error("Error transit:", e));
-  }, []);
+  const [subSeccion, setSubSeccion] = useState("renfe");
+  const [sentido, setSentido] = useState("sevilla");
 
-  const buses = lines.filter((l) => l.kind === "bus");
-  const trains = lines.filter((l) => l.kind === "renfe");
+  const horariosSevilla = [
+    { hora: "06:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
+    { hora: "06:45", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
+    { hora: "07:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
+    { hora: "07:40", tipo: "Cercanías C1", estado: "Frecuente", destino: "Sevilla - Santa Justa" },
+    { hora: "08:10", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
+    { hora: "08:45", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
+    { hora: "09:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
+    { hora: "10:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
+  ];
 
-  const Card = ({ l }) => {
-    const isBus = l.kind === "bus";
-    return (
-      <div data-testid={`transit-${l.id}`} className="rounded-2xl border border-border/70 bg-card p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className={`w-11 h-11 rounded-xl grid place-items-center ${isBus ? "bg-[color:var(--transit)]/12 text-[color:var(--transit)]" : "bg-rose-500/12 text-rose-600"}`}>
-            {isBus ? <Bus size={20} /> : <Train size={20} />}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className={`text-[11px] font-extrabold px-2 py-0.5 rounded-md ${isBus ? "bg-[color:var(--transit)] text-white" : "bg-rose-600 text-white"}`}>
-                {l.line}
-              </span>
-              <p className="font-display font-bold text-[14px] truncate">{l.name}</p>
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-0.5">{l.frequency}</p>
-          </div>
+  const horariosUtrera = [
+    { hora: "07:00", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+    { hora: "08:00", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+    { hora: "13:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+    { hora: "14:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+    { hora: "15:05", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+    { hora: "17:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+    { hora: "19:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+    { hora: "21:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
+  ];
+
+  const busesUrbana = [
+    { id: 1, line: "L1", name: "Línea Urbana - Estación / Centro / Barriadas", frequency: "Cada 30 min en horas punta", next: ["08:00", "08:30", "09:00"] },
+    { id: 2, line: "L2", name: "Línea Periférica - Polígonos y Zonas Deportivas", frequency: "Cada 45 min", next: ["08:15", "09:00", "09:45"] },
+  ];
+
+  const listaTrenes = sentido === "sevilla" ? horariosSevilla : horariosUtrera;
+
+  return (
+    <div className="max-w-md mx-auto p-4 pb-28 space-y-5 animate-fadeIn font-sans">
+      
+      {/* CABECERA */}
+      <div className="bg-gradient-to-r from-sky-950 via-blue-900 to-sky-900 text-white p-6 shadow-xl rounded-3xl relative overflow-hidden space-y-2">
+        <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-sky-500/20 rounded-full blur-2xl"></div>
+        <div className="flex items-center justify-between relative z-10">
+          <span className="bg-sky-400/20 text-sky-300 border border-sky-400/30 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+            <Compass size={12} /> Movilidad Utrera
+          </span>
+          <span className="text-xs text-sky-200">Utrera 2026</span>
         </div>
-        {l.next_departures && l.next_departures.length > 0 && (
-          <div className="mt-3 flex gap-2">
-            {l.next_departures.map((t, i) => (
-              <div
-                key={t + i}
-                className={`flex-1 text-center py-2 rounded-xl font-mono text-sm ${i === 0 ? "bg-[color:var(--terracotta)]/10 text-[color:var(--terracotta)] font-bold" : "bg-muted text-muted-foreground"}`}
-              >
-                <Clock size={11} className="inline mr-1" /> {t}
+        <h1 className="text-xl font-black tracking-tight relative z-10">Transporte y Conexiones</h1>
+        <p className="text-xs text-sky-100 relative z-10">Consulta horarios de trenes, autobuses o planifica tu ruta exacta.</p>
+      </div>
+
+      {/* PESTAÑAS SELECTORAS */}
+      <div className="grid grid-cols-3 gap-1.5 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
+        <button
+          onClick={() => setSubSeccion("renfe")}
+          className={`py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+            subSeccion === "renfe" ? "bg-rose-900 text-white shadow" : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Train size={14} /> Cercanías
+        </button>
+        <button
+          onClick={() => setSubSeccion("bus")}
+          className={`py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+            subSeccion === "bus" ? "bg-rose-900 text-white shadow" : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Bus size={14} /> Urbanos
+        </button>
+        <button
+          onClick={() => setSubSeccion("moovit")}
+          className={`py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+            subSeccion === "moovit" ? "bg-rose-900 text-white shadow" : "text-slate-600 hover:bg-slate-100"
+          }`}
+        >
+          <Navigation size={14} /> Rutas
+        </button>
+      </div>
+
+      {/* CONTENIDO 1: CERCANÍAS RENFE */}
+      {subSeccion === "renfe" && (
+        <div className="space-y-4">
+          <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex gap-1">
+            <button
+              onClick={() => setSentido("sevilla")}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                sentido === "sevilla" ? "bg-blue-600 text-white shadow" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <span>Utrera ➔ Sevilla</span> <ArrowRight size={12} />
+            </button>
+            <button
+              onClick={() => setSentido("utrera")}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                sentido === "utrera" ? "bg-blue-600 text-white shadow" : "text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              <span>Sevilla ➔ Utrera</span> <ArrowRight size={12} />
+            </button>
+          </div>
+
+          <div className="space-y-2.5">
+            {listaTrenes.map((tren, idx) => (
+              <div key={idx} className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-900 text-white font-black text-xs px-2.5 py-2 rounded-xl">
+                    {tren.hora}
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-black text-slate-900">{tren.tipo}</h3>
+                    <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                      <MapPin size={10} className="text-blue-600" /> {tren.destino}
+                    </p>
+                  </div>
+                </div>
+                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
+                  {tren.estado}
+                </span>
               </div>
             ))}
           </div>
-        )}
-      </div>
-    );
-  };
 
-  return (
-    <div className="app-shell pb-28" data-testid="transporte-page">
-      <TopBar title="Transporte y Movilidad" back testId="transporte-topbar" />
+          <a
+            href="https://www.renfe.com/es/es/cercanias/cercanias-sevilla"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-white hover:bg-slate-50 border border-slate-200 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold text-slate-800 shadow-sm transition-colors cursor-pointer"
+          >
+            <span className="flex items-center gap-2">
+              <Train size={16} className="text-rose-600" /> Web Oficial Renfe Cercanías
+            </span>
+            <ExternalLink size={14} className="text-slate-400" />
+          </a>
+        </div>
+      )}
 
-      <Tabs defaultValue="renfe" className="mt-4">
-        <TabsList className="grid grid-cols-3 w-full rounded-full bg-muted p-1 h-11">
-          <TabsTrigger data-testid="tab-renfe" value="renfe" className="rounded-full text-xs font-bold data-[state=active]:bg-[color:var(--terracotta)] data-[state=active]:text-white">
-            Cercanías
-          </TabsTrigger>
-          <TabsTrigger data-testid="tab-bus" value="bus" className="rounded-full text-xs font-bold data-[state=active]:bg-[color:var(--terracotta)] data-[state=active]:text-white">
-            Urbanos
-          </TabsTrigger>
-          <TabsTrigger data-testid="tab-moovit" value="moovit" className="rounded-full text-xs font-bold data-[state=active]:bg-[color:var(--terracotta)] data-[state=active]:text-white">
-            Rutas
-          </TabsTrigger>
-        </TabsList>
+      {/* CONTENIDO 2: AUTOBUSES URBANOS */}
+      {subSeccion === "bus" && (
+        <div className="space-y-3">
+          {busesUrbana.map((bus) => (
+            <div key={bus.id} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-amber-500/10 text-amber-700 w-10 h-10 rounded-xl grid place-items-center font-black text-xs">
+                  {bus.line}
+                </div>
+                <div>
+                  <h3 className="text-xs font-black text-slate-900">{bus.name}</h3>
+                  <p className="text-[11px] text-slate-500">{bus.frequency}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                {bus.next.map((t, i) => (
+                  <div key={i} className="flex-1 text-center py-2 bg-slate-100 rounded-xl font-mono text-xs font-bold text-slate-700">
+                    <Clock size={11} className="inline mr-1 text-amber-600" /> {t}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* PESTAÑA CERCANÍAS RENFE */}
-        <TabsContent value="renfe" className="mt-4 space-y-3">
-          {trains.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-xs">Cargando horarios de trenes...</div>
-          ) : (
-            trains.map((l) => <Card key={l.id} l={l} />)
-          )}
-          <div className="pt-2">
-            <a
-              href="https://www.renfe.com/es/es/cercanias/cercanias-sevilla"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-card hover:bg-muted/50 border border-border/70 p-3.5 rounded-2xl flex items-center justify-between text-xs font-bold shadow-sm transition-colors"
-            >
-              <span className="flex items-center gap-2">
-                <Train size={16} className="text-rose-600" /> Web Oficial Renfe Cercanías
-              </span>
-              <ExternalLink size={14} className="text-muted-foreground" />
-            </a>
-          </div>
-        </TabsContent>
-
-        {/* PESTAÑA AUTOBUSES URBANOS */}
-        <TabsContent value="bus" className="mt-4 space-y-3">
-          {buses.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-xs">Cargando líneas de autobús...</div>
-          ) : (
-            buses.map((l) => <Card key={l.id} l={l} />)
-          )}
-        </TabsContent>
-
-        {/* PESTAÑA PLANIFICADOR DE RUTAS (MOOVIT) */}
-        <TabsContent value="moovit" className="mt-4 space-y-3">
-          <div className="bg-gradient-to-br from-blue-600 to-sky-700 text-white p-5 rounded-3xl shadow-lg relative overflow-hidden space-y-4">
+      {/* CONTENIDO 3: PLANIFICADOR MOOVIT */}
+      {subSeccion === "moovit" && (
+        <div className="space-y-4">
+          <div className="bg-gradient-to-br from-blue-600 to-sky-700 text-white p-6 rounded-3xl shadow-lg relative overflow-hidden space-y-4">
             <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full blur-xl"></div>
             
             <div className="flex items-center gap-2.5">
@@ -125,19 +191,9 @@ export default function Transporte() {
               <ExternalLink size={14} />
             </a>
           </div>
+        </div>
+      )}
 
-          <div className="bg-muted/50 border border-border/70 rounded-2xl p-4 text-xs text-muted-foreground space-y-1">
-            <p className="font-bold text-foreground flex items-center gap-1.5">
-              <Compass size={14} className="text-[color:var(--terracotta)]" /> Movilidad Integrada
-            </p>
-            <p className="leading-relaxed">
-              El planificador se abrirá de forma segura en tu navegador con las coordenadas exactas de salida y llegada.
-            </p>
-          </div>
-        </TabsContent>
-      </Tabs>
-
-      <BottomNav />
     </div>
   );
 }
