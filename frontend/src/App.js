@@ -4,6 +4,7 @@ import Farmacias from './pages/Farmacias';
 import Conso from './pages/Conso';
 import GuiaComercial from './pages/GuiaComercial';
 import DashboardAdmin from './pages/DashboardAdmin';
+import Transporte from './pages/Transporte'; // <-- Importamos nuestro componente modular de Transporte
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -22,18 +23,7 @@ export default function App() {
       case 'admin':
         return <DashboardAdmin />;
       case 'transporte':
-        return (
-          <div className="min-h-screen bg-slate-50 p-6 pb-28">
-            <div className="max-w-md mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-              <h1 className="text-xl font-bold text-slate-900 mb-2">🚆 Transporte y Trenes</h1>
-              <p className="text-xs text-slate-500 mb-4">Horarios de Cercanías Línea C-1 Utrera - Sevilla.</p>
-              <div className="p-4 bg-sky-50 rounded-2xl border border-sky-200 text-xs text-sky-900 font-medium space-y-1">
-                <p>Dirección Lora del Río: Vía 1 (16:07 h)</p>
-                <p>Dirección Sevilla-Santa Justa: Vía 3 (16:25 h)</p>
-              </div>
-            </div>
-          </div>
-        );
+        return <Transporte />; // <-- Cargamos la vista completa de transporte con sus pestañas y Moovit
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }
@@ -75,8 +65,8 @@ export default function App() {
           onClick={() => setPaginaActual('transporte')}
           className={`flex flex-col items-center gap-1 transition-colors cursor-pointer ${paginaActual === 'transporte' ? 'text-rose-900 font-bold' : 'text-slate-400 hover:text-slate-600'}`}
         >
-          <span className="text-xl">🚆</span>
-          <span className="text-[10px]">Trenes</span>
+          <span className="text-xl">🧭</span>
+          <span className="text-[10px]">Transporte</span>
         </button>
       </nav>
     </div>
