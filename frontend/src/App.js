@@ -8,6 +8,7 @@ import Transporte from './pages/Transporte';
 import Salud from './pages/Salud';
 import AgendaGestiones from './pages/AgendaGestiones';
 import QueVer from './pages/QueVer';
+import MuroComunidad from './pages/MuroComunidad';
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -33,6 +34,8 @@ export default function App() {
         return <AgendaGestiones setPaginaActual={setPaginaActual} />;
       case 'que-ver':
         return <QueVer setPaginaActual={setPaginaActual} />;
+      case 'muro-comunidad':
+        return <MuroComunidad setPaginaActual={setPaginaActual} />;
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }
