@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed } from "lucide-react";
-import { supabase } from "../lib/supabase"; // Asegúrate de que la ruta a tu cliente supabase sea correcta
+import { supabase } from "../lib/supabaseClient";
 
 export default function Home({ setPaginaActual, setTab }) {
   const [slideActual, setSlideActual] = useState(0);
@@ -47,7 +47,7 @@ export default function Home({ setPaginaActual, setTab }) {
     }
   ]);
 
-  // Cargar anuncios desde Supabase
+  // Cargar anuncios desde Supabase en tiempo real
   useEffect(() => {
     async function cargarAnuncios() {
       try {
