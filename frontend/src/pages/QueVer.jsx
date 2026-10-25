@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { ArrowLeft, Landmark, Camera, ExternalLink, Compass, Volume2, Globe } from "lucide-react";
+import { ArrowLeft, Landmark, Camera, ExternalLink, Compass, Volume2 } from "lucide-react";
 
 export default function QueVer({ setPaginaActual }) {
   const [idioma, setIdioma] = useState('es'); // 'es', 'en', 'fr'
   const [reproduciendoId, setReproduciendoId] = useState(null);
 
-  // Textos estáticos de la interfaz según el idioma
   const uiTextos = {
     es: {
       tituloCabecera: "Qué Ver en Utrera",
@@ -69,7 +68,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Sanctuaire historique d'une profonde dévotion mariane et joyau spirituel de la basse Andalousie. Maison de la Patronne d'Utrera."
       },
       horarios: "L-D: 9:00 - 13:30 y 17:00 - 20:30",
-      imagen: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=600&q=80",
       instaTag: "#SantuarioConsolacionUtrera"
     },
     {
@@ -90,7 +89,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Forteresse médiévale construite sur un ancien alcázar arabe, située sur une haute colline surplombant la campagne."
       },
       horarios: "Consultar visitas guiadas en oficina de turismo",
-      imagen: "https://images.unsplash.com/photo-1584646098378-0874589d76b1?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1599806388711-4099433d73b2?auto=format&fit=crop&w=600&q=80",
       instaTag: "#CastilloDeUtrera"
     },
     {
@@ -111,7 +110,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Majestueux temple déclaré Monument Historique et Artistique National. Il se distingue par sa magnifique Porte du Pardon et sa tour de plus de 60 mètres."
       },
       horarios: "L-V: 9:00-13:00 y 17:00-20:00 | S-D: 10:00-14:00 y 17:00-20:00",
-      imagen: "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=600&q=80",
       instaTag: "#SantaMariaUtrera"
     },
     {
@@ -132,7 +131,7 @@ export default function QueVer({ setPaginaActual }) {
         fr: "Endroit andalou typique du centre historique, avec son arc d'entrée et ses ruelles blanches imprégnées d'histoire."
       },
       horarios: "Acceso libre 24h",
-      imagen: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80",
+      imagen: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=600&q=80",
       instaTag: "#UtreraHistorica"
     }
   ];
@@ -166,7 +165,6 @@ export default function QueVer({ setPaginaActual }) {
     }
   ];
 
-  // Simulación de reproductor de audioguía mediante voz nativa del navegador (Text-to-Speech)
   const toggleAudio = (monumento) => {
     if ('speechSynthesis' in window) {
       if (reproduciendoId === monumento.id) {
