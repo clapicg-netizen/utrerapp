@@ -341,7 +341,7 @@ export default function GuiaComercial() {
               </p>
             )}
 
-            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS */}
+            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS (CON FOTO EN CADA VIVIENDA) */}
             {comercioSel.tipo_ficha === 'especial1' && comercioSel.datos_especiales && (
               <div className="mt-6 space-y-4 border-t pt-6">
                 <div className="flex justify-between items-center">
@@ -362,47 +362,69 @@ export default function GuiaComercial() {
                     const urlWhatsApp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajeWhatsApp}`;
 
                     return (
-                      <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-sm relative overflow-hidden">
-                        {inmueble.etiqueta_destacado && (
-                          <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm">
-                            {inmueble.etiqueta_destacado}
-                          </span>
-                        )}
-
-                        <div className="flex justify-between items-start mb-2 pr-12">
-                          <div>
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <div key={idx} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm relative">
+                        
+                        {/* 📸 FOTO DEL INMUEBLE */}
+                        {inmueble.imagen && (
+                          <div className="h-40 w-full relative bg-slate-100 overflow-hidden">
+                            <img 
+                              src={inmueble.imagen} 
+                              alt={inmueble.titulo} 
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            />
+                            {inmueble.etiqueta_destacado && (
+                              <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow">
+                                {inmueble.etiqueta_destacado}
+                              </span>
+                            )}
+                            <span className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
                               {inmueble.modalidad || 'Venta'} • Ref: {inmueble.referencia_interna || 'N/A'}
                             </span>
+                          </div>
+                        )}
+
+                        <div className="p-4">
+                          {!inmueble.imagen && inmueble.etiqueta_destacado && (
+                            <span className="float-right bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm mb-2">
+                              {inmueble.etiqueta_destacado}
+                            </span>
+                          )}
+
+                          <div className="mb-2">
+                            {!inmueble.imagen && (
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                {inmueble.modalidad || 'Venta'} • Ref: {inmueble.referencia_interna || 'N/A'}
+                              </span>
+                            )}
                             <h4 className="text-sm font-black text-slate-900 mt-0.5">{inmueble.titulo}</h4>
                             <p className="text-xs text-slate-500">{inmueble.subtitulo_zona}</p>
                           </div>
-                        </div>
 
-                        <div className="my-3">
-                          <span className="text-lg font-black text-blue-600">{inmueble.precio}</span>
-                        </div>
-
-                        {inmueble.caracteristicas_clave && (
-                          <div className="flex flex-wrap gap-2 my-3 text-[11px] font-semibold text-slate-600 bg-white p-2.5 rounded-xl border border-slate-100">
-                            {Object.entries(inmueble.caracteristicas_clave).map(([clave, valor], i) => (
-                              <span key={i} className="bg-slate-100 px-2 py-1 rounded-lg">
-                                {clave}: <strong className="text-slate-900">{valor}</strong>
-                              </span>
-                            ))}
+                          <div className="my-3">
+                            <span className="text-lg font-black text-blue-600">{inmueble.precio}</span>
                           </div>
-                        )}
 
-                        <p className="text-xs text-slate-600 mb-4 line-clamp-2">{inmueble.descripcion}</p>
+                          {inmueble.caracteristicas_clave && (
+                            <div className="flex flex-wrap gap-2 my-3 text-[11px] font-semibold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                              {Object.entries(inmueble.caracteristicas_clave).map(([clave, valor], i) => (
+                                <span key={i} className="bg-white px-2 py-1 rounded-lg border border-slate-200">
+                                  {clave}: <strong className="text-slate-900">{valor}</strong>
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
-                        <a
-                          href={urlWhatsApp}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
-                        >
-                          <span>💬 Preguntar por este inmueble</span>
-                        </a>
+                          <p className="text-xs text-slate-600 mb-4 line-clamp-2">{inmueble.descripcion}</p>
+
+                          <a
+                            href={urlWhatsApp}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
+                          >
+                            <span>💬 Preguntar por este inmueble</span>
+                          </a>
+                        </div>
                       </div>
                     );
                   })}
