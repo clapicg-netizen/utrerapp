@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { ArrowLeft, Landmark, Camera, ExternalLink, Compass, Volume2, X, ChevronRight } from "lucide-react";
+import { ArrowLeft, Landmark, ExternalLink, Compass, Volume2, X, ChevronRight } from "lucide-react";
 import { monumentosUtrera } from "./monumentosUtrera";
 
 export default function QueVer({ setPaginaActual }) {
   const [idioma, setIdioma] = useState('es'); // 'es', 'en', 'fr'
   const [reproduciendoId, setReproduciendoId] = useState(null);
   const [monumentoSeleccionado, setMonumentoSeleccionado] = useState(null);
+  const [fotoActivaIndex, setFotoActivaIndex] = useState(0);
 
   const uiTextos = {
     es: {
@@ -106,6 +107,11 @@ export default function QueVer({ setPaginaActual }) {
     }
   };
 
+  const abrirFicha = (mon) => {
+    setMonumentoSeleccionado(mon);
+    setFotoActivaIndex(0); // Reiniciar a la primera foto al abrir
+  };
+
   return (
     <div className="max-w-md mx-auto p-4 pb-28 space-y-5 animate-fadeIn font-sans text-slate-800">
       
@@ -163,7 +169,7 @@ export default function QueVer({ setPaginaActual }) {
         </a>
       </div>
 
-      {/* GALERÍA DE MONUMENTOS (LEYENDO DE monumentosUtrera.js) */}
+      {/* GALERÍA DE MONUMENTOS */}
       <div className="space-y-3">
         <div className="px-1 flex items-center gap-1.5">
           <Landmark size={16} className="text-amber-600" />
@@ -174,7 +180,7 @@ export default function QueVer({ setPaginaActual }) {
           {monumentosUtrera.map((mon) => (
             <div 
               key={mon.id} 
-              onClick={() => setMonumentoSeleccionado(mon)}
+              onClick={() => abrirFicha(mon)}
               className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-3 cursor-pointer hover:shadow-md hover:border-amber-400 transition-all group"
             >
               <div className="relative h-44 w-full bg-slate-100">
@@ -207,10 +213,10 @@ export default function QueVer({ setPaginaActual }) {
         </div>
       </div>
 
-      {/* MODAL / FICHA COMPLETA */}
+      {/* MODAL / FICHA COMPLETA CON VISOR DE FOTOS ESTILO TURISMO SEVILLA */}
       {monumentoSeleccionado && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
-          <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 p-5 space-y-4">
+          <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 p-5 space-y-4">
             
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <span className="text-[10px] font-black uppercase px-2.5 py-1 bg-amber-100 text-amber-900 rounded-full">
@@ -224,18 +230,43 @@ export default function QueVer({ setPaginaActual }) {
               </button>
             </div>
 
-            <div className="relative h-56 rounded-2xl overflow-hidden shadow-md">
-              <img src={monumentoSeleccionado.imagen} alt={monumentoSeleccionado.nombre[idioma]} className="w-full h-full object-cover" />
+            {/* VISOR DE FOTOS PRINCIPAL */}
+            <div className="relative h-64 rounded-2xl overflow-hidden shadow-md bg-slate-900">
+              <img 
+                src={monumentoSeleccionado.galeria ? monumentoSeleccionado.galeria[fotoActivaIndex] : monumentoSeleccionado.imagen} 
+                alt={monumentoSeleccionado.nombre[idioma]} 
+                className="w-full h-full object-cover transition-all duration-300" 
+              />
+              <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                Foto {fotoActivaIndex + 1} de {monumentoSeleccionado.galeria ? monumentoSeleccionado.galeria.length : 1}
+              </span>
             </div>
 
-            <div className="space-y-2">
+            {/* MINIATURAS DEL VISOR (CARRUSEL ESTILO TURISMO SEVILLA) */}
+            {monumentoSeleccionado.galeria && monumentoSeleccionado.galeria.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {monumentoSeleccionado.galeria.map((foto, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setFotoActivaIndex(idx)}
+                    className={`relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                      fotoActivaIndex === idx ? 'border-amber-500 scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <img src={foto} alt={`Miniatura ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="space-y-2 pt-1">
               <h2 className="text-lg font-black text-slate-900">{monumentoSeleccionado.nombre[idioma]}</h2>
-              <p className="text-xs text-slate-700 leading-relaxed">{monumentoSeleccionado.descripcion[idioma]}</p>
+              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{monumentoSeleccionado.descripcion[idioma]}</p>
             </div>
 
             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-1">
               <p className="font-bold text-slate-900">{t.horarioLabel}</p>
-              <p className="text-slate-600">{monumentoSeleccionado.horarios[idioma] || monumentoSeleccionado.horarios.es}</p>
+              <p className="text-slate-600 whitespace-pre-line">{monumentoSeleccionado.horarios[idioma] || monumentoSeleccionado.horarios.es}</p>
             </div>
 
             {/* BOTÓN DE AUDIOGUÍA */}

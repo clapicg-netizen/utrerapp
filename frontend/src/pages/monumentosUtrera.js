@@ -1,6 +1,3 @@
-// Base de datos oficial de monumentos de Utrera
-// Información basada en Turismo de la Provincia de Sevilla (Prodetur)
-
 export const monumentosUtrera = [
   {
     id: "santuario-consolacion",
@@ -25,6 +22,13 @@ export const monumentosUtrera = [
       fr: "Lundi au vendredi de 9h00 à 13h00 et de 17h30 à 20h30.\nSamedis et dimanches de 10h00 à 14h00 et de 17h30 à 20h30."
     },
     imagen: "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.fachada.jpg?h=c88833d3&itok=sABZ2oyG",
+    // Galería oficial con las fotos del visor de Turismo de Sevilla
+    galeria: [
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.fachada.jpg?h=c88833d3&itok=sABZ2oyG",
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario_0.jpg",
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.altar.jpg",
+      "https://www.turismosevilla.org/sites/default/files/styles/list_1x1/public/2020-04/Utrera.%20Santuario.interior.jpg"
+    ],
     instaTag: "#SantuarioConsolacionUtrera",
     fuente: "Información basada en Turismo de la Provincia de Sevilla (Prodetur)"
   }
