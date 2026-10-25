@@ -10,7 +10,7 @@ export default function QueVer({ setPaginaActual }) {
 
   const uiTextos = {
     es: {
-      tituloCabecera: "Qué Ver en Utrera",
+      tituloCabecera: "Visita Utrera",
       subtituloCabecera: "Patrimonio histórico, monumentos y rincones con encanto andaluz.",
       instaTitulo: "#UtreraEnInstagram",
       instaSub: "Comparte tus fotos y rincones favoritos",
@@ -25,7 +25,7 @@ export default function QueVer({ setPaginaActual }) {
       fuente: "Información basada en Turismo de la Provincia de Sevilla (Prodetur)"
     },
     en: {
-      tituloCabecera: "What to See in Utrera",
+      tituloCabecera: "Visit Utrera",
       subtituloCabecera: "Historical heritage, monuments and corners with Andalusian charm.",
       instaTitulo: "#UtreraOnInstagram",
       instaSub: "Share your photos and favorite spots",
@@ -40,7 +40,7 @@ export default function QueVer({ setPaginaActual }) {
       fuente: "Information based on Tourism of the Province of Seville (Prodetur)"
     },
     fr: {
-      tituloCabecera: "À voir à Utrera",
+      tituloCabecera: "Visiter Utrera",
       subtituloCabecera: "Patrimoine historique, monuments et coins au charme andalou.",
       instaTitulo: "#UtreraSurInstagram",
       instaSub: "Partagez vos photos et vos endroits préférés",
