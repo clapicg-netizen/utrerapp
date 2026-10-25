@@ -79,7 +79,7 @@ export default function DashboardAdmin() {
       }
       setMensaje({ tipo: 'exito', texto: '¡Archivo subido correctamente!' });
     } else {
-      setMensaje({ tipo: 'error', texto: res?.message || 'Error al subir el archivo' });
+      setMensaje({ tipo: 'error', texto: res?.message || 'Error al subir el archivo. Prueba pegando la URL directa.' });
     }
   };
 
@@ -93,7 +93,6 @@ export default function DashboardAdmin() {
     setGuardando(true);
     setMensaje({ tipo: '', texto: '' });
 
-    // Nos aseguramos de que galeria_urls sea siempre un array limpio
     const datosAEnviar = {
       ...formData,
       galeria_urls: Array.isArray(formData.galeria_urls) ? formData.galeria_urls.filter(u => typeof u === 'string' && u.trim() !== '') : []
@@ -103,7 +102,7 @@ export default function DashboardAdmin() {
       const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, datosAEnviar);
       setGuardando(false);
       if (res && res.success) {
-        setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado con su galería múltiple y PDF!' });
+        setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado al 100%!' });
         cargarLista();
       } else {
         setMensaje({ tipo: 'error', texto: 'Error al guardar: ' + (res?.message || 'Desconocido') });
@@ -272,16 +271,23 @@ export default function DashboardAdmin() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú en PDF</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú en PDF (Subir archivo o pegar URL)</label>
               {formData.carta_pdf_url && typeof formData.carta_pdf_url === 'string' && (
-                <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ PDF cargado: {formData.carta_pdf_url}</p>
+                <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ PDF activo: {formData.carta_pdf_url}</p>
               )}
               <input
+                type="text"
+                placeholder="https://... (o pega aquí la URL del PDF)"
+                value={formData.carta_pdf_url}
+                onChange={(e) => setFormData({...formData, carta_pdf_url: e.target.value})}
+                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-2"
+              />
+              <input
                 type="file"
-                accept="image/*,application/pdf"
+                accept="application/pdf,image/*"
                 onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
                 disabled={subiendo}
-                className="w-full text-xs text-slate-500 mb-2"
+                className="w-full text-xs text-slate-500"
               />
             </div>
 
