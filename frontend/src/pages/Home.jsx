@@ -237,18 +237,18 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Guía Útil */}
+          {/* Agenda de Gestiones */}
           <button 
             type="button"
-            onClick={(e) => cambiarPestana(e, "market")}
+            onClick={(e) => cambiarPestana(e, "agenda-gestiones")}
             className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
               <Building2 size={18} />
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Guía Útil</p>
-              <p className="text-[10px] text-slate-500 truncate">Ayto. & Colegios</p>
+              <p className="font-bold text-slate-900 text-xs truncate">Agenda de Gestiones</p>
+              <p className="text-[10px] text-slate-500 truncate">Admin. & Suministros</p>
             </div>
           </button>
 
