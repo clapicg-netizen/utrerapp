@@ -1,33 +1,33 @@
 import React from "react";
-import { ArrowLeft, Landmark, Camera, MapPin, ExternalLink, Compass } from "lucide-react";
+import { ArrowLeft, Landmark, Camera, ExternalLink, Compass } from "lucide-react";
 
 export default function QueVer({ setPaginaActual }) {
   const monumentos = [
     {
       nombre: "Castillo de Utrera",
       tipo: "Monumento Histórico",
-      descripcion: "Fortaleza medieval situada en un cerro elevado, testigo de la historia defensiva y señorial de la ciudad.",
-      imagen: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=600&q=80",
+      descripcion: "Fortaleza medieval levantada sobre un antiguo alcázar árabe, situado en un cerro elevado que domina toda la campiña.",
+      imagen: "https://images.unsplash.com/photo-1584646098378-0874589d76b1?auto=format&fit=crop&w=600&q=80",
       instaTag: "#CastilloDeUtrera"
     },
     {
       nombre: "Santuario de Nuestra Señora de Consolación",
       tipo: "Templo & Peregrinación",
-      descripcion: "Lugar de profunda devoción mariana y joya del barroco andaluz. Casa de la Patrona de Utrera.",
+      descripcion: "Santuario histórico de profunda devoción mariana y joya espiritual de la baja Andalucía. Casa de la Patrona.",
       imagen: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=600&q=80",
       instaTag: "#SantuarioConsolacionUtrera"
     },
     {
       nombre: "Iglesia de Santa María de la Mesa",
       tipo: "Arquitectura Gótica-Renacentista",
-      descripcion: "Imponente templo situado en la Plaza del Altozano, con una esbelta torre que domina el perfil urbano.",
+      descripcion: "Majestuoso templo ubicado en la emblemática Plaza del Altozano, con una esbelta torre campanario impresionante.",
       imagen: "https://images.unsplash.com/photo-1513584684374-8bab748fbf90?auto=format&fit=crop&w=600&q=80",
       instaTag: "#SantaMariaUtrera"
     },
     {
       nombre: "Plaza del Altozano",
       tipo: "Centro Neurálgico",
-      descripcion: "El corazón social y comercial de Utrera, rodeado de palmeras, terrazas y ambiente cofrade y festivo.",
+      descripcion: "El corazón social, cultural y comercial de Utrera, lleno de vida, terrazas y sabor andaluz.",
       imagen: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=600&q=80",
       instaTag: "#AltozanoUtrera"
     }
@@ -36,12 +36,12 @@ export default function QueVer({ setPaginaActual }) {
   const rutas = [
     {
       titulo: "Ruta Monumental e Histórica",
-      duración: "2 horas aprox.",
+      duracion: "2 horas aprox.",
       descripcion: "Un paseo imprescindible por el casco antiguo descubriendo palacios, plazas y templos centenarios."
     },
     {
       titulo: "Ruta del Mostachón y la Repostería",
-      duración: "1.5 horas",
+      duracion: "1.5 horas",
       descripcion: "Disfruta de los sabores tradicionales de Utrera visitando las confiterías históricas de la ciudad."
     }
   ];
@@ -124,7 +124,7 @@ export default function QueVer({ setPaginaActual }) {
             <div key={idx} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1">
               <div className="flex justify-between items-center">
                 <h3 className="text-xs font-black text-indigo-950">{ruta.titulo}</h3>
-                <span className="text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md">{ruta.duración}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md">{ruta.duracion}</span>
               </div>
               <p className="text-[11px] text-slate-600">{ruta.descripcion}</p>
             </div>
