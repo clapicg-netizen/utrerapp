@@ -109,7 +109,7 @@ export default function QueVer({ setPaginaActual }) {
 
   const abrirFicha = (mon) => {
     setMonumentoSeleccionado(mon);
-    setFotoActivaIndex(0); // Reiniciar a la primera foto al abrir
+    setFotoActivaIndex(0);
   };
 
   return (
@@ -213,7 +213,7 @@ export default function QueVer({ setPaginaActual }) {
         </div>
       </div>
 
-      {/* MODAL / FICHA COMPLETA CON VISOR DE FOTOS ESTILO TURISMO SEVILLA */}
+      {/* MODAL / FICHA COMPLETA CON VISOR DE FOTOS */}
       {monumentoSeleccionado && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn">
           <div className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200 p-5 space-y-4">
@@ -242,7 +242,7 @@ export default function QueVer({ setPaginaActual }) {
               </span>
             </div>
 
-            {/* MINIATURAS DEL VISOR (CARRUSEL ESTILO TURISMO SEVILLA) */}
+            {/* MINIATURAS DEL VISOR */}
             {monumentoSeleccionado.galeria && monumentoSeleccionado.galeria.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {monumentoSeleccionado.galeria.map((foto, idx) => (
@@ -264,9 +264,44 @@ export default function QueVer({ setPaginaActual }) {
               <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{monumentoSeleccionado.descripcion[idioma]}</p>
             </div>
 
-            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-1">
-              <p className="font-bold text-slate-900">{t.horarioLabel}</p>
-              <p className="text-slate-600 whitespace-pre-line">{monumentoSeleccionado.horarios[idioma] || monumentoSeleccionado.horarios.es}</p>
+            {/* HORARIOS, DIRECCIÓN Y TELÉFONO */}
+            <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-2">
+              <div>
+                <p className="font-bold text-slate-900">{t.horarioLabel}</p>
+                <p className="text-slate-600 whitespace-pre-line">{monumentoSeleccionado.horarios[idioma] || monumentoSeleccionado.horarios.es}</p>
+              </div>
+
+              {monumentoSeleccionado.direccion && (
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900">Dirección: </span>
+                    <span className="text-slate-600">{monumentoSeleccionado.direccion}</span>
+                  </div>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(monumentoSeleccionado.nombre.es + ", " + monumentoSeleccionado.direccion)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-amber-500 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-[10px] shadow hover:bg-amber-400 transition-colors shrink-0"
+                  >
+                    Ir a verlo 🗺️
+                  </a>
+                </div>
+              )}
+
+              {monumentoSeleccionado.telefono && (
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                  <div>
+                    <span className="font-bold text-slate-900">Teléfono: </span>
+                    <span className="text-slate-600">{monumentoSeleccionado.telefono}</span>
+                  </div>
+                  <a
+                    href={`tel:${monumentoSeleccionado.telefono}`}
+                    className="bg-indigo-600 text-white font-bold px-3 py-1.5 rounded-xl text-[10px] shadow hover:bg-indigo-700 transition-colors shrink-0"
+                  >
+                    Llamar 📞
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* BOTÓN DE AUDIOGUÍA */}
