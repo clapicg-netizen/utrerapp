@@ -47,7 +47,6 @@ export default function AgendaGestiones({ setPaginaActual }) {
       direccion: "Trámites de fincas y registros",
       web: "https://www.registradores.org"
     },
-    // Suministros integrados en administraciones/servicios esenciales
     {
       nombre: "Acciona (Agua Potable - Giahsa / EMASÚ)",
       tipo: "Suministro - Agua",
@@ -116,11 +115,11 @@ export default function AgendaGestiones({ setPaginaActual }) {
             Utrerapp Oficial
           </span>
         </div>
-        <h1 className="text-xl font-black tracking-tight relative z-10 pt-1">Agenda de Gestiones</h1>
+        <h1 className="text-xl font-black tracking-tight relative z-10 pt-1">Agenda Y Gestiones</h1>
         <p className="text-xs text-slate-300 relative z-10">Directorio oficial de administraciones, suministros y centros educativos en Utrera.</p>
       </div>
 
-      {/* PESTAÑAS PRINCIPALES (Dividido en dos secciones) */}
+      {/* PESTAÑAS PRINCIPALES */}
       <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
         <button
           onClick={() => setSeccionActiva('administraciones')}
@@ -140,7 +139,7 @@ export default function AgendaGestiones({ setPaginaActual }) {
       </div>
 
       {/* SECCIÓN 1: ADMINISTRACIONES Y SUMINISTROS */}
-      {seccionActiva === 'administrations' || seccionActiva === 'administraciones' && (
+      {seccionActiva === 'administraciones' && (
         <div className="space-y-3 animate-fadeIn">
           <div className="px-1 flex justify-between items-center">
             <h2 className="text-xs font-black uppercase text-slate-400 tracking-wider">Oficinas y Suministros Básicos</h2>

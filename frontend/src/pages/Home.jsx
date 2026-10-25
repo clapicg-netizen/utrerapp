@@ -67,7 +67,6 @@ export default function Home({ setPaginaActual, setTab }) {
     cargarAnuncios();
   }, []);
 
-  // Usamos setPaginaActual o setTab indistintamente para evitar fallos
   const cambiarPestana = (e, destino) => {
     if (e) {
       e.preventDefault();
@@ -100,7 +99,6 @@ export default function Home({ setPaginaActual, setTab }) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* ACCESO AL PANEL DE ADMINISTRACIÓN */}
             <button
               onClick={(e) => cambiarPestana(e, "admin")}
               className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base shadow-inner hover:bg-amber-500/30 transition-colors cursor-pointer"
@@ -125,7 +123,7 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* 1. CARRUSEL DE BANNERS EN PORTADA */}
+      {/* CARRUSEL DE BANNERS */}
       <div className="px-4 mt-4 max-w-md mx-auto">
         <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
           <div 
@@ -168,7 +166,7 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* 2. TARJETA DE CONSO - ASISTENTE */}
+      {/* TARJETA DE CONSO */}
       <div className="px-4 mt-4 max-w-md mx-auto">
         <div 
           onClick={(e) => cambiarPestana(e, "conso")}
@@ -200,7 +198,7 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* SECCIÓN DE SERVICIOS Y GUÍA */}
+      {/* SERVICIOS Y GUÍA */}
       <div className="px-4 mt-5 max-w-md mx-auto">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
           Servicios y Guía de Utrera
@@ -222,7 +220,7 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Salud (Centros de Utrera) */}
+          {/* Salud */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "salud")}
@@ -237,7 +235,7 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Agenda de Gestiones */}
+          {/* Agenda Y Gestiones */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "agenda-gestiones")}
@@ -247,7 +245,7 @@ export default function Home({ setPaginaActual, setTab }) {
               <Building2 size={18} />
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Agenda de Gestiones</p>
+              <p className="font-bold text-slate-900 text-xs truncate">Agenda Y Gestiones</p>
               <p className="text-[10px] text-slate-500 truncate">Admin. & Suministros</p>
             </div>
           </button>
@@ -287,13 +285,12 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* ZONA DE OCIO, JUEGOS Y HOSTELERÍA */}
+      {/* OCIO Y ENTRETENIMIENTO */}
       <div className="px-4 mt-5 max-w-md mx-auto">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
           Ocio y Entretenimiento
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          {/* Búsqueda del Mostachón */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "juego-mostachon")}
@@ -308,7 +305,6 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Hostelería */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "market")}
