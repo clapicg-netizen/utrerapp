@@ -1,5 +1,5 @@
 import React from "react";
-import { HeartPulse, MapPin, Phone, Clock, ExternalLink, ShieldAlert, Sparkles } from "lucide-react";
+import { HeartPulse, MapPin, Phone, Clock, ExternalLink, ShieldAlert, Sparkles, CalendarCheck } from "lucide-react";
 
 export default function Salud({ setPaginaActual }) {
   const centros = [
@@ -27,7 +27,7 @@ export default function Salud({ setPaginaActual }) {
       nombre: "Centro de Salud Utrera Sur",
       tipo: "Centro de Salud",
       direccion: "Gta. Pío XII, s/n, 41710 Utrera, Sevilla",
-      telefono: "955 83 00 00", // Teléfono de referencia o general SAS
+      telefono: "955 83 00 00",
       horario: "Lunes a Viernes (Apertura 8:00)",
       badge: "Atención Primaria",
       badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
@@ -49,6 +49,39 @@ export default function Salud({ setPaginaActual }) {
         </div>
         <h1 className="text-xl font-black tracking-tight relative z-10">Centros de Salud y Urgencias</h1>
         <p className="text-xs text-rose-100 relative z-10">Consulta rápida de ubicaciones, teléfonos y atención médica en Utrera.</p>
+      </div>
+
+      {/* TARJETA DE CITA PREVIA MÉDICA */}
+      <div className="bg-gradient-to-br from-emerald-900 to-teal-950 text-white p-5 rounded-3xl shadow-lg space-y-3 relative overflow-hidden">
+        <div className="absolute right-0 top-0 w-28 h-28 bg-white/10 rounded-full blur-xl"></div>
+        <div className="flex items-center gap-2.5 relative z-10">
+          <span className="bg-emerald-500/20 text-emerald-300 p-2 rounded-xl">
+            <CalendarCheck size={20} />
+          </span>
+          <div>
+            <h3 className="text-sm font-black">Cita Previa Médica SAS</h3>
+            <p className="text-[11px] text-emerald-200">Pide cita con tu médico de cabecera o enfermería</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 pt-1 relative z-10">
+          <a
+            href="tel:955545060"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow"
+          >
+            <Phone size={14} />
+            <span>Llamar Cita</span>
+          </a>
+          <a
+            href="https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/pages/anonimo/agenda/pedirCita.jsf?opcionSeleccionada=MUPEDIRCITA"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white hover:bg-emerald-50 text-emerald-900 font-bold text-xs py-3 px-3 rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow"
+          >
+            <span>ClicSalud+ Web</span>
+            <ExternalLink size={14} />
+          </a>
+        </div>
       </div>
 
       {/* AVISO DE URGENCIAS */}
