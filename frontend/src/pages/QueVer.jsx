@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft, Landmark, Camera, ExternalLink, Compass, Volume2, X, ChevronRight } from "lucide-react";
+import { monumentosUtrera } from "./monumentosUtrera";
 
 export default function QueVer({ setPaginaActual }) {
   const [idioma, setIdioma] = useState('es'); // 'es', 'en', 'fr'
@@ -55,94 +56,6 @@ export default function QueVer({ setPaginaActual }) {
   };
 
   const t = uiTextos[idioma];
-
-  // Imágenes de arquitectura monumental andaluza e histórica de gran calidad y neutras
-  const monumentos = [
-    {
-      id: "santuario",
-      nombre: {
-        es: "Santuario de Nuestra Señora de Consolación",
-        en: "Sanctuary of Our Lady of Consolation",
-        fr: "Sanctuaire de Notre-Dame de Consolación"
-      },
-      tipo: {
-        es: "Templo & Peregrinación",
-        en: "Temple & Pilgrimage",
-        fr: "Temple & Pèlerinage"
-      },
-      descripcion: {
-        es: "Santuario histórico de profunda devoción mariana y joya espiritual de la baja Andalucía. Casa de la Patrona de Utrera y lugar de peregrinación centenario.",
-        en: "Historical sanctuary of deep Marian devotion and spiritual jewel of lower Andalusia. Home of the Patron Saint of Utrera.",
-        fr: "Sanctuaire historique d'une profonde dévotion mariane et joyau spirituel de la basse Andalousie. Maison de la Patronne d'Utrera."
-      },
-      horarios: "L-D: 9:00 - 13:30 y 17:00 - 20:30",
-      imagen: "https://images.unsplash.com/photo-1543783207-ec64e4d95325?auto=format&fit=crop&w=800&q=80",
-      instaTag: "#SantuarioConsolacionUtrera"
-    },
-    {
-      id: "castillo",
-      nombre: {
-        es: "Castillo de Utrera y Torre del Homenaje",
-        en: "Castle of Utrera and Keep",
-        fr: "Château d'Utrera et Tour de l'Hommage"
-      },
-      tipo: {
-        es: "Monumento Histórico",
-        en: "Historical Monument",
-        fr: "Monument Historique"
-      },
-      descripcion: {
-        es: "Fortaleza medieval levantada sobre un antiguo alcázar árabe, situado en un cerro elevado que domina toda la campiña. Declarado BIC.",
-        en: "Medieval fortress built on an ancient Arab alcazar, situated on a high hill overlooking the countryside.",
-        fr: "Forteresse médiévale construite sur un ancien alcázar arabe, située sur une haute colline surplombant la campagne."
-      },
-      horarios: "Consultar visitas guiadas en oficina de turismo",
-      imagen: "https://images.unsplash.com/photo-1599806388711-4099433d73b2?auto=format&fit=crop&w=800&q=80",
-      instaTag: "#CastilloDeUtrera"
-    },
-    {
-      id: "santa-maria",
-      nombre: {
-        es: "Iglesia de Santa María de la Mesa",
-        en: "Church of Santa María de la Mesa",
-        fr: "Église de Santa María de la Mesa"
-      },
-      tipo: {
-        es: "Arquitectura Gótica-Renacentista",
-        en: "Gothic-Renaissance Architecture",
-        fr: "Architecture Gothique-Renaissance"
-      },
-      descripcion: {
-        es: "Majestuoso templo declarado Monumento Histórico Artístico Nacional. Destaca su excepcional Puerta del Perdón con casetones renacentistas y su torre de más de 60 metros.",
-        en: "Majestic temple declared a National Historic-Artistic Monument. Highlights include its exceptional Puerta del Perdón and its tower over 60 meters.",
-        fr: "Majestueux temple déclaré Monument Historique et Artistique National. Il se distingue par sa magnifique Porte du Pardon et sa tour de plus de 60 mètres."
-      },
-      horarios: "L-V: 9:00-13:00 y 17:00-20:00 | S-D: 10:00-14:00 y 17:00-20:00",
-      imagen: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=800&q=80",
-      instaTag: "#SantaMariaUtrera"
-    },
-    {
-      id: "nino-perdido",
-      nombre: {
-        es: "Callejón del Niño Perdido",
-        en: "Callejón del Niño Perdido (Alley)",
-        fr: "Ruelle du Callejón del Niño Perdido"
-      },
-      tipo: {
-        es: "Rincón con Encanto",
-        en: "Charming Corner",
-        fr: "Coin de Charme"
-      },
-      descripcion: {
-        es: "Típica estampa andaluza en pleno casco histórico, con su arco de entrada y callejuelas blancas impregnadas de historia y leyendas locales.",
-        en: "Typical Andalusian spot in the historic center, with its entrance arch and white alleys steeped in history.",
-        fr: "Endroit andalou typique du centre historique, avec son arc d'entrée et ses ruelles blanches imprégnées d'histoire."
-      },
-      horarios: "Acceso libre 24h",
-      imagen: "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=800&q=80",
-      instaTag: "#UtreraHistorica"
-    }
-  ];
 
   const rutas = [
     {
@@ -250,7 +163,7 @@ export default function QueVer({ setPaginaActual }) {
         </a>
       </div>
 
-      {/* GALERÍA DE MONUMENTOS */}
+      {/* GALERÍA DE MONUMENTOS (LEYENDO DE monumentosUtrera.js) */}
       <div className="space-y-3">
         <div className="px-1 flex items-center gap-1.5">
           <Landmark size={16} className="text-amber-600" />
@@ -258,7 +171,7 @@ export default function QueVer({ setPaginaActual }) {
         </div>
 
         <div className="space-y-4">
-          {monumentos.map((mon) => (
+          {monumentosUtrera.map((mon) => (
             <div 
               key={mon.id} 
               onClick={() => setMonumentoSeleccionado(mon)}
@@ -322,7 +235,7 @@ export default function QueVer({ setPaginaActual }) {
 
             <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 text-xs space-y-1">
               <p className="font-bold text-slate-900">{t.horarioLabel}</p>
-              <p className="text-slate-600">{monumentoSeleccionado.horarios}</p>
+              <p className="text-slate-600">{monumentoSeleccionado.horarios[idioma] || monumentoSeleccionado.horarios.es}</p>
             </div>
 
             {/* BOTÓN DE AUDIOGUÍA */}
