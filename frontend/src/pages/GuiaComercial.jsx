@@ -1,6 +1,6 @@
 // src/pages/GuiaComercial.jsx
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag } from "lucide-react";
+import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike } from "lucide-react";
 import { obtenerComercios } from "../lib/comerciosService";
 
 export default function GuiaComercial() {
@@ -341,7 +341,7 @@ export default function GuiaComercial() {
               </p>
             )}
 
-            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS (CON FOTO VISIBLE Y CONTENEDOR SEGURO) */}
+            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS */}
             {comercioSel.tipo_ficha === 'especial1' && comercioSel.datos_especiales && (
               <div className="mt-6 space-y-4 border-t pt-6">
                 <div className="flex justify-between items-center">
@@ -353,27 +353,18 @@ export default function GuiaComercial() {
                   </span>
                 </div>
 
-                {/* LISTADO DE INMUEBLES DEL JSON */}
                 <div className="grid grid-cols-1 gap-4">
                   {comercioSel.datos_especiales.items && comercioSel.datos_especiales.items.map((inmueble, idx) => {
                     const mensajeWhatsApp = encodeURIComponent(
                       `¡Hola! Estoy interesado en el inmueble con referencia *${inmueble.referencia_interna || 'REF'}* (${inmueble.titulo}) que he visto en Utrerapp. ¿Podrían darme más información?`
                     );
                     const urlWhatsApp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajeWhatsApp}`;
-
-                    // Imagen garantizada para cada inmueble
                     const imagenInmueble = inmueble.imagen || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2";
 
                     return (
                       <div key={idx} className="bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden">
-                        
-                        {/* 📸 FOTO SUPERIOR VISIBLE */}
                         <div className="h-44 w-full relative bg-slate-200">
-                          <img 
-                            src={imagenInmueble} 
-                            alt={inmueble.titulo} 
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={imagenInmueble} alt={inmueble.titulo} className="w-full h-full object-cover" />
                           {inmueble.etiqueta_destacado && (
                             <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">
                               {inmueble.etiqueta_destacado}
@@ -384,7 +375,6 @@ export default function GuiaComercial() {
                           </span>
                         </div>
 
-                        {/* CONTENIDO DE LA TARJETA */}
                         <div className="p-4 space-y-3">
                           <div>
                             <h4 className="text-sm font-black text-slate-900">{inmueble.titulo}</h4>
@@ -420,20 +410,84 @@ export default function GuiaComercial() {
                     );
                   })}
                 </div>
+              </div>
+            )}
 
-                {comercioSel.datos_especiales.mostrar_boton_captacion && (
-                  <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 text-center space-y-2 mt-4">
-                    <p className="text-xs font-bold text-blue-900">¿Quieres vender o alquilar tu casa en Utrera?</p>
-                    <a
-                      href={`https://wa.me/${comercioSel.whatsapp}?text=${encodeURIComponent(`Hola, me gustaría solicitar más información sobre vuestros servicios de tasación y captación visto en Utrerapp.`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2.5 px-6 rounded-xl shadow cursor-pointer"
-                    >
-                      {comercioSel.datos_especiales.texto_boton_captacion || 'Solicitar valoración gratuita'}
-                    </a>
+            {/* 🍕 RENDERIZADO ESPECIAL 2: COMIDA A DOMICILIO / DELIVERY */}
+            {comercioSel.tipo_ficha === 'especial2' && comercioSel.datos_especiales && (
+              <div className="mt-6 space-y-4 border-t pt-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-1.5">
+                    <Utensils size={18} className="text-orange-600" /> {comercioSel.datos_especiales.titulo_seccion_catalogo || 'Carta a Domicilio'}
+                  </h3>
+                  <span className="text-[10px] font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                    Delivery Oficial
+                  </span>
+                </div>
+
+                {/* Banner de Logística (Horario, Envío, Pago) */}
+                <div className="bg-orange-50 border border-orange-100 rounded-2xl p-3.5 space-y-2 text-xs text-orange-950">
+                  {comercioSel.datos_especiales.horario_reparto && (
+                    <div className="flex items-center gap-2 font-medium">
+                      <Clock size={14} className="text-orange-600 flex-shrink-0" />
+                      <span><strong>Reparto:</strong> {comercioSel.datos_especiales.horario_reparto}</span>
+                    </div>
+                  )}
+                  {comercioSel.datos_especiales.coste_envio && (
+                    <div className="flex items-center gap-2 font-medium">
+                      <Bike size={14} className="text-orange-600 flex-shrink-0" />
+                      <span><strong>Envío:</strong> {comercioSel.datos_especiales.coste_envio}</span>
+                    </div>
+                  )}
+                  {comercioSel.datos_especiales.metodos_pago && (
+                    <div className="flex items-center gap-2 font-medium">
+                      <CreditCard size={14} className="text-orange-600 flex-shrink-0" />
+                      <span><strong>Pago:</strong> {comercioSel.datos_especiales.metodos_pago.join(", ")}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Categorías y Platos de la Carta */}
+                {comercioSel.datos_especiales.categorias_carta && comercioSel.datos_especiales.categorias_carta.map((cat, idxCat) => (
+                  <div key={idxCat} className="space-y-3 pt-2">
+                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider bg-slate-100 px-3 py-1.5 rounded-xl">
+                      {cat.nombre}
+                    </h4>
+
+                    <div className="grid grid-cols-1 gap-3">
+                      {cat.productos && cat.productos.map((prod, idxProd) => {
+                        const mensajePedido = encodeURIComponent(
+                          `¡Hola! Me gustaría hacer un pedido a domicilio:\n- *${prod.nombre}* (${prod.precio})\n¿Me confirmáis disponibilidad?`
+                        );
+                        const urlPedidoWpp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajePedido}`;
+                        const imgProd = prod.imagen || "https://images.unsplash.com/photo-1545231027-637d2f6210f8";
+
+                        return (
+                          <div key={idxProd} className="bg-white border border-slate-200 rounded-2xl p-3 flex gap-3 items-center shadow-sm">
+                            <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100">
+                              <img src={imgProd} alt={prod.nombre} className="w-full h-full object-cover" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-xs font-black text-slate-900 truncate">{prod.nombre}</h5>
+                              <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{prod.descripcion}</p>
+                              <div className="flex items-center justify-between mt-1.5">
+                                <span className="text-xs font-black text-orange-600">{prod.precio}</span>
+                                <a
+                                  href={urlPedidoWpp}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2.5 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
+                                >
+                                  <span>🛒 Pedir</span>
+                                </a>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                )}
+                ))}
               </div>
             )}
 
@@ -558,41 +612,6 @@ export default function GuiaComercial() {
                   <ShoppingBag size={15} /> Tienda Online <ExternalLink size={12} />
                 </a>
               )}
-
-              <div className="grid grid-cols-3 gap-2 pt-1">
-                {comercioSel.instagram_username && comercioSel.instagram_username !== "EMPTY" && (
-                  <a
-                    href={comercioSel.instagram_username.startsWith('http') ? comercioSel.instagram_username : `https://instagram.com/${comercioSel.instagram_username.replace('@','')}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow cursor-pointer truncate px-2"
-                  >
-                    📸 Instagram
-                  </a>
-                )}
-
-                {comercioSel.facebook_url && comercioSel.facebook_url !== "EMPTY" && (
-                  <a
-                    href={comercioSel.facebook_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow cursor-pointer truncate px-2"
-                  >
-                    📘 Facebook
-                  </a>
-                )}
-
-                {comercioSel.tiktok_username && comercioSel.tiktok_username !== "EMPTY" && (
-                  <a
-                    href={comercioSel.tiktok_username.startsWith('http') ? comercioSel.tiktok_username : `https://tiktok.com/@${comercioSel.tiktok_username.replace('@','')}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="py-2.5 rounded-xl bg-slate-900 hover:bg-black text-white font-bold text-[11px] flex items-center justify-center gap-1 shadow cursor-pointer truncate px-2"
-                  >
-                    🎵 TikTok
-                  </a>
-                )}
-              </div>
             </div>
 
           </div>
