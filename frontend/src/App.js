@@ -5,6 +5,7 @@ import Conso from './pages/Conso';
 import GuiaComercial from './pages/GuiaComercial';
 import DashboardAdmin from './pages/DashboardAdmin';
 import Transporte from './pages/Transporte';
+import Salud from './pages/Salud';
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -24,6 +25,8 @@ export default function App() {
         return <DashboardAdmin />;
       case 'transporte':
         return <Transporte setPaginaActual={setPaginaActual} />;
+      case 'salud':
+        return <Salud setPaginaActual={setPaginaActual} />;
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }
