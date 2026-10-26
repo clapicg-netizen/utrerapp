@@ -265,10 +265,10 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Eventos y Teatro */}
+          {/* Eventos y Teatro (Apunta al nuevo menú de agenda) */}
           <button 
             type="button"
-            onClick={(e) => cambiarPestana(e, "market")}
+            onClick={(e) => cambiarPestana(e, "menu-agenda")}
             className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all text-left col-span-2 cursor-pointer"
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -277,10 +277,10 @@ export default function Home({ setPaginaActual, setTab }) {
               </div>
               <div className="min-w-0">
                 <p className="font-bold text-slate-900 text-xs truncate">Agenda Cultural y Eventos</p>
-                <p className="text-[10px] text-slate-500 truncate">Programación y Teatro Municipal</p>
+                <p className="text-[10px] text-slate-500 truncate">Teatro Municipal y programación local</p>
               </div>
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md flex-shrink-0 ml-2">Teatro</span>
+            <span className="text-[9px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md flex-shrink-0 ml-2">Explorar</span>
           </button>
         </div>
       </div>

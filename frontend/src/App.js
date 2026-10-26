@@ -4,17 +4,18 @@ import Farmacias from './pages/Farmacias';
 import Conso from './pages/Conso';
 import GuiaComercial from './pages/GuiaComercial';
 import DashboardAdmin from './pages/DashboardAdmin';
-import PanelComercio from './pages/PanelComercio'; // <-- Importamos tu panel de comercio exclusivo
+import PanelComercio from './pages/PanelComercio';
 import Transporte from './pages/Transporte';
 import Salud from './pages/Salud';
 import AgendaGestiones from './pages/AgendaGestiones';
 import QueVer from './pages/QueVer';
 import MuroComunidad from './pages/MuroComunidad';
+import MenuAgenda from './pages/MenuAgenda'; // <-- Nuevo menú cultural
+import Teatro from './pages/Teatro';         // <-- Nueva vista de teatro con Giglon
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
 
-  // Detectar al cargar si venimos de un enlace directo con ?id= o en la ruta /panel
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const idComercio = params.get('id');
@@ -39,7 +40,7 @@ export default function App() {
       case 'admin':
         return <DashboardAdmin />;
       case 'panel-comercio':
-        return <PanelComercio />; // <-- Muestra el panel directo para el comercio
+        return <PanelComercio />;
       case 'transporte':
         return <Transporte setPaginaActual={setPaginaActual} />;
       case 'salud':
@@ -50,6 +51,10 @@ export default function App() {
         return <QueVer setPaginaActual={setPaginaActual} />;
       case 'muro-comunidad':
         return <MuroComunidad setPaginaActual={setPaginaActual} />;
+      case 'menu-agenda':
+        return <MenuAgenda setPaginaActual={setPaginaActual} />; // <-- Ruta del menú cultural
+      case 'teatro':
+        return <Teatro setPaginaActual={setPaginaActual} />;     // <-- Ruta del teatro de Giglon
       default:
         return <Home setPaginaActual={setPaginaActual} />;
     }
@@ -61,7 +66,6 @@ export default function App() {
         {renderizarPagina()}
       </div>
 
-      {/* Barra de navegación inferior fija (Se oculta si es un comercio editando por enlace directo para mantenerlo limpio) */}
       {paginaActual !== 'panel-comercio' && (
         <nav className="sticky bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-3 flex justify-around items-center z-50 shadow-lg">
           <button 

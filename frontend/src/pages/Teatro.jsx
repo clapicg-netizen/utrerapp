@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import TopBar from "@/components/app/TopBar";
 import BottomNav from "@/components/app/BottomNav";
-import { CalendarDays, ExternalLink, Ticket } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export default function Teatro() {
   const [cargando, setCargando] = useState(true);
