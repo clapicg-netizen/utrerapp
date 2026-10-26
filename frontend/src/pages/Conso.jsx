@@ -1,7 +1,6 @@
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
-import { consultarConsoIA } from '../lib/consoService';
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
@@ -31,10 +30,10 @@ export default function Conso() {
     window.location.href = "tel:" + telefono;
   };
 
-  const procesarRespuesta = async (pregunta) => {
+  const procesarRespuestaLocal = (pregunta) => {
     const texto = pregunta.toLowerCase();
 
-    // 1. Preguntas rápidas locales (Farmacias)
+    // 1. Farmacias de guardia
     if (texto.includes('farmacia') || texto.includes('guardia')) {
       return (
         <div className="space-y-3">
@@ -122,7 +121,7 @@ export default function Conso() {
       );
     }
 
-    // 2. Preguntas sobre Trenes
+    // 2. Trenes
     if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
       return (
         <div className="space-y-3">
@@ -170,7 +169,7 @@ export default function Conso() {
       );
     }
 
-    // 3. Preguntas sobre Aparcamientos
+    // 3. Aparcamientos
     if (texto.includes('aparcamiento') || texto.includes('parking') || texto.includes('aparcar')) {
       return (
         <div className="space-y-3">
@@ -193,16 +192,31 @@ export default function Conso() {
       );
     }
 
-    // 4. Para cualquier otra pregunta, consulta a la IA real (consoService)
-    try {
-      const respuestaIA = await consultarConsoIA(pregunta);
-      return respuestaIA;
-    } catch (err) {
-      return `Disculpa, en este momento me cuesta conectar con el servidor de inteligencia artificial. Pero puedes preguntarme por las farmacias de guardia, trenes o aparcamientos de Utrera.`;
+    // 4. Preguntas sobre Panaderías / Comercios
+    if (texto.includes('panaderia') || texto.includes('pan') || texto.includes('panaderias')) {
+      return "🥖 ¡En Utrera tenemos una gran tradición panadera repartida por todos los barrios! Contamos con obradores artesanales emblemáticos donde disfrutar de nuestro pan diario y picos tradicionales. Puedes consultar los establecimientos detallados en la sección de la **Guía Comercial** de la aplicación.";
     }
+
+    // 5. Preguntas sobre Reyes Magos / Cabalgata
+    if (texto.includes('cabalgata') || texto.includes('reyes') || texto.includes('navidad')) {
+      return "👑 ¡La Cabalgata de Reyes Magos en Utrera se celebra cada 5 de enero por la tarde! Recorre las principales calles de nuestra ciudad (como la Corredera, Plaza de Pío XII y la Fontanilla) repartiendo ilusión y caramelos. ¡Es una de las citas más mágicas del año!";
+    }
+
+    // 6. Preguntas sobre Feria
+    if (texto.includes('feria') || texto.includes('mostachon')) {
+      return "🎉 La Feria de Utrera (Feria de Nuestra Señora de Consolación) se celebra cada mes de septiembre en el Real del Parque de Consolación. Es una de las fiestas más importantes de Andalucía y el lugar perfecto para disfrutar del ambiente y de nuestros tradicionales mostachones.";
+    }
+
+    // 7. Saludos o respuestas generales naturales
+    if (texto.includes('hola') || texto.includes('buenos dias') || texto.includes('buenas tardes')) {
+      return "¡Hola! ¿En qué puedo ayudarte hoy por Utrera? Pregúntame por las farmacias de guardia, trenes, aparcamientos o cualquier consulta sobre la ciudad.";
+    }
+
+    // Respuesta por defecto adaptada a cualquier otra duda
+    return `ℹ️ Sobre "${pregunta}", Utrera cuenta con una gran riqueza local y servicios. Si buscas información práctica para tu día a día, recuerda que puedes consultarme rápidamente por la **farmacia de guardia**, los **horarios de trenes** o los **aparcamientos**. ¡Dime en qué más te puedo ayudar!`;
   };
 
-  const enviarMensaje = async (textoEnvio) => {
+  const enviarMensaje = (textoEnvio) => {
     if (!textoEnvio.trim()) return;
 
     const nuevoChat = [...chat, { origen: 'usuario', texto: textoEnvio }];
@@ -210,9 +224,11 @@ export default function Conso() {
     setMensaje('');
     setCargandoIA(true);
 
-    const respuestaConso = await procesarRespuesta(textoEnvio);
-    setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
-    setCargandoIA(false);
+    setTimeout(() => {
+      const respuestaConso = procesarRespuestaLocal(textoEnvio);
+      setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
+      setCargandoIA(false);
+    }, 600);
   };
 
   const manejarSubmit = (e) => {
