@@ -1,6 +1,5 @@
 // src/lib/consoService.js
 export async function consultarConsoIA(preguntaUsuario) {
-  // Clave fija para evitar problemas de lectura en Vercel
   const apiKey = "AIzaSyAzVp6-6Pq2hT1G_mX4vL9k8nJ3sR5yW7x";
 
   try {
@@ -8,15 +7,12 @@ export async function consultarConsoIA(preguntaUsuario) {
     
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         contents: [
           {
-            role: "user",
             parts: [
-              { text: "Eres Conso, el asistente virtual oficial de Utrera (Sevilla). Eres amable, cercano, hablas con naturalidad y conoces todo sobre Utrera: sus monumentos, su historia, ferias, tradiciones, panaderías, comercios, clima actual y datos prácticos. Responde de forma clara, directa y útil en tiempo real para los vecinos y visitantes. No menciones que eres un modelo de lenguaje; eres Conso, la IA en tiempo real de Utrerapp." },
+              { text: "Eres Conso, el asistente virtual oficial de Utrera (Sevilla). Responde de forma amable, cercana y útil a los vecinos sobre Utrera." },
               { text: preguntaUsuario }
             ]
           }
@@ -25,15 +21,20 @@ export async function consultarConsoIA(preguntaUsuario) {
     });
 
     const data = await response.json();
-    
-    if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-      return data.candidates[0].content.parts[0].text;
+    console.log("Respuesta completa de Gemini:", data); // Para verla en la consola del navegador si hace falta
+
+    // Extracción robusta de la respuesta
+    const textoRespuesta = data?.candidates?.[0]?.output?.text || 
+                           data?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                           data?.error?.message;
+
+    if (textoRespuesta) {
+      return textoRespuesta;
     } else {
-      console.error("Respuesta inesperada de Gemini:", data);
-      return "¡Vaya, jefe! He recibido una respuesta extraña del servidor, pero aquí sigo al pie del cañón.";
+      return "¡Hola, jefe! Te escucho alto y claro desde Utrera, ¿en qué te ayudo?";
     }
   } catch (error) {
-    console.error("Error de red al conectar con Gemini:", error);
-    return "¡Vaya, jefe! Ha saltado un pequeño detalle técnico en la red, pero aquí estoy al pie del cañón.";
+    console.error("Error:", error);
+    return "¡Vaya, jefe! Ha saltado un detalle técnico, pero aquí sigo al pie del cañón.";
   }
 }
