@@ -1,14 +1,21 @@
-// Servicio inteligente y definitivo para Conso
-export const obtenerRespuestaConso = async (mensajeUsuario, historial = []) => {
-  const texto = mensajeUsuario.toLowerCase();
+// src/lib/consoService.js
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-  if (texto.includes('farmacia') || texto.includes('guardia') || texto.includes('medicamento')) {
-    return `🏥 **FARMACIA DE GUARDIA HOY EN UTRERA**\n📅 *Jueves, 22 de octubre de 2026*\n\n**Ldo/a. José González Mena**\n📍 Dirección: Avda. Blas Infante, 7\n📞 Teléfono: 954861763\n⏰ Horarios: Turno de Guardia 24 horas`;
+// Usamos la clave de API que ya tenemos integrada en la sesión
+const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "TU_API_KEY");
+
+export async function consultarConsoIA(preguntaUsuario) {
+  try {
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: "Eres Conso, el asistente virtual oficial de Utrera (Sevilla). Eres amable, cercano, hablas con naturalidad y conoces todo sobre Utrera: sus monumentos (Santa María, el Santuario), su historia, ferias, tradiciones, panaderías, comercios, clima y datos prácticos. Responde de forma clara, directa y útil para los vecinos y visitantes. No menciones que eres un modelo de lenguaje; eres Conso, la IA de Utrerapp."
+    });
+
+    const result = await model.generateContent(preguntaUsuario);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error("Error al consultar a Conso IA:", error);
+    return "¡Vaya! He tenido un pequeño despiste técnico conectando con mi servidor. Pregúntame por las farmacias de guardia o los trenes mientras recargo las pilas.";
   }
-
-  if (texto.includes('tren') || texto.includes('renfe') || texto.includes('cercanias') || texto.includes('sevilla')) {
-    return `🚆 **CERCANÍAS RENFE LÍNEA C1 (Utrera ↔ Sevilla)**\n\n• **Próximas salidas hacia Sevilla:**\n- 12:40 h (Cercanías C1)\n- 13:20 h (Cercanías C1)\n- 13:50 h (Cercanías C1)\n\n📍 **Estación de Utrera:** Plaza de la Estación, s/n\n⏱️ **Tiempo estimado hasta San Bernardo:** 32 min.`;
-  }
-
-  return `¡Hola, JuanRa! Soy Conso, tu asistente en vivo para Utrera. ✨ ¿Qué necesitas consultar hoy?`;
-};
+}
