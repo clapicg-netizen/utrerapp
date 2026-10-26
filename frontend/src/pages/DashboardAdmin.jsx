@@ -27,9 +27,9 @@ export default function DashboardAdmin() {
     whatsapp: '',
     web_url: '',
     tienda_url: '',
-    instagram_username: '',
+    instagram_url: '',
     facebook_url: '',
-    tiktok_username: '',
+    tiktok_url: '',
     horario_texto: '',
     descripcion: '',
     oferta_flash: '',
@@ -129,6 +129,13 @@ export default function DashboardAdmin() {
     }
   };
 
+  const eliminarDeGaleria = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      galeria_urls: prev.galeria_urls.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleGuardar = async (e) => {
     e.preventDefault();
     if (!formData.nombre || !formData.categoria) {
@@ -156,6 +163,9 @@ export default function DashboardAdmin() {
       logo_url: formData.logo_url && formData.logo_url.trim() !== "" ? formData.logo_url.trim() : null,
       carta_pdf_url: formData.carta_pdf_url && formData.carta_pdf_url.trim() !== "" ? formData.carta_pdf_url.trim() : null,
       video_story_url: formData.video_story_url && formData.video_story_url.trim() !== "" ? formData.video_story_url.trim() : null,
+      instagram_url: formData.instagram_url && formData.instagram_url.trim() !== "" ? formData.instagram_url.trim() : null,
+      tiktok_url: formData.tiktok_url && formData.tiktok_url.trim() !== "" ? formData.tiktok_url.trim() : null,
+      facebook_url: formData.facebook_url && formData.facebook_url.trim() !== "" ? formData.facebook_url.trim() : null,
       galeria_urls: Array.isArray(formData.galeria_urls) ? formData.galeria_urls.filter(u => typeof u === 'string' && u.trim() !== '') : [],
       datos_especiales: parsedDatosEspeciais
     };
@@ -251,9 +261,9 @@ export default function DashboardAdmin() {
       whatsapp: c.whatsapp || '',
       web_url: c.web_url || '',
       tienda_url: c.tienda_url || '',
-      instagram_username: c.instagram_username || '',
+      instagram_url: c.instagram_url || '',
       facebook_url: c.facebook_url || '',
-      tiktok_username: c.tiktok_username || '',
+      tiktok_url: c.tiktok_url || '',
       horario_texto: c.horario_texto || '',
       descripcion: c.descripcion || '',
       oferta_flash: c.oferta_flash || '',
@@ -477,6 +487,43 @@ export default function DashboardAdmin() {
                 </div>
               </div>
 
+              {/* 🌐 REDES SOCIALES */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <p className="text-xs font-black uppercase text-slate-700">🌐 Redes Sociales</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Instagram URL:</label>
+                    <input
+                      type="text"
+                      placeholder="https://instagram.com/..."
+                      value={formData.instagram_url}
+                      onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">TikTok URL:</label>
+                    <input
+                      type="text"
+                      placeholder="https://tiktok.com/@..."
+                      value={formData.tiktok_url}
+                      onChange={(e) => setFormData({...formData, tiktok_url: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Facebook URL:</label>
+                    <input
+                      type="text"
+                      placeholder="https://facebook.com/..."
+                      value={formData.facebook_url}
+                      onChange={(e) => setFormData({...formData, facebook_url: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
               {formData.tipo_ficha !== 'normal' && (
                 <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-3">
                   <h3 className="text-xs font-black uppercase text-amber-900">
@@ -513,6 +560,32 @@ export default function DashboardAdmin() {
                     onChange={(e) => handleFileUpload(e, 'portada_url')}
                     disabled={subiendo}
                     className="w-full text-xs text-slate-500"
+                  />
+                </div>
+
+                {/* 🖼️ GALERÍA DE FOTOS MÚLTIPLE */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  <label className="block text-xs font-bold text-slate-800 mb-2">🖼️ Galería de Fotos (Múltiples imágenes):</label>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {Array.isArray(formData.galeria_urls) && formData.galeria_urls.map((url, idx) => (
+                      <div key={idx} className="relative h-20 bg-slate-200 rounded-xl overflow-hidden border">
+                        <img src={url} alt={`Galeria ${idx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => eliminarDeGaleria(idx)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center cursor-pointer shadow"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, null, true)}
+                    disabled={subiendo}
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
                   />
                 </div>
 
