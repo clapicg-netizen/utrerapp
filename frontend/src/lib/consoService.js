@@ -5,8 +5,8 @@ export async function consultarConsoIA(preguntaUsuario) {
   const apiKey = parte1 + parte2;
 
   try {
-    // Cambiamos el modelo a gemini-2.5-flash para que la API lo acepte al instante
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    // Usamos el modelo oficial que nos pide Google AI Studio
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: "POST",
