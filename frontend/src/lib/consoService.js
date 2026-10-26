@@ -1,6 +1,11 @@
 // src/lib/consoService.js
 export async function consultarConsoIA(preguntaUsuario) {
-  const apiKey = "AIzaSyAzVp6-6Pq2hT1G_mX4vL9k8nJ3sR5yW7x";
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  if (!apiKey) {
+    console.error("Falta la clave VITE_GEMINI_API_KEY");
+    return "¡Vaya, jefe! Falta configurar la llave de acceso.";
+  }
 
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -21,18 +26,9 @@ export async function consultarConsoIA(preguntaUsuario) {
     });
 
     const data = await response.json();
-    console.log("Respuesta completa de Gemini:", data); // Para verla en la consola del navegador si hace falta
+    const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || data?.error?.message;
 
-    // Extracción robusta de la respuesta
-    const textoRespuesta = data?.candidates?.[0]?.output?.text || 
-                           data?.candidates?.[0]?.content?.parts?.[0]?.text || 
-                           data?.error?.message;
-
-    if (textoRespuesta) {
-      return textoRespuesta;
-    } else {
-      return "¡Hola, jefe! Te escucho alto y claro desde Utrera, ¿en qué te ayudo?";
-    }
+    return textoRespuesta || "¡Hola, jefe! Te escucho alto y claro desde Utrera, ¿en qué te ayudo?";
   } catch (error) {
     console.error("Error:", error);
     return "¡Vaya, jefe! Ha saltado un detalle técnico, pero aquí sigo al pie del cañón.";
