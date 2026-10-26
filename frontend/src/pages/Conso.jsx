@@ -1,7 +1,6 @@
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
-import { consultarConsoIA } from '../lib/consoService'; // O la función que conecta con tu IA
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
@@ -31,7 +30,6 @@ export default function Conso() {
     window.location.href = "tel:" + telefono;
   };
 
-  // Procesamiento inteligente ampliado
   const procesarRespuestaLocal = (pregunta) => {
     const texto = pregunta.toLowerCase();
 
@@ -191,17 +189,15 @@ export default function Conso() {
       );
     }
 
-    // SI NO ES NINGUNA DE LAS ANTERIORES, CONSO RESPONDE COMO ASISTENTE EXPERTO SOBRE UTRERA
     if (texto.includes('cabalgata') || texto.includes('reyes') || texto.includes('navidad')) {
-      return `👑 ¡Sobre la **Cabalgata de Reyes Magos en Utrera**! Tradicionalmente se celebra cada **5 de enero por la tarde**, recorriendo las principales calles de nuestra ciudad (como la Corredera, Plaza de Pío XII y la Fontanilla) repartiendo ilusión, caramelos y magia para todos los niños utreranos. ¡Es una de las citas más bonitas del año en Utrera!`;
+      return "👑 ¡Sobre la Cabalgata de Reyes Magos en Utrera! Tradicionalmente se celebra cada 5 de enero por la tarde, recorriendo las principales calles de nuestra ciudad (como la Corredera, Plaza de Pío XII y la Fontanilla) repartiendo ilusión, caramelos y magia para todos los niños utreranos. ¡Es una de las citas más bonitas del año en Utrera!";
     }
 
     if (texto.includes('feria') || texto.includes('mostachon')) {
-      আর return `🎉 ¡La **Feria de Utrera** (Feria de Nuestra Señora de Consolación) se celebra tradicionalmente en septiembre! Es una de las fiestas más grandes de Andalucía, declarada de interés turístico, donde el Real del Parque de Consolación se llena de casetas, buen ambiente y, por supuesto, nuestros famosos mostachones.`;
+      return "🎉 ¡La Feria de Utrera (Feria de Nuestra Señora de Consolación) se celebra tradicionalmente en septiembre! Es una de las fiestas más grandes de Andalucía, declarada de interés turístico, donde el Real del Parque de Consolación se llena de casetas, buen ambiente y, por supuesto, nuestros famosos mostachones.";
     }
 
-    // Respuesta general abierta simulando IA experta local
-    return `👑 ¡Claro que sí, JuanRa! Como Conso, el asistente oficial de Utrera, te cuento: sobre eso que me preguntas ("${pregunta}"), en Utrera tenemos mucha historia y tradición. Si necesitas consultar datos prácticos rápidos, recuerda que puedes preguntarme por la **farmacia de guardia**, los **trenes** o los **aparcamientos**. ¡Dime qué más te gustaría saber!`;
+    return `👑 ¡Claro que sí, JuanRa! Como Conso, el asistente oficial de Utrera, te cuento: sobre eso que me preguntas ("${pregunta}"), en Utrera tenemos mucha historia y tradición. Si necesitas consultar datos prácticos rápidos, recuerda que puedes preguntarme por la farmacia de guardia, los trenes o los aparcamientos. ¡Dime qué más te gustaría saber!`;
   };
 
   const enviarMensaje = (textoEnvio) => {
@@ -226,7 +222,6 @@ export default function Conso() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col justify-between">
-      {/* Cabecera */}
       <div className="bg-gradient-to-r from-rose-950 to-red-900 text-white p-5 shadow-lg">
         <div className="flex items-center gap-3 max-w-md mx-auto">
           <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
@@ -242,7 +237,6 @@ export default function Conso() {
         </div>
       </div>
 
-      {/* Historial de Chat */}
       <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full space-y-3 overflow-y-auto">
         {chat.map((msg, index) => (
           <div
@@ -273,7 +267,6 @@ export default function Conso() {
         )}
       </div>
 
-      {/* Botones de Acceso Rápido */}
       <div className="px-4 py-2 max-w-md mx-auto w-full grid grid-cols-3 gap-1.5">
         <button
           type="button"
@@ -301,7 +294,6 @@ export default function Conso() {
         </button>
       </div>
 
-      {/* Barra de entrada de mensaje */}
       <div className="p-3 bg-white border-t border-slate-200 sticky bottom-0 z-15 max-w-md mx-auto w-full">
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
