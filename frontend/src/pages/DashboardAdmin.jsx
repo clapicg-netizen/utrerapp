@@ -618,17 +618,41 @@ export default function DashboardAdmin() {
                   />
                 </div>
 
-                {/* 🎬 VÍDEO PROMOCIONAL / YOUTUBE */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">🎬 Vídeo Promocional (YouTube o enlace de vídeo):</label>
-                  <input
-                    type="text"
-                    placeholder="https://www.youtube.com/watch?v=... o URL de vídeo directo"
-                    value={formData.video_story_url}
-                    onChange={(e) => setFormData({...formData, video_story_url: e.target.value})}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs mb-2"
-                  />
-                  <p className="text-[10px] text-slate-400">Pega el enlace de YouTube o la URL directa del vídeo para que aparezca en la ficha.</p>
+                {/* 🎬 VÍDEO PROMOCIONAL (URL O SUBIDA DIRECTA) */}
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                  <p className="text-xs font-black uppercase text-slate-700">🎬 Vídeo Promocional</p>
+                  
+                  {formData.video_story_url && (
+                    <div className="mb-2">
+                      <video 
+                        src={formData.video_story_url} 
+                        controls 
+                        className="w-full h-40 object-cover rounded-xl border bg-black"
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">URL del vídeo (YouTube o enlace directo):</label>
+                    <input
+                      type="text"
+                      placeholder="https://... o sube un archivo abajo"
+                      value={formData.video_story_url}
+                      onChange={(e) => setFormData({...formData, video_story_url: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs mb-2"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Subir archivo de vídeo (MP4) desde el dispositivo:</label>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => handleFileUpload(e, 'video_story_url')}
+                      disabled={subiendo}
+                      className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                  </div>
                 </div>
 
                 <div>
