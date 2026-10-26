@@ -53,7 +53,16 @@ export default function GuiaComercial() {
 
   const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza"];
 
+  // Leer si viene un parámetro en la URL al cargar (ej. ?cat=hosteleria)
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const catUrl = params.get('cat');
+    if (catUrl) {
+      // Si la URL pide hostelería, ajustamos la categoría seleccionada
+      if (catUrl.toLowerCase() === 'hosteleria') {
+        setCategoriaSel('Hostelería');
+      }
+    }
     cargarComercios();
   }, []);
 
@@ -739,36 +748,4 @@ export default function GuiaComercial() {
                       target="_blank"
                       rel="noreferrer"
                       className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow"
-                    >
-                      💬 WhatsApp
-                    </a>
-                  )}
-                  {comercioSel.telefono && (
-                    <a
-                      href={"tel:" + comercioSel.telefono}
-                      className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5"
-                    >
-                      <Phone size={14} className="text-emerald-600" /> Llamar
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-
-      {/* AMPLIADOR DE FOTOGRAFÍAS */}
-      {fotoAmpliada && (
-        <div 
-          onClick={() => setFotoAmpliada(null)}
-          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 cursor-zoom-out"
-        >
-          <img src={fotoAmpliada} alt="Ampliación" className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl" />
-        </div>
-      )}
-
-    </div>
-  );
-}
+                    ></a>
