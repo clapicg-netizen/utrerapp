@@ -265,7 +265,7 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Eventos y Teatro (Apunta al nuevo menú de agenda) */}
+          {/* Eventos y Teatro */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "menu-agenda")}
@@ -291,7 +291,7 @@ export default function Home({ setPaginaActual, setTab }) {
           Ocio y Entretenimiento
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          {/* TARJETA MOSTACHÓN CON BANDA DIAGONAL PRÓXIMAMENTE (DECORATIVA) */}
+          {/* TARJETA MOSTACHÓN CON BANDA DIAGONAL PRÓXIMAMENTE */}
           <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-400/40 relative overflow-hidden select-none">
             <div className="absolute -right-10 top-3 w-32 bg-white text-red-600 font-black text-[9px] tracking-widest text-center py-1 rotate-45 shadow-sm z-20 pointer-events-none uppercase">
               PRÓXIMAMENTE
@@ -305,9 +305,10 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </div>
 
+          {/* GASTRONOMÍA - BARES Y HOSTELERÍA (FILTRADO) */}
           <button 
             type="button"
-            onClick={(e) => cambiarPestana(e, "market")}
+            onClick={(e) => cambiarPestana(e, "market?cat=hosteleria")}
             className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
