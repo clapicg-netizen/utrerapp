@@ -1,8 +1,8 @@
 // src/lib/consoService.js
 
 export async function consultarConsoIA(preguntaUsuario) {
-  // Usamos tu clave de API directamente
-  const apiKey = process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "TU_API_KEY";
+  // Clave de API de Gemini configurada directamente
+  const apiKey = "AIzaSyAzVp6-6Pq2hT1G_mX4vL9k8nJ3sR5yW7x";
   
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
@@ -29,6 +29,7 @@ export async function consultarConsoIA(preguntaUsuario) {
     if (data && data.candidates && data.candidates[0].content.parts[0].text) {
       return data.candidates[0].content.parts[0].text;
     } else {
+      console.error("Respuesta inesperada de la API:", data);
       throw new Error("Respuesta inválida de la API");
     }
   } catch (error) {
