@@ -308,7 +308,7 @@ export default function Home({ setPaginaActual, setTab }) {
           {/* GASTRONOMÍA - BARES Y HOSTELERÍA (FILTRADO) */}
           <button 
             type="button"
-            onClick={(e) => cambiarPestana(e, "market?cat=hosteleria")}
+            onClick={(e) => cambiarPestana(e, "hosteleria")}
             className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
