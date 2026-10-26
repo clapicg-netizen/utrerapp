@@ -16,6 +16,28 @@ export const comerciosService = {
   }
 };
 
+// --- FUNCIÓN AUXILIAR DE SANEAMIENTO ---
+// Traduce nombres de campos del formulario a los nombres reales de la tabla de Supabase
+const limpiarDatosComercio = (formData) => {
+  const datosLimpios = { ...formData };
+
+  // Mapeo seguro de columnas
+  if (datosLimpios.instagram_url !== undefined) {
+    datosLimpios.instagram_username = datosLimpios.instagram_url;
+    delete datosLimpios.instagram_url;
+  }
+  if (datosLimpios.sitio_web !== undefined) {
+    datosLimpios.web_url = datosLimpios.sitio_web;
+    delete datosLimpios.sitio_web;
+  }
+  if (datosLimpios.pin !== undefined) {
+    datosLimpios.pin_acceso = datosLimpios.pin;
+    delete datosLimpios.pin;
+  }
+
+  return datosLimpios;
+};
+
 // --- FUNCIONES REALES CONECTADAS A SUPABASE (TABLA: comercios_utrera) ---
 
 // 1. Obtener todos los comercios
@@ -42,9 +64,10 @@ export const obtenerComercios = async (categoria = 'Todos') => {
 // 2. Crear un nuevo comercio
 export const crearComercio = async (formData) => {
   try {
+    const datosSaneados = limpiarDatosComercio(formData);
     const { data, error } = await supabase
       .from('comercios_utrera')
-      .insert([formData])
+      .insert([datosSaneados])
       .select();
 
     if (error) {
@@ -61,9 +84,10 @@ export const crearComercio = async (formData) => {
 // 3. Actualizar comercio existente
 export const actualizarComercio = async (id, pinMaestro, formData) => {
   try {
+    const datosSaneados = limpiarDatosComercio(formData);
     const { data, error } = await supabase
       .from('comercios_utrera')
-      .update(formData)
+      .update(datosSaneados)
       .eq('id', id)
       .select();
 
