@@ -38,6 +38,8 @@ export default function GuiaComercial() {
     instagram_url: "",
     tiktok_url: "",
     facebook_url: "",
+    web_url: "",
+    tienda_url: "",
     oferta_flash: "",
     video_story_url: "",
     pin_acceso: "1234",
@@ -128,7 +130,7 @@ export default function GuiaComercial() {
       } else {
         setFormData(prev => ({ ...prev, [campo]: res.url }));
       }
-      setMensajeAdmin({ tipo: 'exito', texto: '¡Imagen subida con éxito!' });
+      setMensajeAdmin({ tipo: 'exito', texto: '¡Archivo subido con éxito!' });
     } else {
       setMensajeAdmin({ tipo: 'error', texto: res.message });
     }
@@ -142,7 +144,7 @@ export default function GuiaComercial() {
   };
 
   const prepararEdicionComercio = (c) => {
-    setComercios(comercios); // Mantener referencia
+    setComercios(comercios);
     setComercioSel(c);
     setFormData({
       nombre: c.nombre || "",
@@ -160,6 +162,8 @@ export default function GuiaComercial() {
       instagram_url: c.instagram_url || "",
       tiktok_url: c.tiktok_url || "",
       facebook_url: c.facebook_url || "",
+      web_url: c.web_url || "",
+      tienda_url: c.tienda_url || "",
       oferta_flash: c.oferta_flash || "",
       video_story_url: c.video_story_url || "",
       pin_acceso: c.pin_acceso || "1234",
@@ -430,6 +434,31 @@ export default function GuiaComercial() {
                       />
                     </div>
 
+                    {/* SITIO WEB Y TIENDA ONLINE */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
+                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Sitio Web y Tienda Online</p>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Página Web:</label>
+                        <input
+                          type="text"
+                          value={formData.web_url}
+                          onChange={(e) => setFormData({...formData, web_url: e.target.value})}
+                          placeholder="https://www.tu-web.es"
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Tienda Online:</label>
+                        <input
+                          type="text"
+                          value={formData.tienda_url}
+                          onChange={(e) => setFormData({...formData, tienda_url: e.target.value})}
+                          placeholder="https://tu-tienda.palbin.com"
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
                     {/* PORTADA PRINCIPAL */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada:</label>
@@ -642,9 +671,25 @@ export default function GuiaComercial() {
                   </div>
                 )}
 
+                {/* SITIO WEB Y TIENDA ONLINE EN LA VISTA PÚBLICA */}
+                {(comercioSel.web_url || comercioSel.tienda_url) && (
+                  <div className="mt-4 pt-3 border-t flex gap-2">
+                    {comercioSel.web_url && (
+                      <a href={comercioSel.web_url.startsWith('http') ? comercioSel.web_url : `https://${comercioSel.web_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-slate-900 text-white py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
+                        🌐 Web Oficial
+                      </a>
+                    )}
+                    {comercioSel.tienda_url && (
+                      <a href={comercioSel.tienda_url.startsWith('http') ? comercioSel.tienda_url : `https://${comercioSel.tienda_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-amber-500 text-slate-950 py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
+                        🛍️ Tienda Online
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 {/* REDES SOCIALES EN LA VISTA */}
                 {(comercioSel.instagram_url || comercioSel.tiktok_url || comercioSel.facebook_url) && (
-                  <div className="mt-4 pt-3 border-t flex gap-2">
+                  <div className="mt-3 pt-2 flex gap-2">
                     {comercioSel.instagram_url && (
                       <a href={comercioSel.instagram_url} target="_blank" rel="noreferrer" className="flex-1 bg-pink-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow">
                         Instagram
