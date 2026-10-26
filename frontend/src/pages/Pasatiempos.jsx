@@ -1,5 +1,5 @@
 // src/pages/Pasatiempos.jsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Gamepad2, Sparkles, ArrowLeft, RotateCw, Play, Pause } from 'lucide-react';
 
 export default function Pasatiempos({ setPaginaActual }) {
@@ -40,7 +40,7 @@ export default function Pasatiempos({ setPaginaActual }) {
     });
   };
 
-  const spawnPiece = () => {
+  const spawnPiece = useCallback(() => {
     const randomShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
     tetrisRef.current.currentPiece = {
       shape: randomShape,
@@ -52,19 +52,9 @@ export default function Pasatiempos({ setPaginaActual }) {
       setGameOver(true);
       setJugandoTetris(false);
     }
-  };
+  }, []);
 
-  const iniciarTetris = () => {
-    tetrisRef.current.board = Array.from({ length: 20 }, () => Array(10).fill(0));
-    spawnPiece();
-    setPuntuacion(0);
-    setGameOver(false);
-    setEnPausa(false);
-    setJugandoTetris(true);
-    setJuegoActivo('tetris');
-  };
-
-  const redibujar = () => {
+  const redibujar = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -94,6 +84,16 @@ export default function Pasatiempos({ setPaginaActual }) {
         });
       });
     }
+  }, []);
+
+  const iniciarTetris = () => {
+    tetrisRef.current.board = Array.from({ length: 20 }, () => Array(10).fill(0));
+    spawnPiece();
+    setPuntuacion(0);
+    setGameOver(false);
+    setEnPausa(false);
+    setJugandoTetris(true);
+    setJuegoActivo('tetris');
   };
 
   const fusionar = () => {
@@ -176,7 +176,7 @@ export default function Pasatiempos({ setPaginaActual }) {
       redibujar();
     }, 600);
     return () => clearInterval(interval);
-  }, [jugandoTetris, enPausa, gameOver]);
+  }, [jugandoTetris, enPausa, gameOver, spawnPiece, redibujar]);
 
   // Sudoku
   const [sudokuBoard, setSudokuBoard] = useState([
