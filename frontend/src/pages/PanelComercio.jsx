@@ -197,7 +197,6 @@ export default function PanelComercio() {
     }
 
     if (esAdminMaestro && !comercioSelId) {
-      // Crear nuevo comercio
       const res = await crearComercio(formData);
       setGuardando(false);
       if (res.success) {
@@ -208,7 +207,6 @@ export default function PanelComercio() {
         setMensaje({ tipo: 'error', texto: res.message });
       }
     } else {
-      // Actualizar comercio existente
       const idAActualizar = comercioSelId;
       const res = await actualizarComercio(idAActualizar, PIN_ADMIN_MAESTRO, formData);
       setGuardando(false);
@@ -322,7 +320,7 @@ export default function PanelComercio() {
           🤖 Agente IA de Volcado Masivo ("A lo Bruto")
         </h3>
         <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
-          Pega aquí los datos desordenados usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Ig:</code>, <code className="text-amber-300">Tk:</code>) y pulsa procesar para rellenar el formulario al instante.
+          Pega aquí los datos usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Ig:</code>, <code className="text-amber-300">Tk:</code>) y pulsa procesar para rellenar el formulario.
         </p>
         <textarea
           rows="4"
@@ -459,6 +457,7 @@ export default function PanelComercio() {
           />
         </div>
 
+        {/* 🖼️ GALERÍA DE FOTOS */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Gl:):</label>
           <div className="grid grid-cols-3 gap-2 mb-2">
@@ -468,7 +467,7 @@ export default function PanelComercio() {
                 <button
                   type="button"
                   onClick={() => eliminarDeGaleria(idx)}
-                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center"
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center cursor-pointer"
                 >
                   ✕
                 </button>
@@ -571,7 +570,7 @@ export default function PanelComercio() {
         <button
           type="submit"
           disabled={guardando || subiendo}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-3.5 rounded-2xl transition shadow-md mt-4"
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm py-3.5 rounded-2xl transition shadow-md mt-4 cursor-pointer"
         >
           {guardando ? 'Guardando...' : comercioSelId ? '💾 Guardar Cambios en Base de Datos' : '🚀 Dar de Alta Comercio'}
         </button>
