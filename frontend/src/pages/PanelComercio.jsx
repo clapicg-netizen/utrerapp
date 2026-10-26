@@ -31,6 +31,9 @@ export default function PanelComercio() {
     logo_url: '',
     carta_pdf_url: '',
     galeria_urls: [],
+    instagram_url: '',
+    tiktok_url: '',
+    facebook_url: '',
     oferta_flash: '',
     video_story_url: '',
     pin_acceso: '1234',
@@ -86,6 +89,9 @@ export default function PanelComercio() {
       logo_url: c.logo_url || '',
       carta_pdf_url: c.carta_pdf_url || '',
       galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
+      instagram_url: c.instagram_url || '',
+      tiktok_url: c.tiktok_url || '',
+      facebook_url: c.facebook_url || '',
       oferta_flash: c.oferta_flash || '',
       video_story_url: c.video_story_url || '',
       pin_acceso: c.pin_acceso || '1234',
@@ -153,6 +159,12 @@ export default function PanelComercio() {
           datosActualizados.portada_url = l.substring(5).trim();
         } else if (lower.startsWith('gl:')) {
           nuevasGaleria.push(l.substring(3).trim());
+        } else if (lower.startsWith('ig:')) {
+          datosActualizados.instagram_url = l.substring(3).trim();
+        } else if (lower.startsWith('tk:')) {
+          datosActualizados.tiktok_url = l.substring(3).trim();
+        } else if (lower.startsWith('fb:')) {
+          datosActualizados.facebook_url = l.substring(3).trim();
         } else if (lower.startsWith('vd:') || lower.startsWith('video:')) {
           datosActualizados.video_story_url = l.substring(l.indexOf(':') + 1).trim();
         } else if (lower.startsWith('pdf:') || lower.startsWith('carta:')) {
@@ -310,11 +322,11 @@ export default function PanelComercio() {
           🤖 Agente IA de Volcado Masivo ("A lo Bruto")
         </h3>
         <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
-          Pega aquí los datos desordenados usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Desc:</code>) y pulsa procesar para rellenar el formulario al instante.
+          Pega aquí los datos desordenados usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Ig:</code>, <code className="text-amber-300">Tk:</code>) y pulsa procesar para rellenar el formulario al instante.
         </p>
         <textarea
           rows="4"
-          placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;W: 34600000000&#10;Port: https://...&#10;Gl: https://..."
+          placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;W: 34600000000&#10;Port: https://...&#10;Ig: https://instagram.com/..."
           value={textoBruto}
           onChange={(e) => setTextoBruto(e.target.value)}
           className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/20"
@@ -354,6 +366,9 @@ export default function PanelComercio() {
                   logo_url: '',
                   carta_pdf_url: '',
                   galeria_urls: [],
+                  instagram_url: '',
+                  tiktok_url: '',
+                  facebook_url: '',
                   oferta_flash: '',
                   video_story_url: '',
                   pin_acceso: '1234',
@@ -467,6 +482,44 @@ export default function PanelComercio() {
             disabled={subiendo}
             className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
           />
+        </div>
+
+        {/* 🌐 REDES SOCIALES */}
+        <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+          <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">🌐 Redes Sociales</p>
+          
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Instagram (Ig:):</label>
+            <input
+              type="text"
+              placeholder="https://instagram.com/tu_negocio"
+              value={formData.instagram_url}
+              onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
+              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">TikTok (Tk:):</label>
+            <input
+              type="text"
+              placeholder="https://tiktok.com/@tu_negocio"
+              value={formData.tiktok_url}
+              onChange={(e) => setFormData({...formData, tiktok_url: e.target.value})}
+              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Facebook (Fb:):</label>
+            <input
+              type="text"
+              placeholder="https://facebook.com/tu_negocio"
+              value={formData.facebook_url}
+              onChange={(e) => setFormData({...formData, facebook_url: e.target.value})}
+              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
