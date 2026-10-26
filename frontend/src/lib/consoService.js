@@ -5,8 +5,8 @@ export async function consultarConsoIA(preguntaUsuario) {
   const apiKey = parte1 + parte2;
 
   try {
-    // Usamos gemini-1.5-flash que es el modelo estándar más rápido y estable
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Usamos el endpoint oficial estable v1 con el modelo flash estándar
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: "POST",
@@ -24,9 +24,8 @@ export async function consultarConsoIA(preguntaUsuario) {
     });
 
     const data = await response.json();
-    console.log("Respuesta de Gemini:", data);
-
-    // Capturamos el texto de forma segura con varias alternativas por si cambia el formato
+    
+    // Extraemos la respuesta de forma segura
     const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || 
                            data?.error?.message;
 
@@ -37,6 +36,6 @@ export async function consultarConsoIA(preguntaUsuario) {
     }
   } catch (error) {
     console.error("Error en ConsoIA:", error);
-    return "¡Vaya, jefe! Me he quedado un momento sin cobertura, dímelo otra vez por favor.";
+    return "¡Vaya, jefe! Ha ocurrido un pequeño detalle técnico, pero sigo al pie del cañón.";
   }
 }
