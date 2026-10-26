@@ -142,6 +142,7 @@ export default function GuiaComercial() {
   };
 
   const prepararEdicionComercio = (c) => {
+    setComercios(comercios); // Mantener referencia
     setComercioSel(c);
     setFormData({
       nombre: c.nombre || "",
@@ -196,46 +197,6 @@ export default function GuiaComercial() {
     } else {
       setMensajeAdmin({ tipo: "error", texto: res.message });
     }
-  };
-
-  // Funciones del carrito
-  const agregarAlCarrito = (producto) => {
-    setCarrito((prev) => {
-      const actual = prev[producto.id] ? prev[producto.id].cantidad : 0;
-      return { ...prev, [producto.id]: { ...producto, cantidad: actual + 1 } };
-    });
-  };
-
-  const quitarDelCarrito = (productoId) => {
-    setCarrito((prev) => {
-      const actual = prev[productoId] ? prev[productoId].cantidad : 0;
-      if (actual <= 1) {
-        const copia = { ...prev };
-        delete copia[productoId];
-        return copia;
-      }
-      return { ...prev, [productoId]: { ...prev[productoId], cantidad: actual - 1 } };
-    });
-  };
-
-  const calcularTotalItems = () => Object.values(carrito).reduce((acc, item) => acc + item.cantidad, 0);
-
-  const calcularPrecioTotal = () => {
-    return Object.values(carrito).reduce((acc, item) => {
-      const precioNum = parseFloat(item.precio.replace("€", "").replace(",", ".").trim()) || 0;
-      return acc + (precioNum * item.cantidad);
-    }, 0).toFixed(2);
-  };
-
-  const enviarPedidoWhatsApp = (comercio) => {
-    const itemsArray = Object.values(carrito);
-    if (itemsArray.length === 0) return;
-    let mensaje = `¡Hola! Me gustaría hacer el siguiente pedido a domicilio desde Utrerapp:\n\n`;
-    itemsArray.forEach((item) => {
-      mensaje += `• ${item.cantidad}x ${item.nombre} (${item.precio})\n`;
-    });
-    mensaje += `\n*Total estimado: ${calcularPrecioTotal()} €*\n¿Me confirmáis el pedido? ¡Gracias!`;
-    window.open(`https://wa.me/${comercio.whatsapp}?text=${encodeURIComponent(mensaje)}`, "_blank");
   };
 
   return (
@@ -307,7 +268,7 @@ export default function GuiaComercial() {
               {comerciosFiltrados.map((comercio) => (
                 <div
                   key={comercio.id}
-                  onClick={() => { setComercioSel(comercio); setCarrito({}); setModoAdmin(false); }}
+                  onClick={() => { setComercioSel(comercio); setModoAdmin(false); }}
                   className="bg-white rounded-3xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
                 >
                   <div className="flex gap-4 items-start">
@@ -335,7 +296,6 @@ export default function GuiaComercial() {
                       onClick={(e) => {
                         e.stopPropagation();
                         setComercioSel(comercio);
-                        setCarrito({});
                         setModoAdmin(false);
                       }}
                       className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors text-center"
@@ -366,7 +326,7 @@ export default function GuiaComercial() {
           <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-5 pb-32">
             
             <button
-              onClick={() => { setComercioSel(null); setModoAdmin(false); setCarrito({}); }}
+              onClick={() => { setComercioSel(null); setModoAdmin(false); }}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold z-10 cursor-pointer"
             >
               ✕
@@ -515,6 +475,25 @@ export default function GuiaComercial() {
                       />
                     </div>
 
+                    {/* VÍDEO PROMOCIONAL */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
+                      <p className="text-xs font-bold text-slate-800 uppercase">🎬 Vídeo Promocional</p>
+                      <input
+                        type="text"
+                        value={formData.video_story_url}
+                        onChange={(e) => setFormData({...formData, video_story_url: e.target.value})}
+                        placeholder="URL del vídeo..."
+                        className="w-full p-2 bg-white border rounded-xl text-xs"
+                      />
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => handleFileUpload(e, 'video_story_url')}
+                        disabled={subiendo}
+                        className="w-full text-xs text-slate-500"
+                      />
+                    </div>
+
                     {/* REDES SOCIALES */}
                     <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
                       <p className="text-xs font-bold text-slate-800 uppercase">🌐 Redes Sociales</p>
@@ -623,6 +602,22 @@ export default function GuiaComercial() {
                   <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border">
                     {comercioSel.descripcion}
                   </p>
+                )}
+
+                {/* VÍDEO PROMOCIONAL EN LA VISTA PÚBLICA */}
+                {comercioSel.video_story_url && typeof comercioSel.video_story_url === 'string' && comercioSel.video_story_url.trim() !== '' && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                      🎬 Vídeo Promocional
+                    </p>
+                    <div className="w-full h-48 rounded-2xl overflow-hidden bg-black border shadow-sm">
+                      <video 
+                        src={comercioSel.video_story_url.trim()} 
+                        controls 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
                 )}
 
                 {/* GALERÍA DE FOTOS EN LA VISTA */}
