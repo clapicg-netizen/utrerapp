@@ -163,6 +163,8 @@ export default function DashboardAdmin() {
       logo_url: formData.logo_url && formData.logo_url.trim() !== "" ? formData.logo_url.trim() : null,
       carta_pdf_url: formData.carta_pdf_url && formData.carta_pdf_url.trim() !== "" ? formData.carta_pdf_url.trim() : null,
       video_story_url: formData.video_story_url && formData.video_story_url.trim() !== "" ? formData.video_story_url.trim() : null,
+      web_url: formData.web_url && formData.web_url.trim() !== "" ? formData.web_url.trim() : null,
+      tienda_url: formData.tienda_url && formData.tienda_url.trim() !== "" ? formData.tienda_url.trim() : null,
       instagram_url: formData.instagram_url && formData.instagram_url.trim() !== "" ? formData.instagram_url.trim() : null,
       tiktok_url: formData.tiktok_url && formData.tiktok_url.trim() !== "" ? formData.tiktok_url.trim() : null,
       facebook_url: formData.facebook_url && formData.facebook_url.trim() !== "" ? formData.facebook_url.trim() : null,
@@ -484,6 +486,33 @@ export default function DashboardAdmin() {
                     onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
                     className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
                   />
+                </div>
+              </div>
+
+              {/* 🌐 SITIO WEB Y TIENDA ONLINE */}
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+                <p className="text-xs font-black uppercase text-slate-700">🌐 Sitio Web y Tienda Online</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Página Web:</label>
+                    <input
+                      type="text"
+                      placeholder="https://www.lachanataberna.es"
+                      value={formData.web_url}
+                      onChange={(e) => setFormData({...formData, web_url: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Tienda Online / E-commerce:</label>
+                    <input
+                      type="text"
+                      placeholder="https://tu-tienda.palbin.com"
+                      value={formData.tienda_url}
+                      onChange={(e) => setFormData({...formData, tienda_url: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -888,7 +917,6 @@ export default function DashboardAdmin() {
                   <div className="flex gap-2 shrink-0">
                     <button
                       type="button"
-                      opacity="1"
                       onClick={() => handleEditarAnuncio(item)}
                       className="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer"
                     >
