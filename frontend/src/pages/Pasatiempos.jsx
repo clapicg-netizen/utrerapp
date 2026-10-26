@@ -1,148 +1,200 @@
 // src/pages/Pasatiempos.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Gamepad2, Sparkles, Brain, ArrowLeft, RotateCw, Play, Pause, RefreshCw } from 'lucide-react';
+import { Gamepad2, Sparkles, Brain, ArrowLeft, RotateCw, Play, Pause, CheckCircle } from 'lucide-react';
 
 export default function Pasatiempos({ setPaginaActual }) {
   const [juegoActivo, setJuegoActivo] = useState(null);
 
-  // Estados y lógica para el Tetris clásico integrado
+  // Estados y lógica del Tetris
   const canvasRef = useRef(null);
   const [puntuacion, setPuntuacion] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [enPausa, setEnPausa] = useState(false);
   const [jugandoTetris, setJugandoTetris] = useState(false);
+  
+  const tetrisRef = useRef({
+    board: Array.from({ length: 20 }, () => Array(10).fill(0)),
+    currentPiece: null
+  });
 
-  // Lógica del Tetris
-  useEffect(() => {
-    if (juegoActivo !== 'tetris' || !jugandoTetris) return;
+  const SHAPES = [
+    [[1, 1, 1, 1]], // I
+    [[1, 1], [1, 1]], // O
+    [[0, 1, 0], [1, 1, 1]], // T
+    [[1, 0, 0], [1, 1, 1]], // L
+    [[0, 0, 1], [1, 1, 1]], // J
+    [[0, 1, 1], [1, 1, 0]], // S
+    [[1, 1, 0], [0, 1, 1]]  // Z
+  ];
 
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+  const COLORS = ['', '#38bdf8', '#fbbf24', '#c084fc', '#fb923c', '#60a5fa', '#4ade80', '#f87171'];
 
-    const BLOCK_SIZE = 20;
-    const COLS = 10;
-    const ROWS = 20;
-    
-    let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+  // Iniciar / Reiniciar Tetris
+  const iniciarTetris = () => {
+    tetrisRef.current.board = Array.from({ length: 20 }, () => Array(10).fill(0));
+    spawnPiece();
+    setPuntuacion(0);
+    setGameOver(false);
+    setEnPausa(false);
+    setJugandoTetris(true);
+    setJuegoActivo('tetris');
+  };
 
-    const SHAPES = [
-      [[1, 1, 1, 1]], // I
-      [[1, 1], [1, 1]], // O
-      [[0, 1, 0], [1, 1, 1]], // T
-      [[1, 0, 0], [1, 1, 1]], // L
-      [[0, 0, 1], [1, 1, 1]], // J
-      [[0, 1, 1], [1, 1, 0]], // S
-      [[1, 1, 0], [0, 1, 1]]  // Z
-    ];
-
-    const COLORS = ['', '#38bdf8', '#fbbf24', '#c084fc', '#fb923c', '#60a5fa', '#4ade80', '#f87171'];
-
-    let currentPiece = {
+  const spawnPiece = () => {
+    const shape = SHAPES[Math.floor(Math.random() * SHOPUT = SHAPES.length || Math.floor(Math.random() * SHAPES.length))];
+    tetrisRef.current.currentPiece = {
       shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
       color: Math.floor(Math.random() * 7) + 1,
       x: 3,
       y: 0
     };
+    if (checkCollision(tetrisRef.current.currentPiece, tetrisRef.current.board)) {
+      setGameOver(true);
+      setJugandoTetris(false);
+    }
+  };
 
-    function drawBoard() {
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const checkCollision = (piece, board) => {
+    return piece.shape.some((row, r) => {
+      return row.some((value, c) => {
+        if (!value) return false;
+        let newX = piece.x + c;
+        let newY = piece.y + r;
+        return newX < 0 || newX >= 10 || newY >= 20 || (newY >= 0 && board[newY][newX]);
+      });
+    });
+  };
 
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          if (board[r][c]) {
-            ctx.fillStyle = COLORS[board[r][c]];
-            ctx.fillRect(c * BLOCK_SIZE, r * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-          }
+  const mover = (dir) => {
+    if (!jugandoTetris || enPausa || gameOver) return;
+    const piece = tetrisRef.current.currentPiece;
+    piece.x += dir;
+    if (checkCollision(piece, tetrisRef.current.board)) {
+      piece.x -= dir;
+    }
+    redibujar();
+  };
+
+  const girarPieza = () => {
+    if (!jugandoTetris || enPausa || gameOver) return;
+    const piece = tetrisRef.current.currentPiece;
+    const rotated = piece.shape[0].map((_, index) => piece.shape.map(row => row[index]).reverse());
+    const originalShape = piece.shape;
+    piece.shape = rotated;
+    if (checkCollision(piece, tetrisRef.current.board)) {
+      piece.shape = originalShape;
+    }
+    redibujar();
+  };
+
+  const bajarRapido = () => {
+    if (!jugandoTetris || enPausa || gameOver) return;
+    const piece = tetrisRef.current.currentPiece;
+    piece.y++;
+    if (checkCollision(piece, tetrisRef.current.board)) {
+      piece.y--;
+      fusionar();
+      limpiarLineas();
+      spawnPiece();
+    }
+    redibujar();
+  };
+
+  const fusionar = () => {
+    const { currentPiece, board } = tetrisRef.current;
+    currentPiece.shape.forEach((row, r) => {
+      row.forEach((value, c) => {
+        if (value && currentPiece.y + r >= 0) {
+          board[currentPiece.y + r][currentPiece.x + c] = currentPiece.color;
+        }
+      });
+    });
+  };
+
+  const limpiarLineas = () => {
+    let board = tetrisRef.current.board;
+    let lines = 0;
+    tetrisRef.current.board = board.filter(row => {
+      if (row.every(cell => cell !== 0)) {
+        lines++;
+        return false;
+      }
+      return true;
+    });
+    while (tetrisRef.current.board.length < 20) {
+      tetrisRef.current.board.unshift(Array(10).fill(0));
+    }
+    if (lines > 0) setPuntuacion(prev => prev + lines * 100);
+  };
+
+  const redibujar = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const BLOCK_SIZE = 20;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Dibujar tablero
+    const board = tetrisRef.current.board;
+    for (let r = 0; r < 20; r++) {
+      for (let c = 0; c < 10; c++) {
+        if (board[r][c]) {
+          ctx.fillStyle = COLORS[board[r][c]];
+          ctx.fillRect(c * BLOCK_SIZE, r * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
         }
       }
     }
 
-    function drawPiece() {
-      ctx.fillStyle = COLORS[currentPiece.color];
-      currentPiece.shape.forEach((row, r) => {
+    // Dibujar pieza actual
+    const piece = tetrisRef.current.currentPiece;
+    if (piece) {
+      ctx.fillStyle = COLORS[piece.color];
+      piece.shape.forEach((row, r) => {
         row.forEach((value, c) => {
           if (value) {
-            ctx.fillRect((currentPiece.x + c) * BLOCK_SIZE, (currentPiece.y + r) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+            ctx.fillRect((piece.x + c) * BLOCK_SIZE, (piece.y + r) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
           }
         });
       });
     }
+  };
 
-    function moveDown() {
-      currentPiece.y++;
-      if (checkCollision()) {
-        currentPiece.y--;
-        mergePiece();
-        clearLines();
-        spawnPiece();
-      }
-    }
-
-    function checkCollision() {
-      return currentPiece.shape.some((row, r) => {
-        return row.some((value, c) => {
-          if (!value) return false;
-          let newX = currentPiece.x + c;
-          let newY = currentPiece.y + r;
-          return newX < 0 || newX >= COLS || newY >= ROWS || (newY >= 0 && board[newY][newX]);
-        });
-      });
-    }
-
-    function mergePiece() {
-      currentPiece.shape.forEach((row, r) => {
-        row.forEach((value, c) => {
-          if (value && currentPiece.y + r >= 0) {
-            board[currentPiece.y + r][currentPiece.x + c] = currentPiece.color;
-          }
-        });
-      });
-    }
-
-    function clearLines() {
-      let linesCleared = 0;
-      board = board.filter(row => {
-        if (row.every(cell => cell !== 0)) {
-          linesCleared++;
-          return false;
-        }
-        return true;
-      });
-
-      while (board.length < ROWS) {
-        board.unshift(Array(COLS).fill(0));
-      }
-
-      if (linesCleared > 0) {
-        setPuntuacion(prev => prev + linesCleared * 100);
-      }
-    }
-
-    function spawnPiece() {
-      currentPiece = {
-        shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
-        color: Math.floor(Math.random() * 7) + 1,
-        x: 3,
-        y: 0
-      };
-      if (checkCollision()) {
-        setGameOver(true);
-        setJugandoTetris(false);
-      }
-    }
-
+  useEffect(() => {
+    if (!jugandoTetris || enPausa || gameOver) return;
     const interval = setInterval(() => {
-      if (!enPausa && !gameOver) {
-        moveDown();
-        drawBoard();
-        drawPiece();
-      }
-    }, 500);
-
+      bajarRapido();
+    }, 600);
     return () => clearInterval(interval);
-  }, [juegoActivo, jugandoTetris, enPausa, gameOver]);
+  }, [jugandoTetris, enPausa, gameOver]);
+
+
+  // Estados y lógica del Sudoku
+  const [sudokuBoard, setSudokuBoard] = useState([
+    [5, 3, 0, 0, 7, 0, 0, 0, 0],
+    [6, 0, 0, 1, 9, 5, 0, 0, 0],
+    [0, 9, 8, 0, 0, 0, 0, 6, 0],
+    [8, 0, 0, 0, 6, 0, 0, 0, 3],
+    [4, 0, 0, 8, 0, 3, 0, 0, 1],
+    [7, 0, 0, 0, 2, 0, 0, 0, 6],
+    [0, 6, 0, 0, 0, 0, 2, 8, 0],
+    [0, 0, 0, 4, 1, 9, 0, 0, 5],
+    [0, 0, 0, 0, 8, 0, 0, 7, 9]
+  ]);
+  const [mensajeSudoku, setMensajeSudoku] = useState("");
+
+  const handleSudokuChange = (r, c, val) => {
+    const num = parseInt(val) || 0;
+    const nuevo = sudokuBoard.map((row, rowIndex) =>
+      row.map((cell, colIndex) => (rowIndex === r && colIndex === c ? num : cell))
+    );
+    setSudokuBoard(nuevo);
+  };
+
+  const comprobarSudoku = () => {
+    setMensajeSudoku("¡Buen intento! Sigue rellenando las celdas vacías.");
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -167,7 +219,7 @@ export default function Pasatiempos({ setPaginaActual }) {
             <Gamepad2 className="text-amber-400" size={28} /> Pasatiempos Utrerapp
           </h1>
           <p className="text-xs text-purple-100 leading-relaxed">
-            Ideal para salas de espera, ratos libres o para desconectar un rato. ¡Elige tu juego y a pasar el rato!
+            Ideal para salas de espera, ratos libres o desconectar un rato. ¡Elige tu juego!
           </p>
         </div>
       </div>
@@ -180,7 +232,7 @@ export default function Pasatiempos({ setPaginaActual }) {
 
             {/* Tarjeta Tetris */}
             <div 
-              onClick={() => { setJuegoActivo('tetris'); setJugandoTetris(true); setGameOver(false); setPuntuacion(0); }}
+              onClick={iniciarTetris}
               className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4 group"
             >
               <div className="w-14 h-14 bg-sky-50 text-sky-600 rounded-2xl flex items-center justify-center text-2xl font-black group-hover:scale-105 transition-transform flex-shrink-0">
@@ -188,7 +240,7 @@ export default function Pasatiempos({ setPaginaActual }) {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-900 text-base">Tetris Clásico</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Encaja las piezas geométricas y consigue la máxima puntuación.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Encaja las piezas geométricas y consigue puntos.</p>
               </div>
               <span className="text-xs font-bold text-sky-600 bg-sky-50 px-3 py-1.5 rounded-xl">Jugar</span>
             </div>
@@ -203,7 +255,7 @@ export default function Pasatiempos({ setPaginaActual }) {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-900 text-base">Sudoku clásico</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Ejercita la mente rellenando la cuadrícula numérica.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Ejercita la mente rellenando la cuadrícula.</p>
               </div>
               <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-xl">Jugar</span>
             </div>
@@ -218,14 +270,14 @@ export default function Pasatiempos({ setPaginaActual }) {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-900 text-base">Sopa de Letras Utrerana</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Encuentra palabras ocultas relacionadas con nuestra tierra.</p>
+                <p className="text-xs text-slate-500 mt-0.5">Encuentra palabras ocultas de nuestra tierra.</p>
               </div>
               <span className="text-xs font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-xl">Jugar</span>
             </div>
 
           </div>
         ) : juegoActivo === 'tetris' ? (
-          /* JUEGO DE TETRIS FUNCIONAL */
+          /* JUEGO DE TETRIS CON CONTROLES COMPLETOS */
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-black text-slate-900 text-base">🧱 Tetris Utrerapp</h3>
@@ -240,51 +292,107 @@ export default function Pasatiempos({ setPaginaActual }) {
               <p className="text-xs font-bold text-red-600 animate-bounce">¡Game Over! Fin de la partida.</p>
             )}
 
-            {/* Controles táctiles en pantalla */}
-            <div className="grid grid-cols-3 gap-2 pt-2">
+            {/* CONTROLES TÁCTILES MEJORADOS */}
+            <div className="grid grid-cols-4 gap-2 pt-2">
               <button 
-                onClick={() => {}} 
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-sm"
+                onClick={() => mover(-1)} 
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow"
               >
-                ◀️
+                ⬅️
               </button>
               <button 
-                onClick={() => setEnPausa(!enPausa)} 
-                className="bg-indigo-50 text-indigo-700 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1"
+                onClick={girarPieza} 
+                className="bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1 shadow"
               >
-                {enPausa ? <Play size={14} /> : <Pause size={14} />} {enPausa ? 'Seguir' : 'Pausa'}
+                <RotateCw size={14} /> Girar
               </button>
               <button 
-                onClick={() => {}} 
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-sm"
+                onClick={bajarRapido} 
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow"
               >
-                ▶️
+                🔽
+              </button>
+              <button 
+                onClick={() => mover(1)} 
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow"
+              >
+                ➡️
               </button>
             </div>
 
-            <button
-              onClick={() => setJuegoActivo(null)}
-              className="w-full bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-2.5 rounded-xl transition-colors cursor-pointer"
-            >
-              Salir al menú de juegos
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setEnPausa(!enPausa)} 
+                className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-2.5 rounded-xl text-xs shadow flex items-center justify-center gap-1"
+              >
+                {enPausa ? <Play size={14} /> : <Pause size={14} />} {enPausa ? 'Seguir' : 'Pausa'}
+              </button>
+              <button
+                onClick={() => setJuegoActivo(null)}
+                className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-2.5 rounded-xl transition-colors cursor-pointer"
+              >
+                Salir al menú
+              </button>
+            </div>
+          </div>
+        ) : juegoActivo === 'sudoku' ? (
+          /* SUDOKU INTERACTIVO */
+          <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
+            <h3 className="font-black text-slate-900 text-base">🔢 Sudoku Clásico</h3>
+            <p className="text-xs text-slate-500">Rellena los números del 1 al 9 sin repetir en filas ni columnas.</p>
+
+            <div className="grid grid-cols-9 gap-1 bg-slate-200 p-2 rounded-2xl max-w-[320px] mx-auto">
+              {sudokuBoard.map((row, r) =>
+                row.map((cell, c) => (
+                  <input
+                    key={`${r}-${c}`}
+                    type="number"
+                    min="1"
+                    max="9"
+                    value={cell === 0 ? '' : cell}
+                    onChange={(e) => handleSudokuChange(r, c, e.target.value)}
+                    className="w-8 h-8 text-center text-xs font-bold bg-white rounded border border-slate-300 focus:bg-amber-50 focus:outline-none"
+                  />
+                ))
+              )}
+            </div>
+
+            {mensajeSudoku && (
+              <p className="text-xs font-bold text-indigo-600 bg-indigo-50 p-2 rounded-xl">{mensajeSudoku}</p>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                onClick={comprobarSudoku}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 rounded-xl shadow"
+              >
+                Comprobar
+              </button>
+              <button
+                onClick={() => setJuegoActivo(null)}
+                className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-3 rounded-xl"
+              >
+                Menú de Juegos
+              </button>
+            </div>
           </div>
         ) : (
-          /* AVISO PARA OTROS JUEGOS EN DESARROLLO */
+          /* SOPA DE LETRAS */
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
-            <div className="text-4xl">🚧</div>
-            <h3 className="text-lg font-black text-slate-900">
-              {juegoActivo === 'sudoku' && 'Sudoku clásico'}
-              {juegoActivo === 'sopa' && 'Sopa de Letras Utrerana'}
-            </h3>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Este pasatiempo estará disponible en la próxima actualización con paneles interactivos. ¡Prueba el Tetris mientras tanto!
-            </p>
+            <h3 className="font-black text-slate-900 text-base">🔠 Sopa de Letras Utrerana</h3>
+            <div className="grid grid-cols-6 gap-1 bg-slate-100 p-3 rounded-2xl max-w-[260px] mx-auto text-xs font-bold text-slate-700">
+              {['M','O','S','T','A','C','H','O','N','F','E','I','R','A','L','V','E','R','O','S','U','T','R','E','R','A','P','P','G','H'].map((letra, i) => (
+                <div key={i} className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm border border-slate-200">
+                  {letra}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-slate-500 font-medium">Busca palabras: MOSTACHON, FERIA, UTRERA</p>
             <button
               onClick={() => setJuegoActivo(null)}
               className="w-full bg-purple-900 text-white font-bold text-xs py-3 rounded-xl shadow hover:bg-purple-800 transition-colors cursor-pointer"
             >
-              Volver a la lista de juegos
+              Volver al menú de juegos
             </button>
           </div>
         )}
