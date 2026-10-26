@@ -13,6 +13,7 @@ import QueVer from './pages/QueVer';
 import MuroComunidad from './pages/MuroComunidad';
 import MenuAgenda from './pages/MenuAgenda';
 import Teatro from './pages/Teatro';
+import Pasatiempos from './pages/Pasatiempos';
 
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
@@ -40,6 +41,8 @@ export default function App() {
         return <GuiaComercial />;
       case 'hosteleria':
         return <GuiaComercial categoriaInicial="Hostelería" />;
+      case 'pasatiempos':
+        return <Pasatiempos setPaginaActual={setPaginaActual} />;
       case 'admin':
         return <DashboardAdmin />;
       case 'panel-comercio':
