@@ -174,6 +174,7 @@ export default function Pasatiempos({ setPaginaActual }) {
       redibujar();
     }, 600);
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jugandoTetris, enPausa, gameOver]);
 
   // Sudoku
