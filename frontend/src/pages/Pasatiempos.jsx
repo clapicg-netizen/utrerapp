@@ -1,6 +1,6 @@
 // src/pages/Pasatiempos.jsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Gamepad2, Sparkles, Brain, ArrowLeft, RotateCw, Play, Pause, CheckCircle } from 'lucide-react';
+import { Gamepad2, Sparkles, ArrowLeft, RotateCw, Play, Pause } from 'lucide-react';
 
 export default function Pasatiempos({ setPaginaActual }) {
   const [juegoActivo, setJuegoActivo] = useState(null);
@@ -29,15 +29,15 @@ export default function Pasatiempos({ setPaginaActual }) {
 
   const COLORS = ['', '#38bdf8', '#fbbf24', '#c084fc', '#fb923c', '#60a5fa', '#4ade80', '#f87171'];
 
-  // Iniciar / Reiniciar Tetris
-  const iniciarTetris = () => {
-    tetrisRef.current.board = Array.from({ length: 20 }, () => Array(10).fill(0));
-    spawnPiece();
-    setPuntuacion(0);
-    setGameOver(false);
-    setEnPausa(false);
-    setJugandoTetris(true);
-    setJuegoActivo('tetris');
+  const checkCollision = (piece, board) => {
+    return piece.shape.some((row, r) => {
+      return row.some((value, c) => {
+        if (!value) return false;
+        let newX = piece.x + c;
+        let newY = piece.y + r;
+        return newX < 0 || newX >= 10 || newY >= 20 || (newY >= 0 && board[newY][newX]);
+      });
+    });
   };
 
   const spawnPiece = () => {
@@ -54,50 +54,46 @@ export default function Pasatiempos({ setPaginaActual }) {
     }
   };
 
-  const checkCollision = (piece, board) => {
-    return piece.shape.some((row, r) => {
-      return row.some((value, c) => {
-        if (!value) return false;
-        let newX = piece.x + c;
-        let newY = piece.y + r;
-        return newX < 0 || newX >= 10 || newY >= 20 || (newY >= 0 && board[newY][newX]);
+  const iniciarTetris = () => {
+    tetrisRef.current.board = Array.from({ length: 20 }, () => Array(10).fill(0));
+    spawnPiece();
+    setPuntuacion(0);
+    setGameOver(false);
+    setEnPausa(false);
+    setJugandoTetris(true);
+    setJuegoActivo('tetris');
+  };
+
+  const redibujar = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const BLOCK_SIZE = 20;
+
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const board = tetrisRef.current.board;
+    for (let r = 0; r < 20; r++) {
+      for (let c = 0; c < 10; c++) {
+        if (board[r][c]) {
+          ctx.fillStyle = COLORS[board[r][c]];
+          ctx.fillRect(c * BLOCK_SIZE, r * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+        }
+      }
+    }
+
+    const piece = tetrisRef.current.currentPiece;
+    if (piece) {
+      ctx.fillStyle = COLORS[piece.color];
+      piece.shape.forEach((row, r) => {
+        row.forEach((value, c) => {
+          if (value) {
+            ctx.fillRect((piece.x + c) * BLOCK_SIZE, (piece.y + r) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+          }
+        });
       });
-    });
-  };
-
-  const mover = (dir) => {
-    if (!jugandoTetris || enPausa || gameOver) return;
-    const piece = tetrisRef.current.currentPiece;
-    piece.x += dir;
-    if (checkCollision(piece, tetrisRef.current.board)) {
-      piece.x -= dir;
     }
-    redibujar();
-  };
-
-  const girarPieza = () => {
-    if (!jugandoTetris || enPausa || gameOver) return;
-    const piece = tetrisRef.current.currentPiece;
-    const rotated = piece.shape[0].map((_, index) => piece.shape.map(row => row[index]).reverse());
-    const originalShape = piece.shape;
-    piece.shape = rotated;
-    if (checkCollision(piece, tetrisRef.current.board)) {
-      piece.shape = originalShape;
-    }
-    redibujar();
-  };
-
-  const bajarRapido = () => {
-    if (!jugandoTetris || enPausa || gameOver) return;
-    const piece = tetrisRef.current.currentPiece;
-    piece.y++;
-    if (checkCollision(piece, tetrisRef.current.board)) {
-      piece.y--;
-      fusionar();
-      limpiarLineas();
-      spawnPiece();
-    }
-    redibujar();
   };
 
   const fusionar = () => {
@@ -127,50 +123,62 @@ export default function Pasatiempos({ setPaginaActual }) {
     if (lines > 0) setPuntuacion(prev => prev + lines * 100);
   };
 
-  const redibujar = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const BLOCK_SIZE = 20;
-
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Dibujar tablero
-    const board = tetrisRef.current.board;
-    for (let r = 0; r < 20; r++) {
-      for (let c = 0; c < 10; c++) {
-        if (board[r][c]) {
-          ctx.fillStyle = COLORS[board[r][c]];
-          ctx.fillRect(c * BLOCK_SIZE, r * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-        }
-      }
-    }
-
-    // Dibujar pieza actual
+  const bajarRapido = () => {
+    if (!jugandoTetris || enPausa || gameOver) return;
     const piece = tetrisRef.current.currentPiece;
-    if (piece) {
-      ctx.fillStyle = COLORS[piece.color];
-      piece.shape.forEach((row, r) => {
-        row.forEach((value, c) => {
-          if (value) {
-            ctx.fillRect((piece.x + c) * BLOCK_SIZE, (piece.y + r) * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
-          }
-        });
-      });
+    if (!piece) return;
+    piece.y++;
+    if (checkCollision(piece, tetrisRef.current.board)) {
+      piece.y--;
+      fusionar();
+      limpiarLineas();
+      spawnPiece();
     }
+    redibujar();
+  };
+
+  const mover = (dir) => {
+    if (!jugandoTetris || enPausa || gameOver) return;
+    const piece = tetrisRef.current.currentPiece;
+    if (!piece) return;
+    piece.x += dir;
+    if (checkCollision(piece, tetrisRef.current.board)) {
+      piece.x -= dir;
+    }
+    redibujar();
+  };
+
+  const girarPieza = () => {
+    if (!jugandoTetris || enPausa || gameOver) return;
+    const piece = tetrisRef.current.currentPiece;
+    if (!piece) return;
+    const rotated = piece.shape[0].map((_, index) => piece.shape.map(row => row[index]).reverse());
+    const originalShape = piece.shape;
+    piece.shape = rotated;
+    if (checkCollision(piece, tetrisRef.current.board)) {
+      piece.shape = originalShape;
+    }
+    redibujar();
   };
 
   useEffect(() => {
     if (!jugandoTetris || enPausa || gameOver) return;
     const interval = setInterval(() => {
-      bajarRapido();
+      const piece = tetrisRef.current.currentPiece;
+      if (!piece) return;
+      piece.y++;
+      if (checkCollision(piece, tetrisRef.current.board)) {
+        piece.y--;
+        fusionar();
+        limpiarLineas();
+        spawnPiece();
+      }
+      redibujar();
     }, 600);
     return () => clearInterval(interval);
   }, [jugandoTetris, enPausa, gameOver]);
 
-
-  // Estados y lógica del Sudoku
+  // Sudoku
   const [sudokuBoard, setSudokuBoard] = useState([
     [5, 3, 0, 0, 7, 0, 0, 0, 0],
     [6, 0, 0, 1, 9, 5, 0, 0, 0],
@@ -277,7 +285,6 @@ export default function Pasatiempos({ setPaginaActual }) {
 
           </div>
         ) : juegoActivo === 'tetris' ? (
-          /* JUEGO DE TETRIS CON CONTROLES COMPLETOS */
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-black text-slate-900 text-base">🧱 Tetris Utrerapp</h3>
@@ -292,7 +299,6 @@ export default function Pasatiempos({ setPaginaActual }) {
               <p className="text-xs font-bold text-red-600 animate-bounce">¡Game Over! Fin de la partida.</p>
             )}
 
-            {/* CONTROLES TÁCTILES MEJORADOS */}
             <div className="grid grid-cols-4 gap-2 pt-2">
               <button 
                 onClick={() => mover(-1)} 
@@ -336,7 +342,6 @@ export default function Pasatiempos({ setPaginaActual }) {
             </div>
           </div>
         ) : juegoActivo === 'sudoku' ? (
-          /* SUDOKU INTERACTIVO */
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
             <h3 className="font-black text-slate-900 text-base">🔢 Sudoku Clásico</h3>
             <p className="text-xs text-slate-500">Rellena los números del 1 al 9 sin repetir en filas ni columnas.</p>
@@ -377,7 +382,6 @@ export default function Pasatiempos({ setPaginaActual }) {
             </div>
           </div>
         ) : (
-          /* SOPA DE LETRAS */
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm text-center space-y-4">
             <h3 className="font-black text-slate-900 text-base">🔠 Sopa de Letras Utrerana</h3>
             <div className="grid grid-cols-6 gap-1 bg-slate-100 p-3 rounded-2xl max-w-[260px] mx-auto text-xs font-bold text-slate-700">
