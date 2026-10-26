@@ -1,12 +1,22 @@
+// src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
+  
+  // Fecha actual dinámica para que Conso nunca desentone
+  const fechaHoyStr = new Date().toLocaleDateString('es-ES', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: '¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia, trenes o aparcamientos.'
+      texto: `¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia de hoy, trenes o aparcamientos.`
     }
   ]);
 
@@ -29,7 +39,7 @@ export default function Conso() {
         <div className="space-y-3">
           <div>
             <p className="font-bold text-slate-900 mb-0.5">💊 FARMACIA DE GUARDIA OFICIAL</p>
-            <p className="text-[11px] text-slate-500">📅 Sábado, 24 de Octubre de 2026</p>
+            <p className="text-[11px] text-slate-500 capitalize">📅 {fechaHoyStr}</p>
           </div>
 
           {/* Turno de Día */}
@@ -59,7 +69,7 @@ export default function Conso() {
               <p className="font-bold text-slate-900 text-xs">Farmacia Rafael González</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
                 <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Cristo de los Afligidos, 74 (Antig. La Fuente)</span>
+                <span>Cristo de los Afligidos, 74</span>
               </p>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-slate-500">📞 954860213</span>
@@ -75,7 +85,7 @@ export default function Conso() {
               <p className="font-bold text-slate-900 text-xs">Farmacia Pablo Troncoso López</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
                 <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Avda. María Auxiliadora, 95. "El Charco"</span>
+                <span>Avda. María Auxiliadora, 95</span>
               </p>
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-slate-500">📞 954860196</span>
@@ -109,7 +119,6 @@ export default function Conso() {
             </div>
           </div>
 
-          {/* Mensaje de ánimo destacado */}
           <div className="pt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 italic">
             <HeartPulse size={15} className="text-emerald-500" />
             <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
@@ -126,10 +135,7 @@ export default function Conso() {
             <p className="text-[11px] text-slate-500">Horarios oficiales de Renfe</p>
           </div>
 
-          {/* Tarjeta de Trenes con enlaces directos oficiales */}
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
-            
-            {/* Salida Hacia Sevilla */}
             <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-rose-400 text-xs flex items-center gap-1">
@@ -139,9 +145,6 @@ export default function Conso() {
                   Línea C-1
                 </span>
               </div>
-              <p className="text-slate-300 text-[11px] leading-relaxed">
-                Consulta los horarios exactos en tiempo real, vías y paradas intermedias desde Utrera.
-              </p>
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -153,7 +156,6 @@ export default function Conso() {
               </button>
             </div>
 
-            {/* Regreso Hacia Utrera */}
             <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-2">
               <div className="flex items-center justify-between">
                 <span className="font-bold text-emerald-400 text-xs flex items-center gap-1">
@@ -163,9 +165,6 @@ export default function Conso() {
                   Línea C-1
                 </span>
               </div>
-              <p className="text-slate-300 text-[11px] leading-relaxed">
-                Consulta los trenes de vuelta y los horarios de regreso desde Santa Justa hacia Utrera.
-              </p>
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -176,11 +175,6 @@ export default function Conso() {
                 <span>🚆 Ver Horarios: Sevilla ➔ Utrera</span>
               </button>
             </div>
-
-          </div>
-
-          <div className="mt-2 pt-2 border-t border-slate-100 text-[10px] text-slate-500 italic">
-            • Recuerda validar tu abono en las canceladoras automáticas antes de acceder al andén.
           </div>
         </div>
       );
@@ -195,25 +189,6 @@ export default function Conso() {
           </div>
 
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
-            <div className="flex justify-between items-center text-center border-b border-slate-700 pb-2.5">
-              <div>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wider">Total Plazas</p>
-                <p className="text-base font-black text-white">1.060</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-emerald-400 uppercase tracking-wider">Libres</p>
-                <p className="text-base font-black text-emerald-400">47 (9%)</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-rose-400 uppercase tracking-wider">Ocupadas</p>
-                <p className="text-base font-black text-rose-400">491 (91%)</p>
-              </div>
-            </div>
-
-            <p className="text-[11px] text-slate-300 leading-relaxed">
-              Consulta el plano interactivo oficial con el estado de los sensores y plazas libres calle a calle.
-            </p>
-
             <button
               onClick={(e) => {
                 e.preventDefault();
@@ -228,7 +203,7 @@ export default function Conso() {
       );
     }
 
-    return `¡Entendido! Como Conso, tu asistente de Utrera, sigo procesando toda la información local. Prueba a preguntarme por la **"farmacia de guardia"**, los **"trenes"** o los **"aparcamientos"**.`;
+    return `¡Entendido, JuanRa! Como Conso, tu asistente de Utrera, estoy aquí para lo que necesites. Prueba a preguntarme por la **"farmacia de guardia"**, los **"trenes"** o los **"aparcamientos"**.`;
   };
 
   const enviarMensaje = (textoEnvio) => {
@@ -285,7 +260,7 @@ export default function Conso() {
                 ? 'bg-rose-900 text-white rounded-tr-none' 
                 : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
             }`}>
-              {typeof msg.texto === 'string' ? msg.texto : msg.texto}
+              {msg.texto}
             </div>
           </div>
         ))}
@@ -326,7 +301,7 @@ export default function Conso() {
             type="text"
             placeholder="Pregúntale a Conso (trenes, farmacias, parking...)"
             value={mensaje}
-            onChange={(e) => setMensaje(e.target.value)}
+            onChange={(e) => setSignificacion?.(e.target.value) || setMensaje(e.target.value)}
             className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
           />
           <button
