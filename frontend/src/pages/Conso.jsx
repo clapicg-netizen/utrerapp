@@ -1,6 +1,7 @@
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
+import { consultarConsoIA } from '../lib/consoService';
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
@@ -16,7 +17,7 @@ export default function Conso() {
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: `¡Hola! Soy Conso, tu asistente virtual de Utrera. 👋\nPuedes preguntarme por las farmacias de guardia de hoy, trenes, aparcamientos o cualquier duda sobre nuestra ciudad.`
+      texto: `¡Hola! Soy Conso, tu asistente virtual de Utrera. 👋\nPuedes preguntarme por las farmacias de guardia de hoy, el tiempo, trenes, aparcamientos o cualquier duda sobre nuestra ciudad.`
     }
   ]);
 
@@ -30,10 +31,10 @@ export default function Conso() {
     window.location.href = "tel:" + telefono;
   };
 
-  const procesarRespuestaLocal = (pregunta) => {
+  const procesarRespuesta = async (pregunta) => {
     const texto = pregunta.toLowerCase();
 
-    // 1. Farmacias de guardia
+    // Consultas rápidas locales estructuradas
     if (texto.includes('farmacia') || texto.includes('guardia')) {
       return (
         <div className="space-y-3">
@@ -121,7 +122,6 @@ export default function Conso() {
       );
     }
 
-    // 2. Trenes
     if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
       return (
         <div className="space-y-3">
@@ -169,7 +169,6 @@ export default function Conso() {
       );
     }
 
-    // 3. Aparcamientos
     if (texto.includes('aparcamiento') || texto.includes('parking') || texto.includes('aparcar')) {
       return (
         <div className="space-y-3">
@@ -192,36 +191,16 @@ export default function Conso() {
       );
     }
 
-    // 4. Ayuntamiento / Partido político gobernante
-    if (texto.includes('ayuntamiento') || texto.includes('partido') || texto.includes('gobierna') || texto.includes('alcalde')) {
-      return "🏛️ Actualmente, el Ayuntamiento de Utrera está gobernado por el **Partido Popular (PP)**, siendo su alcalde Francisco Jiménez.";
+    // Para cualquier otra consulta, tira de la IA real
+    try {
+      const respuestaIA = await consultarConsoIA(pregunta);
+      return respuestaIA;
+    } catch (err) {
+      return "Disculpa, ahora mismo tengo problemas de conexión con el servidor de inteligencia artificial. Pero puedes consultarme por las farmacias de guardia o los trenes.";
     }
-
-    // 5. Panaderías
-    if (texto.includes('panaderia') || texto.includes('pan') || texto.includes('panaderias')) {
-      return "🥖 ¡En Utrera tenemos una gran tradición panadera repartida por todos los barrios! Contamos con obradores artesanales emblemáticos donde disfrutar de nuestro pan diario y picos tradicionales. Puedes consultar los establecimientos detallados en la sección de la **Guía Comercial** de la aplicación.";
-    }
-
-    // 6. Reyes Magos / Cabalgata
-    if (texto.includes('cabalgata') || texto.includes('reyes') || texto.includes('navidad')) {
-      return "👑 ¡La Cabalgata de Reyes Magos en Utrera se celebra cada 5 de enero por la tarde! Recorre las principales calles de nuestra ciudad (como la Corredera, Plaza de Pío XII y la Fontanilla) repartiendo ilusión y caramelos. ¡Es una de las citas más mágicas del año!";
-    }
-
-    // 7. Feria
-    if (texto.includes('feria') || texto.includes('mostachon')) {
-      return "🎉 La Feria de Utrera (Feria de Nuestra Señora de Consolación) se celebra cada mes de septiembre en el Real del Parque de Consolación. Es una de las fiestas más importantes de Andalucía y el lugar perfecto para disfrutar del ambiente y de nuestros tradicionales mostachones.";
-    }
-
-    // 8. Saludos
-    if (texto.includes('hola') || texto.includes('buenos dias') || texto.includes('buenas tardes')) {
-      return "¡Hola! ¿En qué puedo ayudarte hoy por Utrera? Pregúntame por las farmacias de guardia, trenes, aparcamientos o cualquier consulta sobre la ciudad.";
-    }
-
-    // Respuesta por defecto natural
-    return `ℹ️ Sobre "${pregunta}", Utrera cuenta con una gran riqueza local y servicios municipales. Si necesitas información práctica, recuerda que puedes consultarme rápidamente por la **farmacia de guardia**, los **horarios de trenes** o los **aparcamientos**. ¡Dime en qué más te puedo ayudar!`;
   };
 
-  const enviarMensaje = (textoEnvio) => {
+  const enviarMensaje = async (textoEnvio) => {
     if (!textoEnvio.trim()) return;
 
     const nuevoChat = [...chat, { origen: 'usuario', texto: textoEnvio }];
@@ -229,11 +208,9 @@ export default function Conso() {
     setMensaje('');
     setCargandoIA(true);
 
-    setTimeout(() => {
-      const respuestaConso = procesarRespuestaLocal(textoEnvio);
-      setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
-      setCargandoIA(false);
-    }, 600);
+    const respuestaConso = await procesarRespuesta(textoEnvio);
+    setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
+    setCargandoIA(false);
   };
 
   const manejarSubmit = (e) => {
@@ -283,7 +260,7 @@ export default function Conso() {
         {cargandoIA && (
           <div className="flex items-center gap-2 text-slate-400 text-xs italic p-2">
             <Sparkles size={14} className="animate-spin text-amber-500" />
-            <span>Conso está consultando la información de Utrera...</span>
+            <span>Conso está pensando su respuesta...</span>
           </div>
         )}
       </div>
@@ -319,7 +296,7 @@ export default function Conso() {
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="Pregúntale a Conso sobre Utrera, eventos, trenes..."
+            placeholder="Pregúntale a Conso sobre Utrera, el tiempo, trenes..."
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
