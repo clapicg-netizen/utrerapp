@@ -159,7 +159,7 @@ export default function GuiaComercial() {
       logo_url: c.logo_url || "",
       carta_pdf_url: c.carta_pdf_url || "",
       galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
-      instagram_url: c.instagram_url || "",
+      instagram_url: c.instagram_url || c.instagram_username || "",
       tiktok_url: c.tiktok_url || "",
       facebook_url: c.facebook_url || "",
       web_url: c.web_url || "",
@@ -687,26 +687,49 @@ export default function GuiaComercial() {
                   </div>
                 )}
 
-                {/* REDES SOCIALES EN LA VISTA */}
-                {(comercioSel.instagram_url || comercioSel.tiktok_url || comercioSel.facebook_url) && (
-                  <div className="mt-3 pt-2 flex gap-2">
-                    {comercioSel.instagram_url && (
-                      <a href={comercioSel.instagram_url} target="_blank" rel="noreferrer" className="flex-1 bg-pink-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow">
-                        Instagram
-                      </a>
-                    )}
-                    {comercioSel.tiktok_url && (
-                      <a href={comercioSel.tiktok_url} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white py-2 rounded-xl text-center text-xs font-bold shadow">
-                        TikTok
-                      </a>
-                    )}
-                    {comercioSel.facebook_url && (
-                      <a href={comercioSel.facebook_url} target="_blank" rel="noreferrer" className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow">
-                        Facebook
-                      </a>
-                    )}
-                  </div>
-                )}
+                {/* REDES SOCIALES EN LA VISTA PÚBLICA */}
+                {(() => {
+                  const insta = comercioSel.instagram_url || comercioSel.instagram_username;
+                  const tiktok = comercioSel.tiktok_url;
+                  const facebook = comercioSel.facebook_url;
+
+                  if (!insta && !tiktok && !facebook) return null;
+
+                  return (
+                    <div className="mt-3 pt-2 flex gap-2">
+                      {insta && (
+                        <a 
+                          href={insta.startsWith('http') ? insta : `https://${insta}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex-1 bg-pink-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
+                        >
+                          Instagram
+                        </a>
+                      )}
+                      {tiktok && (
+                        <a 
+                          href={tiktok.startsWith('http') ? tiktok : `https://${tiktok}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex-1 bg-black text-white py-2 rounded-xl text-center text-xs font-bold shadow"
+                        >
+                          TikTok
+                        </a>
+                      )}
+                      {facebook && (
+                        <a 
+                          href={facebook.startsWith('http') ? facebook : `https://${facebook}`} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
+                        >
+                          Facebook
+                        </a>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* BOTONES DE CONTACTO */}
                 <div className="grid grid-cols-2 gap-2 mt-4">
