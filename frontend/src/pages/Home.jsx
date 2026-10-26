@@ -1,3 +1,4 @@
+// src/pages/Home.jsx
 import React, { useState, useEffect } from "react";
 import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
@@ -290,11 +291,11 @@ export default function Home({ setPaginaActual, setTab }) {
           Ocio y Entretenimiento
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "juego-mostachon")}
-            className="bg-gradient-to-br from-amber-500 to-orange-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-400/40 active:scale-[0.98] transition-transform cursor-pointer"
-          >
+          {/* TARJETA MOSTACHÓN CON BANDA DIAGONAL PRÓXIMAMENTE (DECORATIVA) */}
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-400/40 relative overflow-hidden select-none">
+            <div className="absolute -right-10 top-3 w-32 bg-white text-red-600 font-black text-[9px] tracking-widest text-center py-1 rotate-45 shadow-sm z-20 pointer-events-none uppercase">
+              PRÓXIMAMENTE
+            </div>
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg shadow-inner flex-shrink-0">
               🧁
             </div>
@@ -302,7 +303,7 @@ export default function Home({ setPaginaActual, setTab }) {
               <p className="text-[9px] uppercase font-black text-amber-200 tracking-wider">Interactivo</p>
               <h3 className="font-extrabold text-xs leading-tight truncate">Búsqueda Mostachón</h3>
             </div>
-          </button>
+          </div>
 
           <button 
             type="button"
