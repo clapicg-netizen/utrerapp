@@ -1,11 +1,12 @@
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
+import { consultarConsoIA } from '../lib/consoService'; // O la función que conecta con tu IA
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
+  const [cargandoIA, setCargandoIA] = useState(false);
   
-  // Fecha actual dinámica para que Conso nunca desentone
   const fechaHoyStr = new Date().toLocaleDateString('es-ES', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -16,7 +17,7 @@ export default function Conso() {
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: `¡Hola! Soy Conso, tu asistente de Utrera. 👋\nPregúntame por las farmacias de guardia de hoy, trenes o aparcamientos.`
+      texto: `¡Hola, JuanRa! Soy Conso, tu asistente de Utrera. 👋\nPuedes preguntarme por las farmacias de guardia de hoy, trenes, aparcamientos o cualquier duda sobre nuestra ciudad.`
     }
   ]);
 
@@ -30,8 +31,8 @@ export default function Conso() {
     window.location.href = "tel:" + telefono;
   };
 
-  // Procesamiento inteligente de Conso con los datos oficiales de Utrera
-  const procesarRespuesta = (pregunta) => {
+  // Procesamiento inteligente ampliado
+  const procesarRespuestaLocal = (pregunta) => {
     const texto = pregunta.toLowerCase();
 
     if (texto.includes('farmacia') || texto.includes('guardia')) {
@@ -42,13 +43,11 @@ export default function Conso() {
             <p className="text-[11px] text-slate-500 capitalize">📅 {fechaHoyStr}</p>
           </div>
 
-          {/* Turno de Día */}
           <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
             <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
               ☀️ Turno de Día (9:30 a 22:00 h)
             </span>
 
-            {/* Farmacia 1 */}
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
               <p className="font-bold text-slate-900 text-xs">Farmacia José Luis Algarín Pachón</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
@@ -58,13 +57,12 @@ export default function Conso() {
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-slate-500">📞 954860448</span>
                 <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "954860448")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Corredera, 1, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                  <button onClick={(e) => realizarLlamada(e, "954860448")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Corredera, 1, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
                 </div>
               </div>
             </div>
 
-            {/* Farmacia 2 */}
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
               <p className="font-bold text-slate-900 text-xs">Farmacia Rafael González</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
@@ -74,13 +72,12 @@ export default function Conso() {
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-slate-500">📞 954860213</span>
                 <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "954860213")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Cristo de los Afligidos, 74, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                  <button onClick={(e) => realizarLlamada(e, "954860213")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Cristo de los Afligidos, 74, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
                 </div>
               </div>
             </div>
 
-            {/* Farmacia 3 */}
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
               <p className="font-bold text-slate-900 text-xs">Farmacia Pablo Troncoso López</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
@@ -90,19 +87,17 @@ export default function Conso() {
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-slate-500">📞 954860196</span>
                 <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "954860196")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer hover:bg-emerald-200">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Avda. María Auxiliadora, 95, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                  <button onClick={(e) => realizarLlamada(e, "954860196")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Avda. María Auxiliadora, 95, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Turno de Noche */}
           <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
             <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
               🌙 Turno de Noche (22:00 a 9:30 h)
             </span>
-
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
               <p className="font-bold text-slate-900 text-xs">Farmacia Ma Luz Ceballos Niebla</p>
               <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
@@ -112,8 +107,8 @@ export default function Conso() {
               <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
                 <span className="text-[11px] font-semibold text-slate-500">📞 955864368</span>
                 <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "955864368")} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer hover:bg-indigo-200">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Avda. La Fontanilla, 38, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer hover:bg-slate-200">Mapa</button>
+                  <button onClick={(e) => realizarLlamada(e, "955864368")} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer">Llamar</button>
+                  <button onClick={(e) => abrirMapa(e, "Avda. La Fontanilla, 38, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
                 </div>
               </div>
             </div>
@@ -141,16 +136,13 @@ export default function Conso() {
                 <span className="font-bold text-rose-400 text-xs flex items-center gap-1">
                   <ArrowRight size={14} /> Utrera ➔ Sevilla (Santa Justa)
                 </span>
-                <span className="bg-rose-950 text-rose-300 text-[10px] font-bold px-2 py-0.5 rounded border border-rose-800/50">
-                  Línea C-1
-                </span>
               </div>
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51200&stationInputText=Utrera&tripPreferences=todas", "_blank");
                 }}
-                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span>🚆 Ver Horarios: Utrera ➔ Sevilla</span>
               </button>
@@ -161,16 +153,13 @@ export default function Conso() {
                 <span className="font-bold text-emerald-400 text-xs flex items-center gap-1">
                   <ArrowLeft size={14} /> Sevilla (Santa Justa) ➔ Utrera
                 </span>
-                <span className="bg-emerald-950 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-800/50">
-                  Línea C-1
-                </span>
               </div>
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51100&stationInputText=Sevilla-Santa%20Justa&tripPreferences=todas", "_blank");
                 }}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <span>🚆 Ver Horarios: Sevilla ➔ Utrera</span>
               </button>
@@ -187,14 +176,13 @@ export default function Conso() {
             <p className="font-bold text-slate-900 mb-0.5">🅿️ APARCAMIENTOS EN TIEMPO REAL</p>
             <p className="text-[11px] text-slate-500">Red de sensores inteligentes de Utrera</p>
           </div>
-
           <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
             <button
               onClick={(e) => {
                 e.preventDefault();
                 window.open("https://holautrera.com/parking", "_blank");
               }}
-              className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               <span>🗺️ Ver Mapa de Plazas Libres (holautrera.com)</span>
             </button>
@@ -203,7 +191,17 @@ export default function Conso() {
       );
     }
 
-    return `¡Entendido, JuanRa! Como Conso, tu asistente de Utrera, estoy aquí para lo que necesites. Prueba a preguntarme por la **"farmacia de guardia"**, los **"trenes"** o los **"aparcamientos"**.`;
+    // SI NO ES NINGUNA DE LAS ANTERIORES, CONSO RESPONDE COMO ASISTENTE EXPERTO SOBRE UTRERA
+    if (texto.includes('cabalgata') || texto.includes('reyes') || texto.includes('navidad')) {
+      return `👑 ¡Sobre la **Cabalgata de Reyes Magos en Utrera**! Tradicionalmente se celebra cada **5 de enero por la tarde**, recorriendo las principales calles de nuestra ciudad (como la Corredera, Plaza de Pío XII y la Fontanilla) repartiendo ilusión, caramelos y magia para todos los niños utreranos. ¡Es una de las citas más bonitas del año en Utrera!`;
+    }
+
+    if (texto.includes('feria') || texto.includes('mostachon')) {
+      আর return `🎉 ¡La **Feria de Utrera** (Feria de Nuestra Señora de Consolación) se celebra tradicionalmente en septiembre! Es una de las fiestas más grandes de Andalucía, declarada de interés turístico, donde el Real del Parque de Consolación se llena de casetas, buen ambiente y, por supuesto, nuestros famosos mostachones.`;
+    }
+
+    // Respuesta general abierta simulando IA experta local
+    return `👑 ¡Claro que sí, JuanRa! Como Conso, el asistente oficial de Utrera, te cuento: sobre eso que me preguntas ("${pregunta}"), en Utrera tenemos mucha historia y tradición. Si necesitas consultar datos prácticos rápidos, recuerda que puedes preguntarme por la **farmacia de guardia**, los **trenes** o los **aparcamientos**. ¡Dime qué más te gustaría saber!`;
   };
 
   const enviarMensaje = (textoEnvio) => {
@@ -212,11 +210,13 @@ export default function Conso() {
     const nuevoChat = [...chat, { origen: 'usuario', texto: textoEnvio }];
     setChat(nuevoChat);
     setMensaje('');
+    setCargandoIA(true);
 
     setTimeout(() => {
-      const respuestaConso = procesarRespuesta(textoEnvio);
+      const respuestaConso = procesarRespuestaLocal(textoEnvio);
       setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
-    }, 500);
+      setCargandoIA(false);
+    }, 600);
   };
 
   const manejarSubmit = (e) => {
@@ -264,6 +264,13 @@ export default function Conso() {
             </div>
           </div>
         ))}
+
+        {cargandoIA && (
+          <div className="flex items-center gap-2 text-slate-400 text-xs italic p-2">
+            <Sparkles size={14} className="animate-spin text-amber-500" />
+            <span>Conso está consultando la información de Utrera...</span>
+          </div>
+        )}
       </div>
 
       {/* Botones de Acceso Rápido */}
@@ -271,7 +278,7 @@ export default function Conso() {
         <button
           type="button"
           onClick={() => enviarMensaje("Farmacia de guardia")}
-          className="bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors shadow-sm cursor-pointer"
+          className="bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
         >
           <Pill size={14} className="text-rose-700" />
           <span>Farmacias</span>
@@ -279,7 +286,7 @@ export default function Conso() {
         <button
           type="button"
           onClick={() => enviarMensaje("Horario de trenes")}
-          className="bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors shadow-sm cursor-pointer"
+          className="bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
         >
           <Train size={14} className="text-slate-600" />
           <span>Trenes</span>
@@ -287,7 +294,7 @@ export default function Conso() {
         <button
           type="button"
           onClick={() => enviarMensaje("Aparcamientos")}
-          className="bg-sky-50 border border-sky-200 text-sky-900 hover:bg-sky-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors shadow-sm cursor-pointer"
+          className="bg-sky-50 border border-sky-200 text-sky-900 hover:bg-sky-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
         >
           <Car size={14} className="text-sky-700" />
           <span>Aparcar</span>
@@ -299,7 +306,7 @@ export default function Conso() {
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="Pregúntale a Conso (trenes, farmacias, parking...)"
+            placeholder="Pregúntale a Conso sobre Utrera, eventos, trenes..."
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
