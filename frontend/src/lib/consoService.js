@@ -5,8 +5,8 @@ export async function consultarConsoIA(preguntaUsuario) {
   const apiKey = parte1 + parte2;
 
   try {
-    // Usamos el modelo oficial que nos pide Google AI Studio
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+    // Usamos gemini-1.5-flash que es el modelo estándar más rápido y estable
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
     
     const response = await fetch(url, {
       method: "POST",
@@ -24,11 +24,19 @@ export async function consultarConsoIA(preguntaUsuario) {
     });
 
     const data = await response.json();
-    const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || data?.error?.message;
+    console.log("Respuesta de Gemini:", data);
 
-    return textoRespuesta || "¡Hola, jefe! Te escucho alto y claro desde Utrera, ¿en qué te ayudo?";
+    // Capturamos el texto de forma segura con varias alternativas por si cambia el formato
+    const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text || 
+                           data?.error?.message;
+
+    if (textoRespuesta) {
+      return textoRespuesta;
+    } else {
+      return "¡Hola, jefe! Aquí estoy en Utrera, ¿en qué te puedo echar una mano hoy?";
+    }
   } catch (error) {
-    console.error("Error:", error);
-    return "¡Vaya, jefe! Ha saltado un detalle técnico, pero aquí sigo al pie del cañón.";
+    console.error("Error en ConsoIA:", error);
+    return "¡Vaya, jefe! Me he quedado un momento sin cobertura, dímelo otra vez por favor.";
   }
 }
