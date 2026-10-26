@@ -1,7 +1,9 @@
 // src/pages/GuiaComercial.jsx
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike, Plus, Minus, ShoppingCart, Trash2 } from "lucide-react";
-import { obtenerComercios } from "../lib/comerciosService";
+import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike, Plus, Minus, ShoppingCart, ShieldCheck } from "lucide-react";
+import { obtenerComercios, actualizarComercio, crearComercio, subirArchivoComercio } from "../lib/comerciosService";
+
+const PIN_ADMIN_MAESTRO = "9999";
 
 export default function GuiaComercial() {
   const [comercios, setComercios] = useState([]);
@@ -10,9 +12,40 @@ export default function GuiaComercial() {
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
 
-  // Estados para el Carrito de la Ficha Especial 2
-  const [carrito, setCarrito] = useState({});
+  // Estados para el panel de administración/edición del comercio
+  const [modoAdmin, setModoAdmin] = useState(false);
+  const [pinInput, setPinInput] = useState("");
+  const [autenticadoAdmin, setAutenticadoAdmin] = useState(false);
+  const [esAdminMaestro, setEsAdminMaestro] = useState(false);
+  const [mensajeAdmin, setMensajeAdmin] = useState({ tipo: "", texto: "" });
+  const [guardando, setGuardando] = useState(false);
+  const [subiendo, setSubiendo] = useState(false);
 
+  // Formulario de edición/creación con Redes Sociales y Galería
+  const [formData, setFormData] = useState({
+    nombre: "",
+    categoria: "Hostelería",
+    subcategoria: "",
+    direccion: "",
+    descripcion: "",
+    horario_texto: "",
+    telefono: "",
+    whatsapp: "",
+    portada_url: "",
+    logo_url: "",
+    carta_pdf_url: "",
+    galeria_urls: [],
+    instagram_url: "",
+    tiktok_url: "",
+    facebook_url: "",
+    oferta_flash: "",
+    video_story_url: "",
+    pin_acceso: "1234",
+    destacado: false
+  });
+
+  // Estados para el Carrito
+  const [carrito, setCarrito] = useState({});
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
 
@@ -25,7 +58,7 @@ export default function GuiaComercial() {
   const cargarComercios = async () => {
     setCargando(true);
     try {
-      const data = await obtenerComercios();
+      const data = await obtenerComercios("Todos");
       setComercios(data || []);
     } catch (error) {
       console.error("Error al cargar los comercios:", error.message);
@@ -40,7 +73,7 @@ export default function GuiaComercial() {
     if (comerciosCarrusel.length <= 1) return;
     const intervalo = setInterval(() => {
       setIndiceCarrusel((prev) => (prev + 1) % comerciosCarrusel.length);
-    }, 2000);
+    }, 3000);
     return () => clearInterval(intervalo);
   }, [comerciosCarrusel.length]);
 
@@ -70,13 +103,6 @@ export default function GuiaComercial() {
     window.open("https://www.google.com/maps/search/?api=1&query=" + direccionEscapada, "_blank");
   };
 
-  const obtenerYoutubeEmbed = (url) => {
-    if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? "https://www.youtube.com/embed/" + match[2] : null;
-  };
-
   const obtenerPortadaValida = (url) => {
     if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL") {
       return url.trim();
@@ -84,14 +110,99 @@ export default function GuiaComercial() {
     return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5";
   };
 
-  // Funciones de gestión del carrito
+  // Gestión de subida de archivos (imágenes/galería)
+  const handleFileUpload = async (e, campo, esGaleria = false) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSubiendo(true);
+    const res = await subirArchivoComercio(file);
+    setSubiendo(false);
+
+    if (res.success) {
+      if (esGaleria) {
+        setFormData(prev => ({
+          ...prev,
+          galeria_urls: [...(prev.galeria_urls || []), res.url]
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, [campo]: res.url }));
+      }
+      setMensajeAdmin({ tipo: 'exito', texto: '¡Imagen subida con éxito!' });
+    } else {
+      setMensajeAdmin({ tipo: 'error', texto: res.message });
+    }
+  };
+
+  const eliminarDeGaleria = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      galeria_urls: prev.galeria_urls.filter((_, i) => i !== index)
+    }));
+  };
+
+  const prepararEdicionComercio = (c) => {
+    setComercioSel(c);
+    setFormData({
+      nombre: c.nombre || "",
+      categoria: c.categoria || "Hostelería",
+      subcategoria: c.subcategoria || "",
+      direccion: c.direccion || "",
+      descripcion: c.descripcion || "",
+      horario_texto: c.horario_texto || "",
+      telefono: c.telefono || "",
+      whatsapp: c.whatsapp || "",
+      portada_url: c.portada_url || "",
+      logo_url: c.logo_url || "",
+      carta_pdf_url: c.carta_pdf_url || "",
+      galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
+      instagram_url: c.instagram_url || "",
+      tiktok_url: c.tiktok_url || "",
+      facebook_url: c.facebook_url || "",
+      oferta_flash: c.oferta_flash || "",
+      video_story_url: c.video_story_url || "",
+      pin_acceso: c.pin_acceso || "1234",
+      destacado: c.destacado || false
+    });
+    setModoAdmin(true);
+    setAutenticadoAdmin(false);
+    setPinInput("");
+  };
+
+  const handleLoginAdmin = (e) => {
+    e.preventDefault();
+    if (pinInput === PIN_ADMIN_MAESTRO || pinInput === (comercioSel?.pin_acceso || "1234")) {
+      setAutenticadoAdmin(true);
+      setEsAdminMaestro(pinInput === PIN_ADMIN_MAESTRO);
+      setMensajeAdmin({ tipo: "", texto: "" });
+    } else {
+      setMensajeAdmin({ tipo: "error", texto: "PIN incorrecto" });
+    }
+  };
+
+  const guardarCambiosComercio = async (e) => {
+    e.preventDefault();
+    setGuardando(true);
+    const res = await actualizarComercio(comercioSel.id, PIN_ADMIN_MAESTRO, formData);
+    setGuardando(false);
+
+    if (res.success) {
+      setMensajeAdmin({ tipo: "exito", texto: "¡Cambios guardados correctamente!" });
+      await cargarComercios();
+      setTimeout(() => {
+        setModoAdmin(false);
+        setComercioSel(null);
+      }, 1000);
+    } else {
+      setMensajeAdmin({ tipo: "error", texto: res.message });
+    }
+  };
+
+  // Funciones del carrito
   const agregarAlCarrito = (producto) => {
     setCarrito((prev) => {
       const actual = prev[producto.id] ? prev[producto.id].cantidad : 0;
-      return {
-        ...prev,
-        [producto.id]: { ...producto, cantidad: actual + 1 }
-      };
+      return { ...prev, [producto.id]: { ...producto, cantidad: actual + 1 } };
     });
   };
 
@@ -103,16 +214,11 @@ export default function GuiaComercial() {
         delete copia[productoId];
         return copia;
       }
-      return {
-        ...prev,
-        [productoId]: { ...prev[productoId], cantidad: actual - 1 }
-      };
+      return { ...prev, [productoId]: { ...prev[productoId], cantidad: actual - 1 } };
     });
   };
 
-  const calcularTotalItems = () => {
-    return Object.values(carrito).reduce((acc, item) => acc + item.cantidad, 0);
-  };
+  const calcularTotalItems = () => Object.values(carrito).reduce((acc, item) => acc + item.cantidad, 0);
 
   const calcularPrecioTotal = () => {
     return Object.values(carrito).reduce((acc, item) => {
@@ -124,15 +230,12 @@ export default function GuiaComercial() {
   const enviarPedidoWhatsApp = (comercio) => {
     const itemsArray = Object.values(carrito);
     if (itemsArray.length === 0) return;
-
     let mensaje = `¡Hola! Me gustaría hacer el siguiente pedido a domicilio desde Utrerapp:\n\n`;
     itemsArray.forEach((item) => {
       mensaje += `• ${item.cantidad}x ${item.nombre} (${item.precio})\n`;
     });
-    mensaje += `\n*Total estimado: ${calcularPrecioTotal()} €*\n¿Me confirmáis el pedido y el tiempo de entrega? ¡Gracias!`;
-
-    const urlWpp = `https://wa.me/${comercio.whatsapp}?text=${encodeURIComponent(mensaje)}`;
-    window.open(urlWpp, "_blank");
+    mensaje += `\n*Total estimado: ${calcularPrecioTotal()} €*\n¿Me confirmáis el pedido? ¡Gracias!`;
+    window.open(`https://wa.me/${comercio.whatsapp}?text=${encodeURIComponent(mensaje)}`, "_blank");
   };
 
   return (
@@ -178,9 +281,7 @@ export default function GuiaComercial() {
                 key={cat}
                 onClick={() => setCategoriaSel(cat)}
                 className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all shadow-sm cursor-pointer ${
-                  categoriaSel === cat
-                    ? "bg-rose-900 text-white shadow-md"
-                    : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  categoriaSel === cat ? "bg-rose-900 text-white shadow-md" : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                 }`}
               >
                 {cat}
@@ -189,63 +290,11 @@ export default function GuiaComercial() {
           </div>
         </div>
 
-        {/* CARRUSEL AUTOMÁTICO */}
-        {comerciosCarrusel.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1">
-                <Sparkles size={14} className="text-amber-500" /> Comercios Destacados Utrera
-              </h2>
-              <div className="flex gap-1">
-                {comerciosCarrusel.map((_, idx) => (
-                  <span 
-                    key={idx} 
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      idx === indiceCarrusel ? 'w-5 bg-rose-900' : 'w-1.5 bg-slate-300'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div 
-              onClick={() => { setComercioSel(comerciosCarrusel[indiceCarrusel]); setCarrito({}); }}
-              className="relative bg-white rounded-3xl overflow-hidden shadow-lg border border-slate-200 transition-all duration-500 cursor-pointer hover:shadow-xl"
-            >
-              <div className="h-36 w-full relative overflow-hidden bg-slate-900">
-                <img 
-                  src={obtenerPortadaValida(comerciosCarrusel[indiceCarrusel].portada_url)} 
-                  alt={comerciosCarrusel[indiceCarrusel].nombre}
-                  className="w-full h-full object-cover opacity-85 transform hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent"></div>
-                <span className="absolute top-3 left-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-xl shadow">
-                  ⭐ DESTACADO
-                </span>
-                <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <h3 className="text-base font-bold">{comerciosCarrusel[indiceCarrusel].nombre}</h3>
-                  <p className="text-[11px] text-slate-200 truncate">{comerciosCarrusel[indiceCarrusel].descripcion || comerciosCarrusel[indiceCarrusel].subcategoria || comerciosCarrusel[indiceCarrusel].categoria}</p>
-                </div>
-              </div>
-              <div className="p-3 bg-white flex items-center justify-between">
-                <span className="text-[11px] text-slate-500 flex items-center gap-1 truncate">
-                  <MapPin size={12} className="text-rose-700 flex-shrink-0" /> {comerciosCarrusel[indiceCarrusel].direccion || "Utrera"}
-                </span>
-                <span className="text-xs font-bold text-rose-900 bg-rose-50 px-3 py-1 rounded-xl">
-                  Ver Ficha ➔
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* LISTA DE COMERCIOS */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
-              Establecimientos ({comerciosFiltrados.length})
-            </h2>
-          </div>
+          <h2 className="text-xs font-black uppercase tracking-wider text-slate-500">
+            Establecimientos ({comerciosFiltrados.length})
+          </h2>
 
           {cargando ? (
             <div className="text-center py-12 text-slate-400 text-sm">Cargando guía comercial...</div>
@@ -258,22 +307,12 @@ export default function GuiaComercial() {
               {comerciosFiltrados.map((comercio) => (
                 <div
                   key={comercio.id}
-                  onClick={() => { setComercioSel(comercio); setCarrito({}); }}
+                  onClick={() => { setComercioSel(comercio); setCarrito({}); setModoAdmin(false); }}
                   className="bg-white rounded-3xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
                 >
-                  {comercio.destacado && (
-                    <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shadow">
-                      ⭐ PREMIUM
-                    </span>
-                  )}
-
                   <div className="flex gap-4 items-start">
                     <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0 border border-slate-100">
-                      <img
-                        src={obtenerPortadaValida(comercio.portada_url)}
-                        alt={comercio.nombre}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={obtenerPortadaValida(comercio.portada_url)} alt={comercio.nombre} className="w-full h-full object-cover" />
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -288,25 +327,31 @@ export default function GuiaComercial() {
                           <span className="truncate">{comercio.direccion}</span>
                         </p>
                       )}
-
-                      {comercio.descripcion && (
-                        <p className="text-xs text-slate-600 mt-1.5 line-clamp-2">
-                          {comercio.descripcion}
-                        </p>
-                      )}
                     </div>
                   </div>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setComercioSel(comercio);
-                      setCarrito({});
-                    }}
-                    className="mt-3 w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors text-center flex items-center justify-center gap-1.5"
-                  >
-                    👁️ Ver Ficha Completa
-                  </button>
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setComercioSel(comercio);
+                        setCarrito({});
+                        setModoAdmin(false);
+                      }}
+                      className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors text-center"
+                    >
+                      👁️ Ver Ficha Completa
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prepararEdicionComercio(comercio);
+                      }}
+                      className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl transition-colors flex items-center gap-1"
+                    >
+                      ✏️ Editar
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -315,393 +360,337 @@ export default function GuiaComercial() {
 
       </div>
 
-      {/* MODAL FICHA DESPLEGABLE */}
+      {/* MODAL FICHA DESPLEGABLE O PANEL DE EDICIÓN */}
       {comercioSel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl relative p-5 pb-32 sm:pb-12">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-5 pb-32">
             
             <button
-              onClick={() => { setComercioSel(null); setCarrito({}); }}
+              onClick={() => { setComercioSel(null); setModoAdmin(false); setCarrito({}); }}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold z-10 cursor-pointer"
             >
               ✕
             </button>
 
-            {/* Portada Principal */}
-            <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border border-slate-100">
-              <img
-                src={obtenerPortadaValida(comercioSel.portada_url)}
-                alt={comercioSel.nombre}
-                className="w-full h-full object-cover"
-              />
-              {comercioSel.destacado && (
-                <span className="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">
-                  ⭐ PREMIUM
-                </span>
-              )}
-            </div>
-
-            {/* Cabecera con Logo */}
-            <div className="flex items-center gap-3">
-              {comercioSel.logo_url && comercioSel.logo_url !== "EMPTY" && comercioSel.logo_url !== "NULL" && (
-                <img 
-                  src={comercioSel.logo_url} 
-                  alt="Logo" 
-                  className="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm flex-shrink-0" 
-                />
-              )}
+            {/* SI ESTÁ EN MODO EDICIÓN */}
+            {modoAdmin ? (
               <div>
-                <h2 className="text-2xl font-bold text-slate-800 leading-tight">{comercioSel.nombre}</h2>
-                <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mt-0.5">
-                  {comercioSel.subcategoria || comercioSel.categoria}
-                </p>
-              </div>
-            </div>
+                {!autenticadoAdmin ? (
+                  <form onSubmit={handleLoginAdmin} className="space-y-4 pt-4">
+                    <div className="text-center">
+                      <span className="text-3xl">🔐</span>
+                      <h3 className="text-lg font-black text-slate-900 mt-2">Acceso de Gestión</h3>
+                      <p className="text-xs text-slate-500">Introduce el PIN para editar {comercioSel.nombre}</p>
+                    </div>
 
-            {/* Dirección */}
-            {comercioSel.direccion && (
-              <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
-                <MapPin size={14} className="text-slate-400" /> {comercioSel.direccion}
-              </p>
-            )}
-
-            {/* Horario */}
-            {comercioSel.horario_texto && comercioSel.horario_texto !== "EMPTY" && (
-              <p className="text-xs text-slate-600 mt-1">
-                ⏰ <span className="font-medium">{comercioSel.horario_texto}</span>
-              </p>
-            )}
-
-            {/* OFERTA FLASH */}
-            {comercioSel.oferta_flash && comercioSel.oferta_flash !== "EMPTY" && comercioSel.oferta_flash !== "NULL" && (
-              <div className="mt-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white p-3.5 rounded-2xl shadow-md border border-amber-400 flex items-start gap-3">
-                <div className="bg-white/20 p-2 rounded-xl flex-shrink-0">
-                  <Zap size={18} className="text-amber-100" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-amber-100">
-                    Oferta Flash / Promoción
-                  </p>
-                  <p className="text-xs font-bold leading-snug mt-0.5">
-                    {comercioSel.oferta_flash}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Descripción */}
-            {comercioSel.descripcion && (
-              <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
-                {comercioSel.descripcion}
-              </p>
-            )}
-
-            {/* 🏠 RENDERIZADO ESPECIAL 1: INMOBILIARIAS */}
-            {comercioSel.tipo_ficha === 'especial1' && comercioSel.datos_especiales && (
-              <div className="mt-6 space-y-4 border-t pt-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-base font-black text-slate-900">
-                    🏠 {comercioSel.datos_especiales.titulo_seccion_catalogo || 'Inmuebles Destacados'}
-                  </h3>
-                  <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    Inmobiliaria Verificada
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 gap-4">
-                  {comercioSel.datos_especiales.items && comercioSel.datos_especiales.items.map((inmueble, idx) => {
-                    const mensajeWhatsApp = encodeURIComponent(
-                      `¡Hola! Estoy interesado en el inmueble con referencia *${inmueble.referencia_interna || 'REF'}* (${inmueble.titulo}) que he visto en Utrerapp. ¿Podrían darme más información?`
-                    );
-                    const urlWhatsApp = `https://wa.me/${comercioSel.whatsapp}?text=${mensajeWhatsApp}`;
-                    const imagenInmueble = inmueble.imagen || "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2";
-
-                    return (
-                      <div key={idx} className="bg-white border border-slate-200 rounded-2xl shadow-md overflow-hidden">
-                        <div className="h-44 w-full relative bg-slate-200">
-                          <img src={imagenInmueble} alt={inmueble.titulo} className="w-full h-full object-cover" />
-                          {inmueble.etiqueta_destacado && (
-                            <span className="absolute top-3 right-3 bg-amber-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">
-                              {inmueble.etiqueta_destacado}
-                            </span>
-                          )}
-                          <span className="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
-                            {inmueble.modalidad || 'Venta'} • Ref: {inmueble.referencia_interna || 'N/A'}
-                          </span>
-                        </div>
-
-                        <div className="p-4 space-y-3">
-                          <div>
-                            <h4 className="text-sm font-black text-slate-900">{inmueble.titulo}</h4>
-                            <p className="text-xs text-slate-500">{inmueble.subtitulo_zona}</p>
-                          </div>
-
-                          <div>
-                            <span className="text-lg font-black text-blue-600">{inmueble.precio}</span>
-                          </div>
-
-                          {inmueble.caracteristicas_clave && (
-                            <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                              {Object.entries(inmueble.caracteristicas_clave).map(([clave, valor], i) => (
-                                <span key={i} className="bg-white px-2 py-1 rounded-lg border border-slate-200">
-                                  {clave}: <strong className="text-slate-900">{valor}</strong>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          <p className="text-xs text-slate-600 line-clamp-2">{inmueble.descripcion}</p>
-
-                          <a
-                            href={urlWhatsApp}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
-                          >
-                            <span>💬 Preguntar por este inmueble</span>
-                          </a>
-                        </div>
+                    {mensajeAdmin.texto && (
+                      <div className="p-3 rounded-xl text-xs font-bold bg-red-50 text-red-600 text-center">
+                        {mensajeAdmin.texto}
                       </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+                    )}
 
-            {/* 🍕 RENDERIZADO ESPECIAL 2: COMIDA A DOMICILIO (CON CARRITO INTERACTIVO) */}
-            {comercioSel.tipo_ficha === 'especial2' && comercioSel.datos_especiales && (
-              <div className="mt-6 space-y-4 border-t pt-6 relative">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-base font-black text-slate-900 flex items-center gap-1.5">
-                    <Utensils size={18} className="text-orange-600" /> {comercioSel.datos_especiales.titulo_seccion_catalogo || 'Carta a Domicilio'}
-                  </h3>
-                  <span className="text-[10px] font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    Delivery Interactivo
-                  </span>
-                </div>
+                    <input
+                      type="password"
+                      placeholder="PIN (ej. 1234 o 9999)"
+                      value={pinInput}
+                      onChange={(e) => setPinInput(e.target.value)}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-center font-bold"
+                      autoFocus
+                    />
 
-                {/* Banner de Logística */}
-                <div className="bg-orange-50 border border-orange-100 rounded-2xl p-3.5 space-y-2 text-xs text-orange-950">
-                  {comercioSel.datos_especiales.horario_reparto && (
-                    <div className="flex items-center gap-2 font-medium">
-                      <Clock size={14} className="text-orange-600 flex-shrink-0" />
-                      <span><strong>Reparto:</strong> {comercioSel.datos_especiales.horario_reparto}</span>
-                    </div>
-                  )}
-                  {comercioSel.datos_especiales.coste_envio && (
-                    <div className="flex items-center gap-2 font-medium">
-                      <Bike size={14} className="text-orange-600 flex-shrink-0" />
-                      <span><strong>Envío:</strong> {comercioSel.datos_especiales.coste_envio}</span>
-                    </div>
-                  )}
-                  {comercioSel.datos_especiales.metodos_pago && (
-                    <div className="flex items-center gap-2 font-medium">
-                      <CreditCard size={14} className="text-orange-600 flex-shrink-0" />
-                      <span><strong>Pago:</strong> {comercioSel.datos_especiales.metodos_pago.join(", ")}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Categorías y Platos */}
-                {comercioSel.datos_especiales.categorias_carta && comercioSel.datos_especiales.categorias_carta.map((cat, idxCat) => (
-                  <div key={idxCat} className="space-y-3 pt-2">
-                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider bg-slate-100 px-3 py-1.5 rounded-xl">
-                      {cat.nombre}
-                    </h4>
-
-                    <div className="grid grid-cols-1 gap-3">
-                      {cat.productos && cat.productos.map((prod, idxProd) => {
-                        const enCarrito = carrito[prod.id] ? carrito[prod.id].cantidad : 0;
-                        const imgProd = prod.imagen || "https://images.unsplash.com/photo-1545231027-637d2f6210f8";
-
-                        return (
-                          <div key={idxProd} className="bg-white border border-slate-200 rounded-2xl p-3 flex gap-3 items-center shadow-sm">
-                            <div className="w-16 h-16 bg-slate-100 rounded-xl overflow-hidden flex-shrink-0 border border-slate-100">
-                              <img src={imgProd} alt={prod.nombre} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h5 className="text-xs font-black text-slate-900 truncate">{prod.nombre}</h5>
-                              <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">{prod.descripcion}</p>
-                              
-                              <div className="flex items-center justify-between mt-2">
-                                <span className="text-xs font-black text-orange-600">{prod.precio}</span>
-
-                                {/* Selector de cantidad interactivo (+ / -) */}
-                                <div className="flex items-center gap-2">
-                                  {enCarrito > 0 ? (
-                                    <div className="flex items-center bg-orange-50 border border-orange-200 rounded-xl px-2 py-1 gap-2">
-                                      <button 
-                                        onClick={() => quitarDelCarrito(prod.id)}
-                                        className="text-orange-700 hover:text-orange-900 cursor-pointer"
-                                      >
-                                        <Minus size={12} />
-                                      </button>
-                                      <span className="text-xs font-black text-orange-900">{enCarrito}</span>
-                                      <button 
-                                        onClick={() => agregarAlCarrito(prod)}
-                                        className="text-orange-700 hover:text-orange-900 cursor-pointer"
-                                      >
-                                        <Plus size={12} />
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      onClick={() => agregarAlCarrito(prod)}
-                                      className="bg-orange-600 hover:bg-orange-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-xl flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
-                                    >
-                                      <Plus size={14} /> Añadir
-                                    </button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-
-                {/* BARRA FLOTANTE DE CARRITO SI HAY PRODUCTOS SELECCIONADOS */}
-                {calcularTotalItems() > 0 && (
-                  <div className="sticky bottom-2 left-0 right-0 bg-slate-900 text-white p-4 rounded-2xl shadow-xl border border-slate-800 flex items-center justify-between z-20 mt-6 animate-bounce-short">
-                    <div>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase">Cesta ({calcularTotalItems()} platos)</p>
-                      <p className="text-base font-black text-amber-400">{calcularPrecioTotal()} €</p>
-                    </div>
                     <button
-                      onClick={() => enviarPedidoWhatsApp(comercioSel)}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs py-2.5 px-5 rounded-xl flex items-center gap-2 shadow-lg transition-all cursor-pointer"
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-xl shadow"
                     >
-                      <ShoppingCart size={16} /> Enviar Pedido ➔
+                      Ver Panel de Edición
                     </button>
-                  </div>
+                  </form>
+                ) : (
+                  <form onSubmit={guardarCambiosComercio} className="space-y-4 pt-2">
+                    <div className="border-b pb-2 flex justify-between items-center">
+                      <h3 className="text-base font-black text-slate-900">✏️ Editando: {formData.nombre}</h3>
+                      <button
+                        type="button"
+                        onClick={() => setModoAdmin(false)}
+                        className="text-xs bg-slate-100 px-2.5 py-1 rounded-lg font-bold text-slate-600"
+                      >
+                        Ver Ficha
+                      </button>
+                    </div>
+
+                    {mensajeAdmin.texto && (
+                      <div className={`p-3 rounded-xl text-xs font-bold text-center ${mensajeAdmin.tipo === 'error' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        {mensajeAdmin.texto}
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Nombre del Comercio:</label>
+                      <input
+                        type="text"
+                        value={formData.nombre}
+                        onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                        className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold"
+                        required
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Categoría:</label>
+                        <select
+                          value={formData.categoria}
+                          onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                        >
+                          <option value="Hostelería">Hostelería</option>
+                          <option value="Comercio">Comercio</option>
+                          <option value="Servicios">Servicios</option>
+                          <option value="Salud y Belleza">Salud y Belleza</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría:</label>
+                        <input
+                          type="text"
+                          value={formData.subcategoria}
+                          onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
+                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Dirección:</label>
+                      <input
+                        type="text"
+                        value={formData.direccion}
+                        onChange={(e) => setFormData({...formData, direccion: e.target.value})}
+                        className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                      />
+                    </div>
+
+                    {/* PORTADA PRINCIPAL */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada:</label>
+                      <input
+                        type="text"
+                        value={formData.portada_url}
+                        onChange={(e) => setFormData({...formData, portada_url: e.target.value})}
+                        placeholder="URL de la imagen..."
+                        className="w-full p-2 bg-slate-50 border rounded-xl text-xs mb-1"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, 'portada_url')}
+                        disabled={subiendo}
+                        className="w-full text-xs text-slate-500"
+                      />
+                    </div>
+
+                    {/* GALERÍA DE FOTOS */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border">
+                      <label className="block text-xs font-bold text-slate-800 mb-2">🖼️ Galería de Fotos (Múltiples):</label>
+                      <div className="grid grid-cols-3 gap-2 mb-2">
+                        {formData.galeria_urls.map((url, idx) => (
+                          <div key={idx} className="relative h-16 bg-slate-200 rounded-xl overflow-hidden border">
+                            <img src={url} alt={`Gal ${idx}`} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => eliminarDeGaleria(idx)}
+                              className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[9px] font-bold flex items-center justify-center"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, null, true)}
+                        disabled={subiendo}
+                        className="w-full text-xs text-slate-500"
+                      />
+                    </div>
+
+                    {/* REDES SOCIALES */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
+                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Redes Sociales</p>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Instagram:</label>
+                        <input
+                          type="text"
+                          value={formData.instagram_url}
+                          onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
+                          placeholder="https://instagram.com/..."
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">TikTok:</label>
+                        <input
+                          type="text"
+                          value={formData.tiktok_url}
+                          onChange={(e) => setFormData({...formData, tiktok_url: e.target.value})}
+                          placeholder="https://tiktok.com/@..."
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Facebook:</label>
+                        <input
+                          type="text"
+                          value={formData.facebook_url}
+                          onChange={(e) => setFormData({...formData, facebook_url: e.target.value})}
+                          placeholder="https://facebook.com/..."
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp:</label>
+                        <input
+                          type="text"
+                          value={formData.whatsapp}
+                          onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">PIN Acceso:</label>
+                        <input
+                          type="text"
+                          value={formData.pin_acceso}
+                          onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
+                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Descripción:</label>
+                      <textarea
+                        rows="2"
+                        value={formData.descripcion}
+                        onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                        className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={guardando}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl shadow"
+                    >
+                      {guardando ? "Guardando..." : "💾 Guardar Cambios"}
+                    </button>
+                  </form>
                 )}
               </div>
-            )}
+            ) : (
+              /* VISTA NORMAL DE LA FICHA DEL COMERCIO */
+              <div>
+                <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border">
+                  <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover" />
+                </div>
 
-            {/* VÍDEO PROMOCIONAL */}
-            {comercioSel.video_story_url && comercioSel.video_story_url !== "EMPTY" && comercioSel.video_story_url !== "NULL" && (
-              <div className="mt-4">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                  <Video size={14} /> Vídeo Promocional
-                </p>
-                <div className="rounded-2xl overflow-hidden bg-black aspect-video relative shadow-md">
-                  {obtenerYoutubeEmbed(comercioSel.video_story_url) ? (
-                    <iframe
-                      src={obtenerYoutubeEmbed(comercioSel.video_story_url)}
-                      title="Vídeo promocional"
-                      className="w-full h-full border-0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  ) : (
-                    <video
-                      src={comercioSel.video_story_url}
-                      controls
-                      playsInline
-                      className="w-full h-full object-cover"
-                    />
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-800">{comercioSel.nombre}</h2>
+                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mt-0.5">
+                      {comercioSel.subcategoria || comercioSel.categoria}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setModoAdmin(true); setAutenticadoAdmin(false); }}
+                    className="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1"
+                  >
+                    ✏️ Editar
+                  </button>
+                </div>
+
+                {comercioSel.direccion && (
+                  <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
+                    <MapPin size={14} className="text-slate-400" /> {comercioSel.direccion}
+                  </p>
+                )}
+
+                {comercioSel.descripcion && (
+                  <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border">
+                    {comercioSel.descripcion}
+                  </p>
+                )}
+
+                {/* GALERÍA DE FOTOS EN LA VISTA */}
+                {comercioSel.galeria_urls && Array.isArray(comercioSel.galeria_urls) && comercioSel.galeria_urls.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                      <Image size={14} /> Galería de Fotos
+                    </p>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {comercioSel.galeria_urls.map((url, i) => (
+                        url && (
+                          <div 
+                            key={i} 
+                            onClick={() => setFotoAmpliada(url.trim())}
+                            className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border cursor-pointer hover:opacity-90"
+                          >
+                            <img src={url.trim()} alt={`Foto ${i}`} className="w-full h-full object-cover" />
+                          </div>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* REDES SOCIALES EN LA VISTA */}
+                {(comercioSel.instagram_url || comercioSel.tiktok_url || comercioSel.facebook_url) && (
+                  <div className="mt-4 pt-3 border-t flex gap-2">
+                    {comercioSel.instagram_url && (
+                      <a href={comercioSel.instagram_url} target="_blank" rel="noreferrer" className="flex-1 bg-pink-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow">
+                        Instagram
+                      </a>
+                    )}
+                    {comercioSel.tiktok_url && (
+                      <a href={comercioSel.tiktok_url} target="_blank" rel="noreferrer" className="flex-1 bg-black text-white py-2 rounded-xl text-center text-xs font-bold shadow">
+                        TikTok
+                      </a>
+                    )}
+                    {comercioSel.facebook_url && (
+                      <a href={comercioSel.facebook_url} target="_blank" rel="noreferrer" className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow">
+                        Facebook
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* BOTONES DE CONTACTO */}
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  {comercioSel.whatsapp && (
+                    <a
+                      href={"https://wa.me/" + comercioSel.whatsapp.replace("+", "").replace(/\s/g, "")}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow"
+                    >
+                      💬 WhatsApp
+                    </a>
+                  )}
+                  {comercioSel.telefono && (
+                    <a
+                      href={"tel:" + comercioSel.telefono}
+                      className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <Phone size={14} className="text-emerald-600" /> Llamar
+                    </a>
                   )}
                 </div>
               </div>
             )}
-
-            {/* GALERÍA DE FOTOS */}
-            {comercioSel.galeria_urls && Array.isArray(comercioSel.galeria_urls) && comercioSel.galeria_urls.filter(url => url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY").length > 0 && (
-              <div className="mt-4">
-                <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                  <Image size={14} /> Fotos de las instalaciones y productos
-                </p>
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none snap-x">
-                  {comercioSel.galeria_urls.map((url, i) => (
-                    url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && (
-                      <div 
-                        key={i} 
-                        onClick={() => setFotoAmpliada(url.trim())}
-                        className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 border border-slate-200 cursor-pointer hover:opacity-90 snap-start"
-                      >
-                        <img src={url.trim()} alt={"Imagen " + i} className="w-full h-full object-cover" />
-                      </div>
-                    )
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* BOTÓN CARTA / MENÚ EN PDF */}
-            {(() => {
-              const cartaUrl = comercioSel.carta_pdf_url;
-              if (cartaUrl && typeof cartaUrl === 'string' && cartaUrl.trim() !== "" && cartaUrl !== "EMPTY" && cartaUrl !== "NULL") {
-                return (
-                  <a
-                    href={cartaUrl.trim()}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-4 w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition-colors"
-                  >
-                    <FileText size={16} /> Ver Carta / Menú en PDF <ExternalLink size={12} />
-                  </a>
-                );
-              }
-              return null;
-            })()}
-
-            {/* Contactos */}
-            <div className="grid grid-cols-2 gap-2 mt-4">
-              {comercioSel.whatsapp && comercioSel.whatsapp !== "EMPTY" && (
-                <a
-                  href={"https://wa.me/" + comercioSel.whatsapp.replace("+", "").replace(/\s/g, "")}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow cursor-pointer"
-                >
-                  💬 WhatsApp
-                </a>
-              )}
-
-              {comercioSel.telefono && comercioSel.telefono !== "EMPTY" && (
-                <a
-                  href={"tel:" + comercioSel.telefono}
-                  className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Phone size={14} className="text-emerald-600" /> Llamar
-                </a>
-              )}
-            </div>
-
-            {/* Mapa */}
-            <button
-              onClick={() => abrirMapa(comercioSel)}
-              className="mt-2 w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Navigation size={14} className="text-sky-600" /> Cómo Llegar
-            </button>
-
-            {/* Web, Tienda Online y Redes Sociales */}
-            <div className="mt-3 space-y-2">
-              {comercioSel.web_url && comercioSel.web_url !== "EMPTY" && (
-                <a
-                  href={comercioSel.web_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow cursor-pointer"
-                >
-                  <Globe size={15} /> Sitio Web Oficial <ExternalLink size={12} />
-                </a>
-              )}
-
-              {comercioSel.tienda_url && comercioSel.tienda_url !== "EMPTY" && (
-                <a
-                  href={comercioSel.tienda_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow cursor-pointer"
-                >
-                  <ShoppingBag size={15} /> Tienda Online <ExternalLink size={12} />
-                </a>
-              )}
-            </div>
 
           </div>
         </div>
