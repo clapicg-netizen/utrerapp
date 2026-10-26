@@ -1,11 +1,7 @@
 // src/lib/consoService.js
 export async function consultarConsoIA(preguntaUsuario) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  
-  if (!apiKey) {
-    console.error("Falta la clave VITE_GEMINI_API_KEY en el entorno");
-    return "¡Vaya, jefe! No encuentro la llave de acceso a la IA. Revísala en Vercel.";
-  }
+  // Clave fija para evitar problemas de lectura en Vercel
+  const apiKey = "AIzaSyAzVp6-6Pq2hT1G_mX4vL9k8nJ3sR5yW7x";
 
   try {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
