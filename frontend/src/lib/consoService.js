@@ -1,41 +1,27 @@
 // src/lib/consoService.js
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const apiKey = "AIzaSyAzVp6-6Pq2hT1G_mX4vL9k8nJ3sR5yW7x";
+const genAI = new GoogleGenerativeAI(apiKey);
 
 export async function consultarConsoIA(preguntaUsuario) {
-  const apiKey = "AIzaSyAzVp6-6Pq2hT1G_mX4vL9k8nJ3sR5yW7x";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-  // Estructura oficial requerida por la API de Google Generative AI
-  const payload = {
-    contents: [
-      {
-        parts: [
-          {
-            text: `Eres Conso, el asistente virtual oficial de Utrera (Sevilla). Eres amable, cercano, hablas con naturalidad y conoces todo sobre Utrera: sus monumentos, su historia, ferias, tradiciones, panaderías, comercios, clima actual y datos prácticos. Responde de forma clara, directa y útil en tiempo real para los vecinos y visitantes. No menciones que eres un modelo de lenguaje; eres Conso, la IA en tiempo real de Utrerapp.\n\nPregunta del vecino: ${preguntaUsuario}`
-          }
-        ]
-      }
-    ]
-  };
-
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload)
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: "Eres Conso, el asistente virtual oficial de Utrera (Sevilla). Eres amable, cercano, hablas con naturalidad y conoces todo sobre Utrera: sus monumentos, su historia, ferias, tradiciones, panaderías, comercios, clima actual y datos prácticos. Responde de forma clara, directa y útil en tiempo real para los vecinos y visitantes. No menciones que eres un modelo de lenguaje; eres Conso, la IA en tiempo real de Utrerapp."
     });
 
-    const data = await response.json();
-    
-    if (data && data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
-      return data.candidates[0].content.parts[0].text;
-    } else {
-      console.error("Estructura de respuesta inesperada:", data);
-      throw new Error("Respuesta inválida de la API");
-    }
+    const result = await model.generateContent(preguntaUsuario);
+    const response = await result.response;
+    return response.text();
   } catch (error) {
-    console.error("Error al conectar en tiempo real con Conso IA:", error);
-    return `ℹ️ Sobre "${preguntaUsuario}", Utrera cuenta con una gran actividad y servicios municipales. Recuerda que puedes consultarme directamente por las **farmacias de guardia**, los **horarios de trenes** o los **aparcamientos**. ¡Dime en qué más te puedo ayudar!`;
+    console.error("Error con el SDK de Gemini:", error);
+    
+    const p = preguntaUsuario.toLowerCase();
+    if (p.includes('lluvia') || p.includes('llover') || p.includes('tiempo')) {
+      return "☁️ Para consultar la previsión de lluvia al minuto en Utrera, te recomiendo revisar el radar meteorológico o la aplicación del tiempo de tu dispositivo.";
+    }
+    
+    return `ℹ️ Entendido sobre "${preguntaUsuario}". Recuerda que también puedes consultarme de forma inmediata por las farmacias de guardia, los horarios de trenes o los aparcamientos. ¡Dime!`;
   }
 }
