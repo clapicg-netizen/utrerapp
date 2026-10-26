@@ -1,3 +1,4 @@
+// src/App.js
 import React, { useState, useEffect } from 'react';
 import Home from './pages/Home';
 import Farmacias from './pages/Farmacias';
@@ -38,7 +39,7 @@ export default function App() {
       case 'guia':
         return <GuiaComercial />;
       case 'hosteleria':
-        return <GuiaComercial categoriaInicial="Hostelería" />; // <-- Abre la guía directamente en Hostelería
+        return <GuiaComercial categoriaInicial="Hostelería" />;
       case 'admin':
         return <DashboardAdmin />;
       case 'panel-comercio':
