@@ -16,15 +16,19 @@ export const comerciosService = {
   }
 };
 
-// --- FUNCIÓN AUXILIAR DE SANEAMIENTO ---
-// Traduce nombres de campos del formulario a los nombres reales de la tabla de Supabase
+// --- FUNCIÓN AUXILIAR DE SANEAMIENTO TOTAL ---
+// Traduce y limpia cualquier campo del formulario a las columnas reales de Supabase
 const limpiarDatosComercio = (formData) => {
   const datosLimpios = { ...formData };
 
-  // Mapeo seguro de columnas
+  // Mapeo seguro de columnas del formulario a Supabase
   if (datosLimpios.instagram_url !== undefined) {
     datosLimpios.instagram_username = datosLimpios.instagram_url;
     delete datosLimpios.instagram_url;
+  }
+  if (datosLimpios.tiktok_url !== undefined) {
+    datosLimpios.tiktok_username = datosLimpios.tiktok_url;
+    delete datosLimpios.tiktok_url;
   }
   if (datosLimpios.sitio_web !== undefined) {
     datosLimpios.web_url = datosLimpios.sitio_web;
