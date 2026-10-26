@@ -1,64 +1,60 @@
 // src/pages/Teatro.jsx
 import React, { useState } from "react";
-import TopBar from "@/components/app/TopBar";
-import BottomNav from "@/components/app/BottomNav";
-import { ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, CalendarDays } from "lucide-react";
 
-export default function Teatro() {
+export default function Teatro({ setPaginaActual }) {
   const [cargando, setCargando] = useState(true);
   const urlGiglon = "https://www.giglon.com/todos?city=Utrera";
 
   return (
-    <div className="app-shell pb-24" data-testid="teatro-page">
-      <TopBar title="Teatro Enrique de la Cuadra" back testId="teatro-topbar" />
-
-      {/* CABECERA HERO */}
-      <div className="mt-4 rounded-3xl overflow-hidden relative h-36 shadow-md" data-testid="teatro-hero">
-        <img
-          src="https://images.unsplash.com/photo-1761359841098-8e84b7cf3661?crop=entropy&cs=srgb&fm=jpg&w=800&q=80"
-          alt="Teatro"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-4 text-white flex justify-between items-end w-full">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-white/80">Cartelera Oficial</p>
-            <h2 className="font-display font-extrabold text-lg leading-tight">Enrique de la Cuadra</h2>
-            <p className="text-xs text-white/80">C/ Rodrigo Caro, 16 · Utrera</p>
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col">
+      {/* CABECERA */}
+      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative flex-shrink-0">
+        <div className="flex items-center justify-between max-w-md mx-auto">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPaginaActual("menu-agenda")}
+              className="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <div>
+              <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                <CalendarDays size={12} /> Cartelera Oficial
+              </p>
+              <h1 className="text-lg font-black mt-0.5">Teatro Enrique de la Cuadra</h1>
+            </div>
           </div>
+
           <a
             href={urlGiglon}
             target="_blank"
             rel="noreferrer"
-            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1 shadow transition-colors mb-1"
+            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs px-3 py-2.5 rounded-xl flex items-center gap-1 shadow transition-colors shrink-0"
           >
-            Abrir Web <ExternalLink size={12} />
+            Web <ExternalLink size={12} />
           </a>
         </div>
       </div>
 
-      <p className="mt-5 mb-2 text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold px-1">
-        Programación en Directo (Giglon)
-      </p>
-
       {/* CONTENEDOR DEL IFRAME DE GIGLON */}
-      <div className="rounded-2xl border border-border/70 bg-card overflow-hidden relative shadow-sm h-[60vh] w-full">
-        {cargando && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-card text-muted-foreground gap-2 z-10">
-            <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-xs font-bold">Cargando eventos de Utrera...</p>
-          </div>
-        )}
+      <div className="px-4 mt-4 max-w-md mx-auto w-full flex-1 flex flex-col">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative flex-1 min-h-[70vh] w-full">
+          {cargando && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-500 gap-2 z-10">
+              <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs font-bold">Cargando cartelera de Utrera...</p>
+            </div>
+          )}
 
-        <iframe
-          src={urlGiglon}
-          title="Cartelera Teatro Utrera - Giglon"
-          className="w-full h-full border-0"
-          onLoad={() => setCargando(false)}
-        />
+          <iframe
+            src={urlGiglon}
+            title="Cartelera Teatro Utrera - Giglon"
+            className="w-full h-full border-0 absolute inset-0"
+            onLoad={() => setCargando(false)}
+          />
+        </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }

@@ -1,21 +1,31 @@
 // src/pages/MenuAgenda.jsx
 import React from "react";
-import TopBar from "@/components/app/TopBar";
-import BottomNav from "@/components/app/BottomNav";
-import { Ticket, CalendarDays, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
 
 export default function MenuAgenda({ setPaginaActual }) {
   return (
-    <div className="app-shell pb-24" data-testid="menu-agenda-page">
-      <TopBar title="Agenda Cultural y Eventos" back testId="menu-agenda-topbar" />
-
-      <div className="mt-4 mb-6 px-1">
-        <h2 className="text-lg font-black text-slate-900">Cultura en Utrera</h2>
-        <p className="text-xs text-slate-500">Selecciona una categoría para ver la programación oficial</p>
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
+      {/* CABECERA */}
+      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative">
+        <div className="flex items-center gap-3 max-w-md mx-auto">
+          <button
+            onClick={() => setPaginaActual("home")}
+            className="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+              <CalendarDays size={12} /> Utrera Cultural
+            </p>
+            <h1 className="text-xl font-black mt-0.5">Agenda y Eventos</h1>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-4 px-1">
-        {/* TARJETA 1: TEATRO ENRIQUE DE LA CUADRA (ENLAZA AL GIGLON) */}
+      {/* CONTENIDO */}
+      <div className="px-4 mt-5 max-w-md mx-auto space-y-4">
+        {/* TARJETA 1: TEATRO ENRIQUE DE LA CUADRA */}
         <div
           onClick={() => setPaginaActual("teatro")}
           className="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 p-5 rounded-3xl text-white shadow-md border border-slate-800 cursor-pointer hover:scale-[0.99] transition-transform relative overflow-hidden flex items-center justify-between"
@@ -61,8 +71,6 @@ export default function MenuAgenda({ setPaginaActual }) {
           </div>
         </div>
       </div>
-
-      <BottomNav />
     </div>
   );
 }
