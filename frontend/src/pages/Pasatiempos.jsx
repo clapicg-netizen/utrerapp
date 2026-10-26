@@ -41,9 +41,9 @@ export default function Pasatiempos({ setPaginaActual }) {
   };
 
   const spawnPiece = () => {
-    const shape = SHAPES[Math.floor(Math.random() * SHOPUT = SHAPES.length || Math.floor(Math.random() * SHAPES.length))];
+    const randomShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
     tetrisRef.current.currentPiece = {
-      shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+      shape: randomShape,
       color: Math.floor(Math.random() * 7) + 1,
       x: 3,
       y: 0
@@ -296,25 +296,25 @@ export default function Pasatiempos({ setPaginaActual }) {
             <div className="grid grid-cols-4 gap-2 pt-2">
               <button 
                 onClick={() => mover(-1)} 
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow cursor-pointer"
               >
                 ⬅️
               </button>
               <button 
                 onClick={girarPieza} 
-                className="bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1 shadow"
+                className="bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold py-3 rounded-xl text-xs flex items-center justify-center gap-1 shadow cursor-pointer"
               >
                 <RotateCw size={14} /> Girar
               </button>
               <button 
                 onClick={bajarRapido} 
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow cursor-pointer"
               >
                 🔽
               </button>
               <button 
                 onClick={() => mover(1)} 
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow"
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold py-3 rounded-xl text-base shadow cursor-pointer"
               >
                 ➡️
               </button>
@@ -323,7 +323,7 @@ export default function Pasatiempos({ setPaginaActual }) {
             <div className="flex gap-2">
               <button 
                 onClick={() => setEnPausa(!enPausa)} 
-                className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-2.5 rounded-xl text-xs shadow flex items-center justify-center gap-1"
+                className="flex-1 bg-indigo-50 text-indigo-700 font-bold py-2.5 rounded-xl text-xs shadow flex items-center justify-center gap-1 cursor-pointer"
               >
                 {enPausa ? <Play size={14} /> : <Pause size={14} />} {enPausa ? 'Seguir' : 'Pausa'}
               </button>
@@ -364,13 +364,13 @@ export default function Pasatiempos({ setPaginaActual }) {
             <div className="flex gap-2">
               <button
                 onClick={comprobarSudoku}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 rounded-xl shadow"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 rounded-xl shadow cursor-pointer"
               >
                 Comprobar
               </button>
               <button
                 onClick={() => setJuegoActivo(null)}
-                className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-3 rounded-xl"
+                className="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-3 rounded-xl cursor-pointer"
               >
                 Menú de Juegos
               </button>
