@@ -301,7 +301,7 @@ export default function Conso() {
             type="text"
             placeholder="Pregúntale a Conso (trenes, farmacias, parking...)"
             value={mensaje}
-            onChange={(e) => setSignificacion?.(e.target.value) || setMensaje(e.target.value)}
+            onChange={(e) => setMensaje(e.target.value)}
             className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
           />
           <button
