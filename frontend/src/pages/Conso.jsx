@@ -1,6 +1,7 @@
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
+import { consultarConsoIA } from '../lib/consoService';
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
@@ -16,7 +17,7 @@ export default function Conso() {
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: `¡Hola, JuanRa! Soy Conso, tu asistente de Utrera. 👋\nPuedes preguntarme por las farmacias de guardia de hoy, trenes, aparcamientos o cualquier duda sobre nuestra ciudad.`
+      texto: `¡Hola! Soy Conso, tu asistente virtual de Utrera. 👋\nPuedes preguntarme por las farmacias de guardia de hoy, trenes, aparcamientos o cualquier duda sobre nuestra ciudad.`
     }
   ]);
 
@@ -30,9 +31,10 @@ export default function Conso() {
     window.location.href = "tel:" + telefono;
   };
 
-  const procesarRespuestaLocal = (pregunta) => {
+  const procesarRespuesta = async (pregunta) => {
     const texto = pregunta.toLowerCase();
 
+    // 1. Preguntas rápidas locales (Farmacias)
     if (texto.includes('farmacia') || texto.includes('guardia')) {
       return (
         <div className="space-y-3">
@@ -120,6 +122,7 @@ export default function Conso() {
       );
     }
 
+    // 2. Preguntas sobre Trenes
     if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
       return (
         <div className="space-y-3">
@@ -167,6 +170,7 @@ export default function Conso() {
       );
     }
 
+    // 3. Preguntas sobre Aparcamientos
     if (texto.includes('aparcamiento') || texto.includes('parking') || texto.includes('aparcar')) {
       return (
         <div className="space-y-3">
@@ -189,18 +193,16 @@ export default function Conso() {
       );
     }
 
-    if (texto.includes('cabalgata') || texto.includes('reyes') || texto.includes('navidad')) {
-      return "👑 ¡Sobre la Cabalgata de Reyes Magos en Utrera! Tradicionalmente se celebra cada 5 de enero por la tarde, recorriendo las principales calles de nuestra ciudad (como la Corredera, Plaza de Pío XII y la Fontanilla) repartiendo ilusión, caramelos y magia para todos los niños utreranos. ¡Es una de las citas más bonitas del año en Utrera!";
+    // 4. Para cualquier otra pregunta, consulta a la IA real (consoService)
+    try {
+      const respuestaIA = await consultarConsoIA(pregunta);
+      return respuestaIA;
+    } catch (err) {
+      return `Disculpa, en este momento me cuesta conectar con el servidor de inteligencia artificial. Pero puedes preguntarme por las farmacias de guardia, trenes o aparcamientos de Utrera.`;
     }
-
-    if (texto.includes('feria') || texto.includes('mostachon')) {
-      return "🎉 ¡La Feria de Utrera (Feria de Nuestra Señora de Consolación) se celebra tradicionalmente en septiembre! Es una de las fiestas más grandes de Andalucía, declarada de interés turístico, donde el Real del Parque de Consolación se llena de casetas, buen ambiente y, por supuesto, nuestros famosos mostachones.";
-    }
-
-    return `👑 ¡Claro que sí, JuanRa! Como Conso, el asistente oficial de Utrera, te cuento: sobre eso que me preguntas ("${pregunta}"), en Utrera tenemos mucha historia y tradición. Si necesitas consultar datos prácticos rápidos, recuerda que puedes preguntarme por la farmacia de guardia, los trenes o los aparcamientos. ¡Dime qué más te gustaría saber!`;
   };
 
-  const enviarMensaje = (textoEnvio) => {
+  const enviarMensaje = async (textoEnvio) => {
     if (!textoEnvio.trim()) return;
 
     const nuevoChat = [...chat, { origen: 'usuario', texto: textoEnvio }];
@@ -208,11 +210,9 @@ export default function Conso() {
     setMensaje('');
     setCargandoIA(true);
 
-    setTimeout(() => {
-      const respuestaConso = procesarRespuestaLocal(textoEnvio);
-      setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
-      setCargandoIA(false);
-    }, 600);
+    const respuestaConso = await procesarRespuesta(textoEnvio);
+    setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
+    setCargandoIA(false);
   };
 
   const manejarSubmit = (e) => {
