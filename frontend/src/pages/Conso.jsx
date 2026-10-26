@@ -192,28 +192,33 @@ export default function Conso() {
       );
     }
 
-    // 4. Preguntas sobre Panaderías / Comercios
+    // 4. Ayuntamiento / Partido político gobernante
+    if (texto.includes('ayuntamiento') || texto.includes('partido') || texto.includes('gobierna') || texto.includes('alcalde')) {
+      return "🏛️ Actualmente, el Ayuntamiento de Utrera está gobernado por el **Partido Popular (PP)**, siendo su alcalde Francisco Jiménez.";
+    }
+
+    // 5. Panaderías
     if (texto.includes('panaderia') || texto.includes('pan') || texto.includes('panaderias')) {
       return "🥖 ¡En Utrera tenemos una gran tradición panadera repartida por todos los barrios! Contamos con obradores artesanales emblemáticos donde disfrutar de nuestro pan diario y picos tradicionales. Puedes consultar los establecimientos detallados en la sección de la **Guía Comercial** de la aplicación.";
     }
 
-    // 5. Preguntas sobre Reyes Magos / Cabalgata
+    // 6. Reyes Magos / Cabalgata
     if (texto.includes('cabalgata') || texto.includes('reyes') || texto.includes('navidad')) {
       return "👑 ¡La Cabalgata de Reyes Magos en Utrera se celebra cada 5 de enero por la tarde! Recorre las principales calles de nuestra ciudad (como la Corredera, Plaza de Pío XII y la Fontanilla) repartiendo ilusión y caramelos. ¡Es una de las citas más mágicas del año!";
     }
 
-    // 6. Preguntas sobre Feria
+    // 7. Feria
     if (texto.includes('feria') || texto.includes('mostachon')) {
       return "🎉 La Feria de Utrera (Feria de Nuestra Señora de Consolación) se celebra cada mes de septiembre en el Real del Parque de Consolación. Es una de las fiestas más importantes de Andalucía y el lugar perfecto para disfrutar del ambiente y de nuestros tradicionales mostachones.";
     }
 
-    // 7. Saludos o respuestas generales naturales
+    // 8. Saludos
     if (texto.includes('hola') || texto.includes('buenos dias') || texto.includes('buenas tardes')) {
       return "¡Hola! ¿En qué puedo ayudarte hoy por Utrera? Pregúntame por las farmacias de guardia, trenes, aparcamientos o cualquier consulta sobre la ciudad.";
     }
 
-    // Respuesta por defecto adaptada a cualquier otra duda
-    return `ℹ️ Sobre "${pregunta}", Utrera cuenta con una gran riqueza local y servicios. Si buscas información práctica para tu día a día, recuerda que puedes consultarme rápidamente por la **farmacia de guardia**, los **horarios de trenes** o los **aparcamientos**. ¡Dime en qué más te puedo ayudar!`;
+    // Respuesta por defecto natural
+    return `ℹ️ Sobre "${pregunta}", Utrera cuenta con una gran riqueza local y servicios municipales. Si necesitas información práctica, recuerda que puedes consultarme rápidamente por la **farmacia de guardia**, los **horarios de trenes** o los **aparcamientos**. ¡Dime en qué más te puedo ayudar!`;
   };
 
   const enviarMensaje = (textoEnvio) => {
