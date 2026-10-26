@@ -17,7 +17,7 @@ export default function PanelComercio() {
   // Texto para el Agente de Volcado Masivo a lo Bruto
   const [textoBruto, setTextoBruto] = useState('');
 
-  // Formulario del comercio activo
+  // Formulario del comercio activo (añadidos web_url y tienda_online)
   const [formData, setFormData] = useState({
     nombre: '',
     categoria: 'Hostelería',
@@ -34,6 +34,8 @@ export default function PanelComercio() {
     instagram_url: '',
     tiktok_url: '',
     facebook_url: '',
+    web_url: '',
+    tienda_online: '',
     oferta_flash: '',
     video_story_url: '',
     pin_acceso: '1234',
@@ -92,6 +94,8 @@ export default function PanelComercio() {
       instagram_url: c.instagram_url || '',
       tiktok_url: c.tiktok_url || '',
       facebook_url: c.facebook_url || '',
+      web_url: c.web_url || '',
+      tienda_online: c.tienda_online || '',
       oferta_flash: c.oferta_flash || '',
       video_story_url: c.video_story_url || '',
       pin_acceso: c.pin_acceso || '1234',
@@ -165,6 +169,10 @@ export default function PanelComercio() {
           datosActualizados.tiktok_url = l.substring(3).trim();
         } else if (lower.startsWith('fb:')) {
           datosActualizados.facebook_url = l.substring(3).trim();
+        } else if (lower.startsWith('web:') || lower.startsWith('wb:')) {
+          datosActualizados.web_url = l.substring(l.indexOf(':') + 1).trim();
+        } else if (lower.startsWith('tienda:')) {
+          datosActualizados.tienda_online = l.substring(l.indexOf(':') + 1).trim();
         } else if (lower.startsWith('vd:') || lower.startsWith('video:')) {
           datosActualizados.video_story_url = l.substring(l.indexOf(':') + 1).trim();
         } else if (lower.startsWith('pdf:') || lower.startsWith('carta:')) {
@@ -320,11 +328,11 @@ export default function PanelComercio() {
           🤖 Agente IA de Volcado Masivo ("A lo Bruto")
         </h3>
         <p className="text-[11px] text-slate-300 mb-3 leading-relaxed">
-          Pega aquí los datos usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">W:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Gl:</code>, <code className="text-amber-300">Ig:</code>, <code className="text-amber-300">Tk:</code>) y pulsa procesar para rellenar el formulario.
+          Pega aquí los datos usando abreviaturas (<code className="text-amber-300">N:</code>, <code className="text-amber-300">Web:</code>, <code className="text-amber-300">Tienda:</code>, <code className="text-amber-300">Port:</code>, <code className="text-amber-300">Ig:</code>) y pulsa procesar para rellenar el formulario.
         </p>
         <textarea
           rows="4"
-          placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;W: 34600000000&#10;Port: https://...&#10;Ig: https://instagram.com/..."
+          placeholder="N: Bar La Chana&#10;Cat: Hostelería&#10;Web: https://...&#10;Tienda: https://...&#10;Port: https://..."
           value={textoBruto}
           onChange={(e) => setTextoBruto(e.target.value)}
           className="w-full p-3 bg-white/10 border border-white/20 rounded-2xl text-xs text-white placeholder-slate-400 focus:outline-none focus:bg-white/20"
@@ -367,6 +375,8 @@ export default function PanelComercio() {
                   instagram_url: '',
                   tiktok_url: '',
                   facebook_url: '',
+                  web_url: '',
+                  tienda_online: '',
                   oferta_flash: '',
                   video_story_url: '',
                   pin_acceso: '1234',
@@ -434,6 +444,33 @@ export default function PanelComercio() {
             onChange={(e) => setFormData({...formData, direccion: e.target.value})}
             className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
           />
+        </div>
+
+        {/* 🌐 SITIO WEB Y TIENDA ONLINE */}
+        <div className="space-y-3 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+          <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">🌐 Sitio Web y Tienda Online</p>
+          
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Página Web (Web:):</label>
+            <input
+              type="text"
+              placeholder="https://www.lachanataberna.es"
+              value={formData.web_url}
+              onChange={(e) => setFormData({...formData, web_url: e.target.value})}
+              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Tienda Online / E-commerce (Tienda:):</label>
+            <input
+              type="text"
+              placeholder="https://tu-tienda.palbin.com"
+              value={formData.tienda_online}
+              onChange={(e) => setFormData({...formData, tienda_online: e.target.value})}
+              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
+            />
+          </div>
         </div>
 
         <div>
