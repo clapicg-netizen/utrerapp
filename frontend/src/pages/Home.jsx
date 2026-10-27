@@ -1,6 +1,6 @@
 // src/pages/Home.jsx
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed } from "lucide-react";
+import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed, Newspaper } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Home({ setPaginaActual, setTab }) {
@@ -285,12 +285,27 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* OCIO Y ENTRETENIMIENTO */}
+      {/* OCIO, CLASIFICADOS Y ENTRETENIMIENTO */}
       <div className="px-4 mt-5 max-w-md mx-auto">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Ocio y Entretenimiento
+          Ocio y Tablón Local
         </h2>
         <div className="grid grid-cols-2 gap-3">
+          {/* TARJETA TABLÓN DE ANUNCIOS CLASIFICADOS */}
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "tablon")}
+            className="bg-gradient-to-br from-amber-600 to-orange-700 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-500/40 active:scale-[0.98] transition-transform cursor-pointer"
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
+              <Newspaper size={18} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase font-black text-amber-200 tracking-wider">Tablón</p>
+              <h3 className="font-extrabold text-xs leading-tight truncate">Anuncios y Empleo</h3>
+            </div>
+          </button>
+
           {/* TARJETA PASATIEMPOS (ZONA DE JUEGOS) */}
           <button 
             type="button"
@@ -310,7 +325,7 @@ export default function Home({ setPaginaActual, setTab }) {
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "hosteleria")}
-            className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform cursor-pointer"
+            className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform col-span-2 cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
               <UtensilsCrossed size={18} />
