@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, Phone, MapPin, Car, ArrowRight, ArrowLeft } from 'lucide-react';
 import { consultarConsoIA } from '../lib/consoService';
+import { supabase } from '../lib/supabaseClient';
 
 export default function Conso() {
   const [mensaje, setMensaje] = useState('');
@@ -34,92 +35,98 @@ export default function Conso() {
   const procesarRespuesta = async (pregunta) => {
     const texto = pregunta.toLowerCase();
 
-    // Consultas rápidas locales estructuradas
+    // Consultas rápidas locales estructuradas consultando Supabase en tiempo real
     if (texto.includes('farmacia') || texto.includes('guardia')) {
-      return (
-        <div className="space-y-3">
-          <div>
-            <p className="font-bold text-slate-900 mb-0.5">💊 FARMACIA DE GUARDIA OFICIAL</p>
-            <p className="text-[11px] text-slate-500 capitalize">📅 {fechaHoyStr}</p>
-          </div>
+      try {
+        const fechaStr = new Date().toISOString().split('T')[0];
+        const { data: guardiasHoy, error } = await supabase
+          .from('farmacias_calendario')
+          .select('*')
+          .eq('fecha', fechaStr);
 
-          <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
-            <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-              ☀️ Turno de Día (9:30 a 22:00 h)
-            </span>
+        if (error) throw error;
 
-            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
-              <p className="font-bold text-slate-900 text-xs">Farmacia José Luis Algarín Pachón</p>
-              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
-                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Corredera, 1</span>
-              </p>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 954860448</span>
-                <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "954860448")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Corredera, 1, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
-                </div>
-              </div>
+        if (!guardiasHoy || guardiasHoy.length === 0) {
+          return (
+            <div className="space-y-2">
+              <p className="font-bold text-slate-900">💊 FARMACIA DE GUARDIA OFICIAL</p>
+              <p className="text-xs text-slate-500">No hay registros introducidos en Supabase para la fecha de hoy ({fechaStr}).</p>
+            </div>
+          );
+        }
+
+        const farmaciasDia = guardiasHoy.filter(f => !f.turno || f.turno.toLowerCase() === 'día' || f.turno.toLowerCase() === 'dia');
+        const farmaciasNoche = guardiasHoy.filter(f => f.turno && f.turno.toLowerCase() === 'noche');
+
+        return (
+          <div className="space-y-3">
+            <div>
+              <p className="font-bold text-slate-900 mb-0.5">💊 FARMACIA DE GUARDIA OFICIAL</p>
+              <p className="text-[11px] text-slate-500 capitalize">📅 {fechaHoyStr}</p>
             </div>
 
-            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
-              <p className="font-bold text-slate-900 text-xs">Farmacia Rafael González</p>
-              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
-                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Cristo de los Afligidos, 74</span>
-              </p>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 954860213</span>
-                <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "954860213")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Cristo de los Afligidos, 74, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
-                </div>
+            {/* TURNO DE DÍA */}
+            {farmaciasDia.length > 0 && (
+              <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
+                <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  ☀️ Turno de Día (9:30 a 22:00 h)
+                </span>
+                {farmaciasDia.map((f, idx) => (
+                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                    <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
+                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
+                    <p className="text-slate-600 text-[11px] flex items-center gap-1">
+                      <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                      <span>{f.direccion}</span>
+                    </p>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                      <span className="text-[11px] font-semibold text-slate-500">📞 {f.telefono}</span>
+                      <div className="flex gap-1.5">
+                        <button onClick={(e) => realizarLlamada(e, f.telefono)} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
+                        <button onClick={(e) => abrirMapa(e, f.direccion)} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            )}
 
-            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
-              <p className="font-bold text-slate-900 text-xs">Farmacia Pablo Troncoso López</p>
-              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
-                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Avda. María Auxiliadora, 95</span>
-              </p>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 954860196</span>
-                <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "954860196")} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Avda. María Auxiliadora, 95, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
-                </div>
+            {/* TURNO DE NOCHE */}
+            {farmaciasNoche.length > 0 && (
+              <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
+                <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  🌙 Turno de Noche (22:00 a 9:30 h)
+                </span>
+                {farmaciasNoche.map((f, idx) => (
+                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                    <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
+                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
+                    <p className="text-slate-600 text-[11px] flex items-center gap-1">
+                      <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                      <span>{f.direccion}</span>
+                    </p>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                      <span className="text-[11px] font-semibold text-slate-500">📞 {f.telefono}</span>
+                      <div className="flex gap-1.5">
+                        <button onClick={(e) => realizarLlamada(e, f.telefono)} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer">Llamar</button>
+                        <button onClick={(e) => abrirMapa(e, f.direccion)} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
+            )}
+
+            <div className="pt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 italic">
+              <HeartPulse size={15} className="text-emerald-500" />
+              <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
             </div>
           </div>
-
-          <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
-            <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-              🌙 Turno de Noche (22:00 a 9:30 h)
-            </span>
-            <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
-              <p className="font-bold text-slate-900 text-xs">Farmacia Ma Luz Ceballos Niebla</p>
-              <p className="text-slate-600 text-[11px] mt-1 flex items-center gap-1">
-                <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                <span>Avda. La Fontanilla, 38</span>
-              </p>
-              <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                <span className="text-[11px] font-semibold text-slate-500">📞 955864368</span>
-                <div className="flex gap-1.5">
-                  <button onClick={(e) => realizarLlamada(e, "955864368")} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer">Llamar</button>
-                  <button onClick={(e) => abrirMapa(e, "Avda. La Fontanilla, 38, Utrera")} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 italic">
-            <HeartPulse size={15} className="text-emerald-500" />
-            <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
-          </div>
-        </div>
-      );
+        );
+      } catch (err) {
+        console.error("Error consultando farmacias en Conso:", err);
+        return "Lo siento, ha ocurrido un error al consultar las farmacias de guardia en la base de datos.";
+      }
     }
 
     if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
