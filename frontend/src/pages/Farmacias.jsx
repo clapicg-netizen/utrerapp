@@ -1,72 +1,78 @@
-import React, { useState } from "react";
+// src/pages/Farmacias.jsx
+import React, { useState, useEffect } from "react";
 import { Pill, Phone, MapPin, Clock, Search, HeartPulse } from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
 
 export default function Farmacias() {
   const [busqueda, setBusqueda] = useState("");
+  const [farmacias, setFarmacias] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Datos oficiales de turnos de guardia según los listados facilitados
-  // Hoy es 24 de octubre de 2026 (Sábado)
   const hoy = new Date();
-  const esSabado24 = hoy.getDate() === 24 && hoy.getMonth() === 9; // Octubre es mes 9
+  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
 
-  const farmaciasUtrera = [
-    {
-      id: 1,
-      nombre: "Farmacia José Luis Algarín Pachón",
-      boticario: "José Luis Algarín Pachón",
-      direccion: "Corredera, 1, Utrera",
-      telefono: "954860448",
-      deGuardia: esSabado24,
-      horarioGuardia: esSabado24 ? "De Guardia Hoy (Día: 9:30 a 22:00 h)" : "09:30 a 22:00 h",
-    },
-    {
-      id: 2,
-      nombre: "Farmacia Ma Luz Ceballos Niebla",
-      boticario: "Ma Luz Ceballos Niebla",
-      direccion: "Avda. La Fontanilla, 38, Utrera",
-      telefono: "955864368",
-      deGuardia: esSabado24,
-      horarioGuardia: esSabado24 ? "De Guardia Hoy (Noche: 22:00 a 9:30 h)" : "Guardia según calendario",
-    },
-    {
-      id: 3,
-      nombre: "Farmacia Rafael González",
-      boticario: "Rafael González",
-      direccion: "Cristo de los Afligidos, 74, Utrera",
-      telefono: "954860213",
-      deGuardia: false,
-      horarioGuardia: "09:30 a 22:00 h",
-    },
-    {
-      id: 4,
-      nombre: "Farmacia Pablo Troncoso López",
-      boticario: "Pablo Troncoso López (El Charco)",
-      direccion: "Avda. María Auxiliadora, 95, Utrera",
-      telefono: "954860196",
-      deGuardia: false,
-      horarioGuardia: "09:30 a 22:00 h",
-    },
-    {
-      id: 5,
-      nombre: "Farmacia Morales Guerrero, CB",
-      boticario: "Farmacia Morales Guerrero",
-      direccion: "Avda. Alcalde José Dorado, 5 - Bda. El Carmen, Utrera",
-      telefono: "954864924",
-      deGuardia: false,
-      horarioGuardia: "Guardia según calendario",
-    },
-    {
-      id: 6,
-      nombre: "Farmacia Antonio Valdés Arenas",
-      boticario: "Antonio Valdés Arenas",
-      direccion: "Av. S. Juan Bosco, 96, Utrera",
-      telefono: "955864951",
-      deGuardia: false,
-      horarioGuardia: "Guardia según calendario",
+  useEffect(() => {
+    async function cargarFarmacias() {
+      try {
+        const { data, error } = await supabase
+          .from('farmacias') // O tu tabla correspondiente en Supabase
+          .select('*');
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setFarmacias(data);
+        } else {
+          // Datos de respaldo por si la tabla está vacía temporalmente
+          setFarmacias([
+            {
+              id: 1,
+              nombre: "Farmacia José Luis Algarín Pachón",
+              boticario: "José Luis Algarín Pachón",
+              direccion: "Corredera, 1, Utrera",
+              telefono: "954860448",
+              de_guardia: true,
+              horario: "09:30 a 22:00 h (De Guardia)"
+            },
+            {
+              id: 2,
+              nombre: "Farmacia Ma Luz Ceballos Niebla",
+              boticario: "Ma Luz Ceballos Niebla",
+              direccion: "Avda. La Fontanilla, 38, Utrera",
+              telefono: "955864368",
+              de_guardia: false,
+              horario: "09:30 a 22:00 h"
+            },
+            {
+              id: 3,
+              nombre: "Farmacia Rafael González",
+              boticario: "Rafael González",
+              direccion: "Cristo de los Afligidos, 74, Utrera",
+              telefono: "954860213",
+              de_guardia: false,
+              horario: "09:30 a 22:00 h"
+            },
+            {
+              id: 4,
+              nombre: "Farmacia Pablo Troncoso López",
+              boticario: "Pablo Troncoso López",
+              direccion: "Avda. María Auxiliadora, 95, Utrera",
+              telefono: "954860196",
+              de_guardia: false,
+              horario: "09:30 a 22:00 h"
+            }
+          ]);
+        }
+      } catch (err) {
+        console.error("Error cargando farmacias:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    cargarFarmacias();
+  }, []);
 
-  const filtradas = farmaciasUtrera.filter(f => 
+  const filtradas = farmacias.filter(f => 
     f.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     f.direccion.toLowerCase().includes(busqueda.toLowerCase())
   );
@@ -74,9 +80,6 @@ export default function Farmacias() {
   const abrirMapa = (direccion) => {
     window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
   };
-
-  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -108,54 +111,58 @@ export default function Farmacias() {
 
       {/* Lista de Farmacias */}
       <div className="px-4 mt-5 space-y-4 max-w-lg mx-auto">
-        {filtradas.map((farmacia) => (
-          <div
-            key={farmacia.id}
-            className={`p-4 rounded-2xl bg-white border shadow-sm transition-all ${
-              farmacia.deGuardia ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200"
-            }`}
-          >
-            {farmacia.deGuardia && (
-              <span className="inline-block bg-emerald-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase mb-2 shadow-sm">
-                🚨 DE GUARDIA OFICIAL HOY
-              </span>
-            )}
+        {loading ? (
+          <div className="text-center py-10 text-xs text-slate-500">Cargando farmacias...</div>
+        ) : (
+          filtradas.map((farmacia) => (
+            <div
+              key={farmacia.id}
+              className={`p-4 rounded-2xl bg-white border shadow-sm transition-all ${
+                farmacia.de_guardia ? "border-emerald-500 ring-2 ring-emerald-500/20" : "border-slate-200"
+              }`}
+            >
+              {farmacia.de_guardia && (
+                <span className="inline-block bg-emerald-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase mb-2 shadow-sm">
+                  🚨 DE GUARDIA OFICIAL HOY
+                </span>
+              )}
 
-            <h3 className="font-bold text-slate-900 text-base">{farmacia.nombre}</h3>
-            <p className="text-xs text-slate-500 mt-0.5">{farmacia.boticario}</p>
+              <h3 className="font-bold text-slate-900 text-base">{farmacia.nombre}</h3>
+              <p className="text-xs text-slate-500 mt-0.5">{farmacia.boticario}</p>
 
-            <p className="text-xs text-slate-600 mt-2 flex items-center gap-1.5">
-              <MapPin size={14} className="text-slate-400 flex-shrink-0" />
-              <span>{farmacia.direccion}</span>
-            </p>
+              <p className="text-xs text-slate-600 mt-2 flex items-center gap-1.5">
+                <MapPin size={14} className="text-slate-400 flex-shrink-0" />
+                <span>{farmacia.direccion}</span>
+              </p>
 
-            <p className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
-              <Clock size={14} className="text-slate-400 flex-shrink-0" />
-              <span className="font-semibold text-emerald-700">{farmacia.horarioGuardia}</span>
-            </p>
+              <p className="text-xs text-slate-600 mt-1 flex items-center gap-1.5">
+                <Clock size={14} className="text-slate-400 flex-shrink-0" />
+                <span className="font-semibold text-emerald-700">{farmacia.horario || "09:30 a 22:00 h"}</span>
+              </p>
 
-            <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">
-              <a
-                href={"tel:" + farmacia.telefono}
-                className="py-2.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-100"
-              >
-                <Phone size={14} /> Llamar
-              </a>
-              <button
-                onClick={() => abrirMapa(farmacia.direccion)}
-                className="py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-200"
-              >
-                <MapPin size={14} /> Cómo Llegar
-              </button>
+              <div className="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-slate-100">
+                <a
+                  href={"tel:" + farmacia.telefono}
+                  className="py-2.5 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-emerald-100"
+                >
+                  <Phone size={14} /> Llamar
+                </a>
+                <button
+                  onClick={() => abrirMapa(farmacia.direccion)}
+                  className="py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-slate-200"
+                >
+                  <MapPin size={14} /> Cómo Llegar
+                </button>
+              </div>
+
+              {/* Mensaje de cortesía */}
+              <div className="mt-3 pt-2 border-t border-slate-50 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
+                <HeartPulse size={13} className="text-emerald-500" />
+                <span>¡Que haya mejoría!</span>
+              </div>
             </div>
-
-            {/* Mensaje de cortesía */}
-            <div className="mt-3 pt-2 border-t border-slate-50 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
-              <HeartPulse size={13} className="text-emerald-500" />
-              <span>¡Que haya mejoría!</span>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
     </div>
