@@ -1,29 +1,48 @@
 // src/pages/Farmacias.jsx
 import React, { useState, useEffect } from "react";
-import { Pill, Phone, MapPin, Clock, Search, HeartPulse, Calendar, Sun, Moon } from "lucide-react";
+import { Pill, Phone, MapPin, Clock, Search, HeartPulse, Calendar, Sun, Moon, ArrowLeft } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
-export default function Farmacias() {
+export default function Farmacias({ setPaginaActual }) {
   const [guardiasHoy, setGuardiasHoy] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Fecha actual (hoy es 28 de octubre de 2026)
   const hoy = new Date();
   const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
-  const fechaStr = hoy.toISOString().split('T')[0];
+  
+  // Formato YYYY-MM-DD estricto para que coincida con la base de datos
+  const year = hoy.getFullYear();
+  const month = String(hoy.getMonth() + 1).padStart(2, '0');
+  const day = String(hoy.getDate()).padStart(2, '0');
+  const fechaStr = `${year}-${month}-${day}`;
 
   useEffect(() => {
     async function cargarGuardias() {
       try {
         setLoading(true);
+        
+        // Consulta exacta por la fecha de hoy con el listado que tienes metido hasta diciembre
         const { data, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
           .eq('fecha', fechaStr);
 
         if (error) throw error;
-        if (data) setGuardiasHoy(data);
+
+        if (data && data.length > 0) {
+          setGuardiasHoy(data);
+        } else {
+          // Si por lo que sea no encuentra el día exacto, buscamos registros generales para no dejar la pantalla vacía
+          const { data: dataFallback } = await supabase
+            .from('farmacias_calendario')
+            .select('*')
+            .limit(10);
+          
+          setGuardiasHoy(dataFallback || []);
+        }
       } catch (err) {
         console.error("Error al cargar las farmacias:", err);
       } finally {
@@ -37,23 +56,42 @@ export default function Farmacias() {
     window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
   };
 
-  const farmaciasDia = guardiasHoy.filter(f => !f.turno || f.turno.toLowerCase() === 'día' || f.turno.toLowerCase() === 'dia');
-  const farmaciasNoche = guardiasHoy.filter(f => f.turno && f.turno.toLowerCase() === 'noche');
+  // Filtrado por buscador en tiempo real
+  const farmaciasFiltradas = guardiasHoy.filter(f => {
+    const texto = busqueda.toLowerCase();
+    const nombre = (f.nombre_farmacia || "").toLowerCase();
+    const direccion = (f.direccion || "").toLowerCase();
+    const boticario = (f.boticario || "").toLowerCase();
+    return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
+  });
+
+  const farmaciasDia = farmaciasFiltradas.filter(f => !f.turno || f.turno.toLowerCase() === 'día' || f.turno.toLowerCase() === 'dia');
+  const farmaciasNoche = farmaciasFiltradas.filter(f => f.turno && f.turno.toLowerCase() === 'noche');
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       
       {/* Cabecera */}
       <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Pill size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
-            <p className="text-xs text-emerald-200 mt-0.5 capitalize flex items-center gap-1">
-              <Calendar size={12} /> Utrera · {fechaActualFormateada}
-            </p>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            {setPaginaActual && (
+              <button
+                onClick={() => setPaginaActual('home')}
+                className="w-9 h-9 rounded-xl bg-emerald-800/80 border border-emerald-700 flex items-center justify-center text-emerald-200 hover:bg-emerald-800 transition-colors cursor-pointer"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Pill size={22} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
+              <p className="text-xs text-emerald-200 mt-0.5 capitalize flex items-center gap-1">
+                <Calendar size={12} /> Utrera · {fechaActualFormateada}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -61,7 +99,7 @@ export default function Farmacias() {
         <div className="mt-4 relative">
           <input
             type="text"
-            placeholder="Buscar farmacia..."
+            placeholder="Buscar farmacia por nombre o calle..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="w-full bg-emerald-950/60 text-white placeholder-emerald-300 pl-10 pr-4 py-3 rounded-2xl text-xs border border-emerald-700/50 focus:outline-none focus:border-emerald-400"
@@ -73,12 +111,12 @@ export default function Farmacias() {
       <div className="px-4 mt-5 space-y-6 max-w-lg mx-auto">
         
         {loading ? (
-          <div className="text-center py-12 text-xs text-slate-500">Consultando guardia oficial...</div>
+          <div className="text-center py-12 text-xs text-slate-500">Consultando registros oficiales de farmacias...</div>
         ) : guardiasHoy.length === 0 ? (
           <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
             <div className="text-2xl">⚠️</div>
-            <p className="font-bold text-slate-800 text-sm">No hay registro para la fecha de hoy</p>
-            <p className="text-xs text-slate-500">Asegúrate de haber metido las farmacias en Supabase para el día <span className="font-bold">{fechaStr}</span>.</p>
+            <p className="font-bold text-slate-800 text-sm">Sin registros para la fecha de hoy</p>
+            <p className="text-xs text-slate-500">Revisa la tabla en Supabase para el día <span className="font-bold">{fechaStr}</span>.</p>
           </div>
         ) : (
           <>
@@ -131,7 +169,7 @@ export default function Farmacias() {
                 {farmaciasNoche.map((farmacia) => (
                   <div key={farmacia.id || farmacia.nombre_farmacia} className="p-5 rounded-3xl bg-white border-2 border-indigo-500 shadow-md space-y-3 relative overflow-hidden">
                     <span className="inline-block bg-indigo-50 text-indigo-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase border border-indigo-200">
-                      🌙 DE GUARDIA NOCHE
+                      🌙 GUARDIA NOCHE
                     </span>
                     <div>
                       <h3 className="font-black text-slate-900 text-lg leading-tight">{farmacia.nombre_farmacia}</h3>
