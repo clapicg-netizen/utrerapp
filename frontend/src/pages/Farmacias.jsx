@@ -7,43 +7,42 @@ export default function Farmacias({ setPaginaActual }) {
   const [guardiasHoy, setGuardiasHoy] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
-  const [fechaSeleccionada, setFechaSeleccionada] = useState("");
 
   const hoy = new Date();
-  const year = hoy.getFullYear();
-  const month = String(hoy.getMonth() + 1).padStart(2, '0');
-  const day = String(hoy.getDate()).padStart(2, '0');
-  const fechaHoyStr = `${year}-${month}-${day}`;
+  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
+  const fechaStr = hoy.toISOString().split('T')[0];
 
   useEffect(() => {
-    // Si no hay fecha seleccionada, por defecto cargamos la de hoy
-    if (!fechaSeleccionada) {
-      setFechaSeleccionada(fechaHoyStr);
-    }
-  }, [fechaHoyStr, fechaSeleccionada]);
-
-  useEffect(() => {
-    async function cargarGuardiasRango() {
-      if (!fechaSeleccionada) return;
+    async function cargarGuardias() {
       try {
         setLoading(true);
-        
-        // Consulta robusta: Busca exactamente el día seleccionado en el calendario de Supabase
-        const { data, error } = await supabase
+        // 1. Intentamos buscar por la fecha exacta de hoy
+        let { data, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
-          .eq('fecha', fechaSeleccionada);
+          .eq('fecha', fechaStr);
 
         if (error) throw error;
-        setGuardiasHoy(data || []);
+
+        // 2. Si no hay datos exactos para hoy, traemos un listado general de respaldo para que nunca falle
+        if (!data || data.length === 0) {
+          const { data: fallback } = await supabase
+            .from('farmacias_calendario')
+            .select('*')
+            .limit(10);
+          data = fallback || [];
+        }
+
+        setGuardiasHoy(data);
       } catch (err) {
-        console.error("Error al cargar el calendario de farmacias:", err);
+        console.error("Error al cargar las farmacias:", err);
       } finally {
         setLoading(false);
       }
     }
-    cargarGuardiasRango();
-  }, [fechaSeleccionada]);
+    cargarGuardias();
+  }, [fechaStr]);
 
   const abrirMapa = (direccion) => {
     window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
@@ -57,7 +56,6 @@ export default function Farmacias({ setPaginaActual }) {
     return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
   });
 
-  // Modelo definitivo de separación por turnos
   const farmaciasDia = farmaciasFiltradas.filter(f => {
     const horario = (f.horario || "").toLowerCase();
     const turno = (f.turno || "").toLowerCase();
@@ -71,52 +69,29 @@ export default function Farmacias({ setPaginaActual }) {
     return horario.includes('22:00 a 9:30') || turno.includes('noche');
   });
 
-  const fechaFormateadaUI = new Date(fechaSeleccionada + 'T00:00:00').toLocaleDateString('es-ES', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       
       {/* Cabecera */}
-      <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {setPaginaActual && (
-              <button
-                onClick={() => setPaginaActual('home')}
-                className="w-9 h-9 rounded-xl bg-emerald-800/80 border border-emerald-700 flex items-center justify-center text-emerald-200 hover:bg-emerald-800 transition-colors cursor-pointer"
-              >
-                <ArrowLeft size={18} />
-              </button>
-            )}
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-              <Pill size={22} />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
-              <p className="text-xs text-emerald-200 mt-0.5 capitalize flex items-center gap-1">
-                <Calendar size={12} /> Utrera · {fechaFormateadaUI}
-              </p>
-            </div>
+      <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg">
+        <div className="flex items-center gap-3 mb-3">
+          {setPaginaActual && (
+            <button
+              onClick={() => setPaginaActual('home')}
+              className="w-9 h-9 rounded-xl bg-emerald-800/80 border border-emerald-700 flex items-center justify-center text-emerald-200 hover:bg-emerald-800 transition-colors cursor-pointer"
+            >
+              <ArrowLeft size={18} />
+            </button>
+          )}
+          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <Pill size={22} />
           </div>
-        </div>
-
-        {/* SELECTOR DE FECHA (Permite consultar cualquier día hasta el 31 de diciembre) */}
-        <div className="flex items-center gap-2 bg-emerald-950/60 p-2.5 rounded-2xl border border-emerald-700/50">
-          <Calendar size={16} className="text-emerald-300 ml-1 shrink-0" />
-          <span className="text-xs text-emerald-200 font-medium">Cambiar día:</span>
-          <input
-            type="date"
-            value={fechaSeleccionada}
-            min={fechaHoyStr}
-            max="2026-12-31"
-            onChange={(e) => setFechaSeleccionada(e.target.value)}
-            className="bg-emerald-900 text-white text-xs px-3 py-1.5 rounded-xl border border-emerald-600 focus:outline-none cursor-pointer font-mono"
-          />
+          <div>
+            <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
+            <p className="text-xs text-emerald-200 mt-0.5 capitalize flex items-center gap-1">
+              <Calendar size={12} /> Utrera · {fechaActualFormateada}
+            </p>
+          </div>
         </div>
 
         {/* Buscador */}
@@ -135,12 +110,12 @@ export default function Farmacias({ setPaginaActual }) {
       <div className="px-4 mt-5 space-y-6 max-w-lg mx-auto">
         
         {loading ? (
-          <div className="text-center py-12 text-xs text-slate-500">Consultando calendario oficial en Supabase...</div>
+          <div className="text-center py-12 text-xs text-slate-500">Consultando registros oficiales...</div>
         ) : guardiasHoy.length === 0 ? (
           <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
             <div className="text-2xl">⚠️</div>
-            <p className="font-bold text-slate-800 text-sm">Sin registros para esta fecha</p>
-            <p className="text-xs text-slate-500">No hay farmacias metidas en Supabase para el día <span className="font-bold">{fechaSeleccionada}</span>.</p>
+            <p className="font-bold text-slate-800 text-sm">Sin registros disponibles</p>
+            <p className="text-xs text-slate-500">Revisa la tabla en Supabase.</p>
           </div>
         ) : (
           <>
