@@ -21,6 +21,7 @@ export default function Farmacias({ setPaginaActual }) {
     async function cargarGuardias() {
       try {
         setLoading(true);
+        // Consulta exacta para el día de hoy
         const { data, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
@@ -49,15 +50,19 @@ export default function Farmacias({ setPaginaActual }) {
     return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
   });
 
-  // Clasificación robusta basada en el turno real de la base de datos
+  // Lógica exacta de separación por turnos de 24h
   const farmaciasDia = farmaciasFiltradas.filter(f => {
-    const t = (f.turno || "").toLowerCase();
-    return t === 'dia' || t === 'día' || (!t.includes('noche') && !t.includes('22:00'));
+    const turno = (f.turno || "").toLowerCase();
+    const horario = (f.horario || "").toLowerCase();
+    // Si contiene explícitamente noche o las 22:00, va a la noche; si no, es turno de día
+    if (turno.includes('noche') || horario.includes('22:00 a 9:30')) return false;
+    return true;
   });
 
   const farmaciasNoche = farmaciasFiltradas.filter(f => {
-    const t = (f.turno || "").toLowerCase();
-    return t === 'noche' || t.includes('22:00') || t.includes('madrugada');
+    const turno = (f.turno || "").toLowerCase();
+    const horario = (f.horario || "").toLowerCase();
+    return turno.includes('noche') || horario.includes('22:00 a 9:30');
   });
 
   return (
@@ -108,7 +113,7 @@ export default function Farmacias({ setPaginaActual }) {
           <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
             <div className="text-2xl">⚠️</div>
             <p className="font-bold text-slate-800 text-sm">Sin registros para la fecha de hoy</p>
-            <p className="text-xs text-slate-500">Comprueba la fecha <span className="font-bold">{fechaStr}</span> en Supabase.</p>
+            <p className="text-xs text-slate-500">Revisa la tabla en Supabase para el día <span className="font-bold">{fechaStr}</span>.</p>
           </div>
         ) : (
           <>
@@ -120,10 +125,10 @@ export default function Farmacias({ setPaginaActual }) {
                   <span>Turno de Día (9:30 a 22:00 h)</span>
                 </div>
 
-                {farmaciasDia.map((farmacia) => (
-                  <div key={farmacia.id || farmacia.nombre_farmacia} className="p-5 rounded-3xl bg-white border-2 border-emerald-500 shadow-md space-y-3 relative overflow-hidden">
+                {farmaciasDia.map((farmacia, index) => (
+                  <div key={farmacia.id || index} className="p-5 rounded-3xl bg-white border-2 border-emerald-500 shadow-md space-y-3 relative overflow-hidden">
                     <span className="inline-block bg-emerald-50 text-emerald-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase border border-emerald-200">
-                      🚨 DE GUARDIA OFICIAL HOY
+                      🚨 GUARDIA OFICIAL DÍA
                     </span>
                     <div>
                       <h3 className="font-black text-slate-900 text-lg leading-tight">{farmacia.nombre_farmacia}</h3>
@@ -158,10 +163,10 @@ export default function Farmacias({ setPaginaActual }) {
                   <span>Turno de Noche (22:00 a 9:30 h)</span>
                 </div>
 
-                {farmaciasNoche.map((farmacia) => (
-                  <div key={farmacia.id || farmacia.nombre_farmacia} className="p-5 rounded-3xl bg-white border-2 border-indigo-500 shadow-md space-y-3 relative overflow-hidden">
+                {farmaciasNoche.map((farmacia, index) => (
+                  <div key={farmacia.id || index} className="p-5 rounded-3xl bg-white border-2 border-indigo-500 shadow-md space-y-3 relative overflow-hidden">
                     <span className="inline-block bg-indigo-50 text-indigo-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase border border-indigo-200">
-                      🌙 GUARDIA NOCHE
+                      🌙 GUARDIA OFICIAL NOCHE
                     </span>
                     <div>
                       <h3 className="font-black text-slate-900 text-lg leading-tight">{farmacia.nombre_farmacia}</h3>
