@@ -7,48 +7,43 @@ export default function Farmacias({ setPaginaActual }) {
   const [guardiasHoy, setGuardiasHoy] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState("");
 
   const hoy = new Date();
-  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
-  
   const year = hoy.getFullYear();
   const month = String(hoy.getMonth() + 1).padStart(2, '0');
   const day = String(hoy.getDate()).padStart(2, '0');
-  const fechaStr = `${year}-${month}-${day}`;
+  const fechaHoyStr = `${year}-${month}-${day}`;
 
   useEffect(() => {
-    async function cargarGuardias() {
+    // Si no hay fecha seleccionada, por defecto cargamos la de hoy
+    if (!fechaSeleccionada) {
+      setFechaSeleccionada(fechaHoyStr);
+    }
+  }, [fechaHoyStr, fechaSeleccionada]);
+
+  useEffect(() => {
+    async function cargarGuardiasRango() {
+      if (!fechaSeleccionada) return;
       try {
         setLoading(true);
         
-        // 1. Intentamos buscar por la fecha exacta de hoy
-        let { data, error } = await supabase
+        // Consulta robusta: Busca exactamente el día seleccionado en el calendario de Supabase
+        const { data, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
-          .eq('fecha', fechaStr);
+          .eq('fecha', fechaSeleccionada);
 
         if (error) throw error;
-
-        // 2. Si no hay datos exactos para hoy, hacemos fallback automático trayendo los últimos registros de la tabla
-        if (!data || data.length === 0) {
-          const { data: dataFallback } = await supabase
-            .from('farmacias_calendario')
-            .select('*')
-            .limit(10);
-          
-          data = dataFallback || [];
-        }
-
-        setGuardiasHoy(data);
+        setGuardiasHoy(data || []);
       } catch (err) {
-        console.error("Error al cargar las farmacias:", err);
+        console.error("Error al cargar el calendario de farmacias:", err);
       } finally {
         setLoading(false);
       }
     }
-    cargarGuardias();
-  }, [fechaStr]);
+    cargarGuardiasRango();
+  }, [fechaSeleccionada]);
 
   const abrirMapa = (direccion) => {
     window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
@@ -62,25 +57,33 @@ export default function Farmacias({ setPaginaActual }) {
     return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
   });
 
+  // Modelo definitivo de separación por turnos
   const farmaciasDia = farmaciasFiltradas.filter(f => {
-    const turno = (f.turno || "").toLowerCase();
     const horario = (f.horario || "").toLowerCase();
-    if (turno.includes('noche') || horario.includes('22:00')) return false;
+    const turno = (f.turno || "").toLowerCase();
+    if (horario.includes('22:00 a 9:30') || turno.includes('noche')) return false;
     return true;
   });
 
   const farmaciasNoche = farmaciasFiltradas.filter(f => {
-    const turno = (f.turno || "").toLowerCase();
     const horario = (f.horario || "").toLowerCase();
-    return turno.includes('noche') || horario.includes('22:00');
+    const turno = (f.turno || "").toLowerCase();
+    return horario.includes('22:00 a 9:30') || turno.includes('noche');
+  });
+
+  const fechaFormateadaUI = new Date(fechaSeleccionada + 'T00:00:00').toLocaleDateString('es-ES', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
   });
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       
       {/* Cabecera */}
-      <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg">
-        <div className="flex items-center justify-between mb-2">
+      <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {setPaginaActual && (
               <button
@@ -96,14 +99,28 @@ export default function Farmacias({ setPaginaActual }) {
             <div>
               <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
               <p className="text-xs text-emerald-200 mt-0.5 capitalize flex items-center gap-1">
-                <Calendar size={12} /> Utrera · {fechaActualFormateada}
+                <Calendar size={12} /> Utrera · {fechaFormateadaUI}
               </p>
             </div>
           </div>
         </div>
 
+        {/* SELECTOR DE FECHA (Permite consultar cualquier día hasta el 31 de diciembre) */}
+        <div className="flex items-center gap-2 bg-emerald-950/60 p-2.5 rounded-2xl border border-emerald-700/50">
+          <Calendar size={16} className="text-emerald-300 ml-1 shrink-0" />
+          <span className="text-xs text-emerald-200 font-medium">Cambiar día:</span>
+          <input
+            type="date"
+            value={fechaSeleccionada}
+            min={fechaHoyStr}
+            max="2026-12-31"
+            onChange={(e) => setFechaSeleccionada(e.target.value)}
+            className="bg-emerald-900 text-white text-xs px-3 py-1.5 rounded-xl border border-emerald-600 focus:outline-none cursor-pointer font-mono"
+          />
+        </div>
+
         {/* Buscador */}
-        <div className="mt-4 relative">
+        <div className="relative">
           <input
             type="text"
             placeholder="Buscar farmacia por nombre o calle..."
@@ -118,12 +135,12 @@ export default function Farmacias({ setPaginaActual }) {
       <div className="px-4 mt-5 space-y-6 max-w-lg mx-auto">
         
         {loading ? (
-          <div className="text-center py-12 text-xs text-slate-500">Consultando registros oficiales...</div>
+          <div className="text-center py-12 text-xs text-slate-500">Consultando calendario oficial en Supabase...</div>
         ) : guardiasHoy.length === 0 ? (
           <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
             <div className="text-2xl">⚠️</div>
-            <p className="font-bold text-slate-800 text-sm">Sin registros disponibles</p>
-            <p className="text-xs text-slate-500">Revisa la tabla en Supabase.</p>
+            <p className="font-bold text-slate-800 text-sm">Sin registros para esta fecha</p>
+            <p className="text-xs text-slate-500">No hay farmacias metidas en Supabase para el día <span className="font-bold">{fechaSeleccionada}</span>.</p>
           </div>
         ) : (
           <>
