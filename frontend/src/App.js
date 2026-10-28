@@ -1,5 +1,6 @@
 // src/App.js
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import Home from './pages/Home';
 import GuiaComercial from './pages/GuiaComercial';
 import Farmacias from './pages/Farmacias';
@@ -68,6 +69,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 relative">
       {renderizarPagina()}
+      <Analytics />
 
       {/* BARRA DE NAVEGACIÓN INFERIOR */}
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 py-2.5 px-6 flex justify-around items-center z-50 shadow-lg max-w-md mx-auto rounded-t-3xl">
