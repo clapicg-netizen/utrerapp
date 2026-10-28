@@ -1,156 +1,97 @@
-// src/pages/Farmacias.jsx
-import React, { useState, useEffect } from "react";
-import { Pill, Phone, MapPin, Clock, Search, HeartPulse, Calendar, Sun, Moon, ArrowLeft } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+// src/pages/Conso.jsx
+import React, { useState } from 'react';
+import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, MapPin, Car } from 'lucide-react';
+import { consultarConsoIA } from '../lib/consoService';
+import { supabase } from '../lib/supabaseClient';
 
-export default function Farmacias({ setPaginaActual }) {
-  const [guardiasHoy, setGuardiasHoy] = useState([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [loading, setLoading] = useState(true);
+export default function Conso() {
+  const [mensaje, setMensaje] = useState('');
+  const [cargandoIA, setCargandoIA] = useState(false);
+  
+  const fechaHoyStr = new Date().toLocaleDateString('es-ES', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
 
-  const hoy = new Date();
-  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
-  const fechaStr = hoy.toISOString().split('T')[0];
+  const [chat, setChat] = useState([
+    {
+      origen: 'conso',
+      texto: `¡Hola! Soy Conso, tu asistente virtual de Utrera. 👋\nPuedes preguntarme por las farmacias de guardia de hoy, el tiempo, trenes, aparcamientos o cualquier duda sobre nuestra ciudad.`
+    }
+  ]);
 
-  useEffect(() => {
-    async function cargarGuardias() {
+  const abrirMapa = (e, direccion) => {
+    e.preventDefault();
+    window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
+  };
+
+  const realizarLlamada = (e, telefono) => {
+    e.preventDefault();
+    window.location.href = "tel:" + telefono;
+  };
+
+  const procesarRespuesta = async (pregunta) => {
+    const texto = pregunta.toLowerCase();
+
+    if (texto.includes('farmacia') || texto.includes('guardia')) {
       try {
-        setLoading(true);
-        // 1. Intentamos buscar por la fecha exacta de hoy
-        let { data, error } = await supabase
+        const fechaStr = new Date().toISOString().split('T')[0];
+        let { data: guardiasHoy, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
           .eq('fecha', fechaStr);
 
         if (error) throw error;
 
-        // 2. Si no hay datos exactos para hoy, traemos un listado general de respaldo para que nunca falle
-        if (!data || data.length === 0) {
+        if (!guardiasHoy || guardiasHoy.length === 0) {
           const { data: fallback } = await supabase
             .from('farmacias_calendario')
             .select('*')
-            .limit(10);
-          data = fallback || [];
+            .limit(4);
+          guardiasHoy = fallback || [];
         }
 
-        setGuardiasHoy(data);
-      } catch (err) {
-        console.error("Error al cargar las farmacias:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    cargarGuardias();
-  }, [fechaStr]);
+        const farmaciasDia = guardiasHoy.filter(f => {
+          const h = (f.horario || "").toLowerCase();
+          const t = (f.turno || "").toLowerCase();
+          return !h.includes('22:00 a 9:30') && !t.includes('noche');
+        });
 
-  const abrirMapa = (direccion) => {
-    window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
-  };
+        const farmaciasNoche = guardiasHoy.filter(f => {
+          const h = (f.horario || "").toLowerCase();
+          const t = (f.turno || "").toLowerCase();
+          return h.includes('22:00 a 9:30') || t.includes('noche');
+        });
 
-  const farmaciasFiltradas = guardiasHoy.filter(f => {
-    const texto = busqueda.toLowerCase();
-    const nombre = (f.nombre_farmacia || "").toLowerCase();
-    const direccion = (f.direccion || "").toLowerCase();
-    const boticario = (f.boticario || "").toLowerCase();
-    return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
-  });
+        return (
+          <div className="space-y-3">
+            <div>
+              <p className="font-bold text-slate-900 mb-0.5">💊 FARMACIAS DE GUARDIA OFICIAL</p>
+              <p className="text-[11px] text-slate-500 capitalize">📅 {fechaHoyStr}</p>
+            </div>
 
-  const farmaciasDia = farmaciasFiltradas.filter(f => {
-    const horario = (f.horario || "").toLowerCase();
-    const turno = (f.turno || "").toLowerCase();
-    if (horario.includes('22:00 a 9:30') || turno.includes('noche')) return false;
-    return true;
-  });
-
-  const farmaciasNoche = farmaciasFiltradas.filter(f => {
-    const horario = (f.horario || "").toLowerCase();
-    const turno = (f.turno || "").toLowerCase();
-    return horario.includes('22:00 a 9:30') || turno.includes('noche');
-  });
-
-  return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
-      
-      {/* Cabecera */}
-      <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg">
-        <div className="flex items-center gap-3 mb-3">
-          {setPaginaActual && (
-            <button
-              onClick={() => setPaginaActual('home')}
-              className="w-9 h-9 rounded-xl bg-emerald-800/80 border border-emerald-700 flex items-center justify-center text-emerald-200 hover:bg-emerald-800 transition-colors cursor-pointer"
-            >
-              <ArrowLeft size={18} />
-            </button>
-          )}
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Pill size={22} />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold">Farmacias de Guardia</h1>
-            <p className="text-xs text-emerald-200 mt-0.5 capitalize flex items-center gap-1">
-              <Calendar size={12} /> Utrera · {fechaActualFormateada}
-            </p>
-          </div>
-        </div>
-
-        {/* Buscador */}
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Buscar farmacia por nombre o calle..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="w-full bg-emerald-950/60 text-white placeholder-emerald-300 pl-10 pr-4 py-3 rounded-2xl text-xs border border-emerald-700/50 focus:outline-none focus:border-emerald-400"
-          />
-          <Search className="absolute left-3.5 top-3.5 text-emerald-300" size={16} />
-        </div>
-      </div>
-
-      <div className="px-4 mt-5 space-y-6 max-w-lg mx-auto">
-        
-        {loading ? (
-          <div className="text-center py-12 text-xs text-slate-500">Consultando registros oficiales...</div>
-        ) : guardiasHoy.length === 0 ? (
-          <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
-            <div className="text-2xl">⚠️</div>
-            <p className="font-bold text-slate-800 text-sm">Sin registros disponibles</p>
-            <p className="text-xs text-slate-500">Revisa la tabla en Supabase.</p>
-          </div>
-        ) : (
-          <>
             {/* TURNO DE DÍA */}
             {farmaciasDia.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 px-1 text-emerald-800 font-black text-xs uppercase tracking-wider">
-                  <Sun size={15} className="text-amber-500" />
-                  <span>Turno de Día (9:30 a 22:00 h)</span>
-                </div>
-
-                {farmaciasDia.map((farmacia, index) => (
-                  <div key={farmacia.id || index} className="p-5 rounded-3xl bg-white border-2 border-emerald-500 shadow-md space-y-3 relative overflow-hidden">
-                    <span className="inline-block bg-emerald-50 text-emerald-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase border border-emerald-200">
-                      🚨 GUARDIA OFICIAL DÍA
-                    </span>
-                    <div>
-                      <h3 className="font-black text-slate-900 text-lg leading-tight">{farmacia.nombre_farmacia}</h3>
-                      {farmacia.boticario && <p className="text-xs text-slate-500 mt-0.5">Titular: {farmacia.boticario}</p>}
-                    </div>
-                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
-                      <MapPin size={14} className="text-emerald-600 flex-shrink-0" />
-                      <span>{farmacia.direccion}</span>
+              <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
+                <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  ☀️ Turno de Día (9:30 a 22:00 h)
+                </span>
+                {farmaciasDia.map((f, idx) => (
+                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                    <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
+                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
+                    <p className="text-slate-600 text-[11px] flex items-center gap-1">
+                      <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                      <span>{f.direccion}</span>
                     </p>
-                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
-                      <Clock size={14} className="text-emerald-600 flex-shrink-0" />
-                      <span className="font-bold text-emerald-700">{farmacia.horario || "09:30 a 22:00 h"}</span>
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                      <a href={"tel:" + farmacia.telefono} className="py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-colors">
-                        <Phone size={14} /> Llamar
-                      </a>
-                      <button onClick={() => abrirMapa(farmacia.direccion)} className="py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
-                        <MapPin size={14} /> Mapa
-                      </button>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                      <span className="text-[11px] font-semibold text-slate-500">📞 {f.telefono}</span>
+                      <div className="flex gap-1.5">
+                        <button onClick={(e) => realizarLlamada(e, f.telefono)} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
+                        <button onClick={(e) => abrirMapa(e, f.direccion)} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -159,49 +100,210 @@ export default function Farmacias({ setPaginaActual }) {
 
             {/* TURNO DE NOCHE */}
             {farmaciasNoche.length > 0 && (
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center gap-2 px-1 text-indigo-900 font-black text-xs uppercase tracking-wider">
-                  <Moon size={15} className="text-indigo-600" />
-                  <span>Turno de Noche (22:00 a 9:30 h)</span>
-                </div>
-
-                {farmaciasNoche.map((farmacia, index) => (
-                  <div key={farmacia.id || index} className="p-5 rounded-3xl bg-white border-2 border-indigo-500 shadow-md space-y-3 relative overflow-hidden">
-                    <span className="inline-block bg-indigo-50 text-indigo-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase border border-indigo-200">
-                      🌙 GUARDIA OFICIAL NOCHE
-                    </span>
-                    <div>
-                      <h3 className="font-black text-slate-900 text-lg leading-tight">{farmacia.nombre_farmacia}</h3>
-                      {farmacia.boticario && <p className="text-xs text-slate-500 mt-0.5">Titular: {farmacia.boticario}</p>}
-                    </div>
-                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
-                      <MapPin size={14} className="text-indigo-600 flex-shrink-0" />
-                      <span>{farmacia.direccion}</span>
+              <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
+                <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  🌙 Turno de Noche (22:00 a 9:30 h)
+                </span>
+                {farmaciasNoche.map((f, idx) => (
+                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                    <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
+                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
+                    <p className="text-slate-600 text-[11px] flex items-center gap-1">
+                      <MapPin size={12} className="text-slate-400 flex-shrink-0" />
+                      <span>{f.direccion}</span>
                     </p>
-                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
-                      <Clock size={14} className="text-indigo-600 flex-shrink-0" />
-                      <span className="font-bold text-indigo-700">{farmacia.horario || "22:00 a 9:30 h"}</span>
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                      <a href={"tel:" + farmacia.telefono} className="py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-colors">
-                        <Phone size={14} /> Llamar
-                      </a>
-                      <button onClick={() => abrirMapa(farmacia.direccion)} className="py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors">
-                        <MapPin size={14} /> Mapa
-                      </button>
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                      <span className="text-[11px] font-semibold text-slate-500">📞 {f.telefono}</span>
+                      <div className="flex gap-1.5">
+                        <button onClick={(e) => realizarLlamada(e, f.telefono)} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer">Llamar</button>
+                        <button onClick={(e) => abrirMapa(e, f.direccion)} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
-          </>
-        )}
 
-        <div className="pt-2 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
-          <HeartPulse size={13} className="text-emerald-500" />
-          <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
+            <div className="pt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 italic">
+              <HeartPulse size={15} className="text-emerald-500" />
+              <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
+            </div>
+          </div>
+        );
+      } catch (err) {
+        console.error("Error consultando farmacias en Conso:", err);
+        return "Lo siento, ha ocurrido un error al consultar las farmacias de guardia.";
+      }
+    }
+
+    if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
+      return (
+        <div className="space-y-3">
+          <div>
+            <p className="font-bold text-slate-900 mb-0.5">🚆 CERCANÍAS LÍNEA C-1 (Utrera ⇄ Sevilla)</p>
+            <p className="text-[11px] text-slate-500">Horarios oficiales de Renfe</p>
+          </div>
+          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51200&stationInputText=Utrera", "_blank");
+              }}
+              className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span>🚆 Ver Horarios: Utrera ➔ Sevilla</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51100&stationInputText=Sevilla-Santa%20Justa", "_blank");
+              }}
+              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span>🚆 Ver Horarios: Sevilla ➔ Utrera</span>
+            </button>
+          </div>
         </div>
+      );
+    }
 
+    if (texto.includes('aparcamiento') || texto.includes('parking') || texto.includes('aparcar')) {
+      return (
+        <div className="space-y-3">
+          <div>
+            <p className="font-bold text-slate-900 mb-0.5">🅿️ APARCAMIENTOS EN TIEMPO REAL</p>
+            <p className="text-[11px] text-slate-500">Red de sensores inteligentes de Utrera</p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              window.open("https://holautrera.com/parking", "_blank");
+            }}
+            className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <span>🗺️ Ver Mapa de Plazas Libres (holautrera.com)</span>
+          </button>
+        </div>
+      );
+    }
+
+    try {
+      const respuestaIA = await consultarConsoIA(pregunta);
+      return respuestaIA;
+    } catch (err) {
+      return "Disculpa, ahora mismo tengo problemas de conexión con el servidor de inteligencia artificial.";
+    }
+  };
+
+  const enviarMensaje = async (textoEnvio) => {
+    if (!textoEnvio.trim()) return;
+
+    const nuevoChat = [...chat, { origen: 'usuario', texto: textoEnvio }];
+    setChat(nuevoChat);
+    setMensaje('');
+    setCargandoIA(true);
+
+    const respuestaConso = await procesarRespuesta(textoEnvio);
+    setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
+    setCargandoIA(false);
+  };
+
+  const manejarSubmit = (e) => {
+    e.preventDefault();
+    enviarMensaje(mensaje);
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col justify-between">
+      <div className="bg-gradient-to-r from-rose-950 to-red-900 text-white p-5 shadow-lg">
+        <div className="flex items-center gap-3 max-w-md mx-auto">
+          <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
+            <Bot size={22} />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-lg font-bold">Conso IA</h1>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+            <p className="text-[11px] text-rose-200">Asistente Oficial de Utrera</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full space-y-3 overflow-y-auto">
+        {chat.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex items-start gap-2.5 ${msg.origen === 'usuario' ? 'flex-row-reverse' : ''}`}
+          >
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs shadow-sm ${
+              msg.origen === 'usuario' ? 'bg-rose-900 text-white' : 'bg-amber-500 text-slate-950 font-bold'
+            }`}>
+              {msg.origen === 'usuario' ? <User size={16} /> : <Sparkles size={16} />}
+            </div>
+
+            <div className={`p-3.5 rounded-2xl text-xs leading-relaxed shadow-sm max-w-[85%] ${
+              msg.origen === 'usuario' 
+                ? 'bg-rose-900 text-white rounded-tr-none' 
+                : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
+            }`}>
+              {typeof msg.texto === 'string' ? <p className="whitespace-pre-line">{msg.texto}</p> : msg.texto}
+            </div>
+          </div>
+        ))}
+
+        {cargandoIA && (
+          <div className="flex items-center gap-2 text-slate-400 text-xs italic p-2">
+            <Sparkles size={14} className="animate-spin text-amber-500" />
+            <span>Conso está pensando su respuesta...</span>
+          </div>
+        )}
+      </div>
+
+      <div className="px-4 py-2 max-w-md mx-auto w-full grid grid-cols-3 gap-1.5">
+        <button
+          type="button"
+          onClick={() => enviarMensaje("Farmacia de guardia")}
+          className="bg-rose-50 border border-rose-200 text-rose-900 hover:bg-rose-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
+        >
+          <Pill size={14} className="text-rose-700" />
+          <span>Farmacias</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => enviarMensaje("Horario de trenes")}
+          className="bg-slate-100 border border-slate-200 text-slate-800 hover:bg-slate-200 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
+        >
+          <Train size={14} className="text-slate-600" />
+          <span>Trenes</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => enviarMensaje("Aparcamientos")}
+          className="bg-sky-50 border border-sky-200 text-sky-900 hover:bg-sky-100 py-2 px-2 rounded-xl text-[11px] font-bold flex flex-col items-center justify-center gap-1 transition-colors cursor-pointer"
+        >
+          <Car size={14} className="text-sky-700" />
+          <span>Aparcar</span>
+        </button>
+      </div>
+
+      <div className="p-3 bg-white border-t border-slate-200 sticky bottom-0 z-15 max-w-md mx-auto w-full">
+        <form onSubmit={manejarSubmit} className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Pregúntale a Conso sobre Utrera, el tiempo, trenes..."
+            value={mensaje}
+            onChange={(e) => setMensaje(e.target.value)}
+            className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
+          />
+          <button
+            type="submit"
+            className="bg-rose-900 text-white px-5 py-3 rounded-2xl text-xs font-bold hover:bg-rose-950 transition-colors shadow-md flex items-center gap-1.5 cursor-pointer"
+          >
+            <span>Enviar</span>
+            <Send size={14} />
+          </button>
+        </form>
       </div>
     </div>
   );
