@@ -1,60 +1,62 @@
-import React, { useEffect, useState } from "react";
-import { Newspaper, Clock, ArrowLeft, ExternalLink } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import React, { useState } from "react";
+import { Newspaper, Clock, ArrowLeft, ExternalLink, Tv, Radio } from "lucide-react";
 
-const SOURCE_COLORS = {
-  "Utrera al Día": "bg-rose-100 text-rose-700",
-  "Utrera Información": "bg-indigo-100 text-indigo-700",
-  "Diario de Utrera": "bg-emerald-100 text-emerald-700",
-  "Sevilla Este": "bg-amber-100 text-amber-800",
-};
+const MEDIA_SOURCES = [
+  {
+    name: "Utrera Digital",
+    color: "bg-rose-100 text-rose-700",
+    url: "https://www.utreradigital.com/web/"
+  },
+  {
+    name: "Utrera Web",
+    color: "bg-indigo-100 text-indigo-700",
+    url: "https://www.utreraweb.com/"
+  },
+  {
+    name: "Uvitel Online",
+    color: "bg-emerald-100 text-emerald-700",
+    url: "https://uvitelonline.com/"
+  }
+];
 
 export default function Noticias({ setPaginaActual }) {
-  const [news, setNews] = useState([]);
+  const [pestanaActiva, setPestanaActiva] = useState("todos"); // 'todos', 'Utrera Digital', 'Utrera Web', 'Uvitel Online', 'tv'
   const [noticiaSeleccionada, setNoticiaSeleccionada] = useState(null);
 
-  useEffect(() => {
-    async function cargarNoticias() {
-      try {
-        // Intentamos cargar desde Supabase si existe la tabla 'noticias'
-        const { data, error } = await supabase
-          .from('noticias')
-          .select('*')
-          .order('published_at', { ascending: false });
-
-        if (data && data.length > 0) {
-          setNews(data);
-        } else {
-          // Datos de respaldo por si la tabla aún está vacía
-          setNews([
-            {
-              id: 1,
-              source: "Utrera al Día",
-              category: "Local",
-              headline: "Utrera se prepara for una nueva edición cultural",
-              summary: "Las calles del centro histórico acogerán diversas actividades durante el fin de semana con gran expectación vecinal.",
-              published_at: "2026-10-28",
-              url: "#"
-            },
-            {
-              id: 2,
-              source: "Utrera Información",
-              category: "Ayuntamiento",
-              headline: "Nuevas mejoras en los transportes y líneas urbanas",
-              summary: "El consistorio anuncia optimizaciones en los horarios de autobuses para facilitar la conexión con las barriadas.",
-              published_at: "2026-10-27",
-              url: "#"
-            }
-          ]);
-        }
-      } catch (err) {
-        console.error("Error cargando noticias:", err);
-      }
+  // Noticias iniciales preparadas con los enlaces y fuentes oficiales de Utrera
+  const [news] = useState([
+    {
+      id: 1,
+      source: "Utrera Digital",
+      category: "Actualidad",
+      headline: "Utrera encara los preparativos para las próximas citas culturales",
+      summary: "Las distintas delegaciones municipales coordinan la agenda de eventos que llenarán de actividad las plazas y teatros de la localidad.",
+      published_at: "2026-10-28",
+      url: "https://www.utreradigital.com/web/"
+    },
+    {
+      id: 2,
+      source: "Utrera Web",
+      category: "Local",
+      headline: "Nuevas actuaciones de mejora en infraestructuras y viales",
+      summary: "El plan de acondicionamiento de barriadas avanza con intervenciones en pavimentación, acerado y señalización.",
+      published_at: "2026-10-28",
+      url: "https://www.utreraweb.com/"
+    },
+    {
+      id: 3,
+      source: "Uvitel Online",
+      category: "Cultura y Sociedad",
+      headline: "Repaso a la actualidad comarcal y programación de televisión",
+      summary: "Toda la información de Utrera y los municipios vecinos recogida en los boletines informativos y magazines de la jornada.",
+      published_at: "2026-10-27",
+      url: "https://uvitelonline.com/"
     }
-    cargarNoticias();
-  }, []);
+  ]);
 
-  const sources = [...new Set(news.map((n) => n.source))];
+  const noticiasFiltradas = pestanaActiva === "todos" 
+    ? news 
+    : news.filter(n => n.source === pestanaActiva);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -68,73 +70,138 @@ export default function Noticias({ setPaginaActual }) {
             >
               <ArrowLeft size={18} />
             </button>
-            <h1 className="text-lg font-black">Titulares de Utrera</h1>
+            <h1 className="text-lg font-black">Titulares y TV Utrera</h1>
           </div>
         </div>
       </div>
 
       <div className="px-4 mt-4 max-w-md mx-auto">
-        {/* FILTROS DE FUENTES */}
+        {/* PESTAÑAS DE FILTRADO Y TV EN DIRECTO */}
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <span className="text-[11px] px-3 py-1.5 rounded-full bg-amber-600 text-white font-semibold shrink-0 cursor-pointer">
-            Todos
-          </span>
-          {sources.map((s) => (
-            <span key={s} className="text-[11px] px-3 py-1.5 rounded-full bg-white text-slate-600 border border-slate-200 shrink-0 cursor-pointer shadow-sm">
-              {s}
-            </span>
-          ))}
-        </div>
-
-        {/* LISTADO DE NOTICIAS */}
-        <div className="mt-3 space-y-2.5">
-          {news.map((n) => (
+          <button
+            onClick={() => setPestanaActiva("todos")}
+            className={`text-[11px] px-3 py-1.5 rounded-full font-semibold shrink-0 cursor-pointer transition-colors ${pestanaActiva === 'todos' ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200'}`}
+          >
+            📰 Todos
+          </button>
+          
+          {MEDIA_SOURCES.map((m) => (
             <button
-              key={n.id}
-              onClick={() => setNoticiaSeleccionada(n)}
-              className="w-full text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex gap-3 hover:bg-slate-50 transition-colors cursor-pointer"
+              key={m.name}
+              onClick={() => setPestanaActiva(m.name)}
+              className={`text-[11px] px-3 py-1.5 rounded-full font-semibold shrink-0 cursor-pointer transition-colors ${pestanaActiva === m.name ? 'bg-amber-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200'}`}
             >
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <Newspaper size={18} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${SOURCE_COLORS[n.source] || "bg-slate-100 text-slate-700"}`}>
-                    {n.source}
-                  </span>
-                  <span className="text-[10px] text-slate-400">{n.category}</span>
-                </div>
-                <h3 className="font-bold text-[14px] leading-tight mt-1.5 text-slate-900">{n.headline}</h3>
-                <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.summary}</p>
-                <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-mono">
-                  <Clock size={10} /> {n.published_at ? n.published_at.slice(0, 10) : ""}
-                </p>
-              </div>
+              {m.name}
             </button>
           ))}
+
+          <button
+            onClick={() => setPestanaActiva("tv")}
+            className={`text-[11px] px-3 py-1.5 rounded-full font-bold shrink-0 cursor-pointer flex items-center gap-1 transition-colors ${pestanaActiva === 'tv' ? 'bg-rose-600 text-white shadow-md animate-pulse' : 'bg-rose-50 text-rose-700 border border-rose-200'}`}
+          >
+            <Tv size={12} /> TV en Directo
+          </button>
         </div>
+
+        {/* CONTENIDO SEGÚN PESTAÑA */}
+        {pestanaActiva === "tv" ? (
+          /* REPRODUCTOR TV EN DIRECTO (UVITEL ONLINE) */
+          <div className="mt-4 bg-white rounded-3xl p-5 shadow-sm border border-slate-200 text-center space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-100 text-rose-700 rounded-full text-xs font-bold">
+              <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+              Uvitel TV En Directo
+            </div>
+            
+            <p className="text-xs text-slate-500">
+              Disfruta de la señal de televisión en streaming de Utrera en tiempo real.
+            </p>
+
+            <div className="relative rounded-2xl overflow-hidden shadow-inner bg-slate-900 aspect-video flex items-center justify-center">
+              <iframe 
+                src="https://uvitelonline.com/en-directo/" 
+                title="Uvitel TV en Directo"
+                className="w-full h-full border-0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+
+            <a
+              href="https://uvitelonline.com/en-directo/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition-colors shadow-md"
+            >
+              Abrir reproductor a pantalla completa <ExternalLink size={14} />
+            </a>
+          </div>
+        ) : (
+          /* LISTADO DE NOTICIAS FILTRADAS */
+          <div className="mt-3 space-y-2.5">
+            {noticiasFiltradas.map((n) => {
+              const fuenteInfo = MEDIA_SOURCES.find(m => m.name === n.source);
+              return (
+                <button
+                  key={n.id}
+                  onClick={() => setNoticiaSeleccionada(n)}
+                  className="w-full text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex gap-3 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                    <Newspaper size={18} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${fuenteInfo?.color || "bg-slate-100 text-slate-700"}`}>
+                        {n.source}
+                      </span>
+                      <span className="text-[10px] text-slate-400">{n.category}</span>
+                    </div>
+                    <h3 className="font-bold text-[14px] leading-tight mt-1.5 text-slate-900">{n.headline}</h3>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.summary}</p>
+                    <p className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-mono">
+                      <Clock size={10} /> {n.published_at}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* MODAL / DIÁLOGO DE DETALLE */}
+      {/* MODAL / DIÁLOGO DE DETALLE CON ENLACE AL MEDIO ORIGINAL */}
       {noticiaSeleccionada && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200">
-            <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full mb-2 ${SOURCE_COLORS[noticiaSeleccionada.source] || "bg-slate-100 text-slate-700"}`}>
-              {noticiaSeleccionada.source}
-            </span>
-            <h2 className="text-lg font-black text-slate-900 leading-tight">
-              {noticiaSeleccionada.headline}
-            </h2>
-            <p className="text-sm text-slate-600 mt-3 leading-relaxed">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in duration-200 space-y-4">
+            <div>
+              <span className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full mb-2 ${MEDIA_SOURCES.find(m => m.name === noticiaSeleccionada.source)?.color || "bg-slate-100 text-slate-700"}`}>
+                {noticiaSeleccionada.source}
+              </span>
+              <h2 className="text-lg font-black text-slate-900 leading-tight">
+                {noticiaSeleccionada.headline}
+              </h2>
+            </div>
+            
+            <p className="text-sm text-slate-600 leading-relaxed">
               {noticiaSeleccionada.summary}
             </p>
-            <div className="mt-6 flex justify-end gap-2">
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-3">
               <button
                 onClick={() => setNoticiaSeleccionada(null)}
-                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors cursor-pointer"
               >
                 Cerrar
               </button>
+
+              <a
+                href={noticiaSeleccionada.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-md"
+              >
+                Leer en {noticiaSeleccionada.source} <ExternalLink size={14} />
+              </a>
             </div>
           </div>
         </div>
