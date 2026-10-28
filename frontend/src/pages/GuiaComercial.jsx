@@ -21,7 +21,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // Formulario de edición/creación con Redes Sociales, Galería y Datos Especiales (JSON)
+  // Formulario de edición/creación completo con Redes Sociales, Galería y Datos Especiales (JSON)
   const [formData, setFormData] = useState({
     nombre: "",
     categoria: "Hostelería",
@@ -478,6 +478,31 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                       </div>
                     )}
 
+                    {/* SITIO WEB Y TIENDA ONLINE */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
+                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Sitio Web y Tienda Online</p>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Página Web:</label>
+                        <input
+                          type="text"
+                          value={formData.web_url}
+                          onChange={(e) => setFormData({...formData, web_url: e.target.value})}
+                          placeholder="https://www.tu-web.es"
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Tienda Online:</label>
+                        <input
+                          type="text"
+                          value={formData.tienda_url}
+                          onChange={(e) => setFormData({...formData, tienda_url: e.target.value})}
+                          placeholder="https://tu-tienda.palbin.com"
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
                     {/* PORTADA PRINCIPAL */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada:</label>
@@ -523,6 +548,81 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                       />
                     </div>
 
+                    {/* VÍDEO PROMOCIONAL */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
+                      <p className="text-xs font-bold text-slate-800 uppercase">🎬 Vídeo Promocional</p>
+                      <input
+                        type="text"
+                        value={formData.video_story_url}
+                        onChange={(e) => setFormData({...formData, video_story_url: e.target.value})}
+                        placeholder="URL del vídeo..."
+                        className="w-full p-2 bg-white border rounded-xl text-xs"
+                      />
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => handleFileUpload(e, 'video_story_url')}
+                        disabled={subiendo}
+                        className="w-full text-xs text-slate-500"
+                      />
+                    </div>
+
+                    {/* REDES SOCIALES */}
+                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
+                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Redes Sociales</p>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Instagram:</label>
+                        <input
+                          type="text"
+                          value={formData.instagram_url}
+                          onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
+                          placeholder="https://instagram.com/..."
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">TikTok:</label>
+                        <input
+                          type="text"
+                          value={formData.tiktok_url}
+                          onChange={(e) => setFormData({...formData, tiktok_url: e.target.value})}
+                          placeholder="https://tiktok.com/@..."
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-600">Facebook:</label>
+                        <input
+                          type="text"
+                          value={formData.facebook_url}
+                          onChange={(e) => setFormData({...formData, facebook_url: e.target.value})}
+                          placeholder="https://facebook.com/..."
+                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp:</label>
+                        <input
+                          type="text"
+                          value={formData.whatsapp}
+                          onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">PIN Acceso:</label>
+                        <input
+                          type="text"
+                          value={formData.pin_acceso}
+                          onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
+                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Descripción:</label>
                       <textarea
@@ -556,10 +656,18 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
                         </div>
                       )}
-                      <div className="relative z-10">
-                        <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase">🏠 Inmobiliaria</span>
-                        <h2 className="text-xl font-black mt-1">{comercioSel.nombre}</h2>
-                        <p className="text-xs text-slate-200">{comercioSel.direccion}</p>
+                      <div className="relative z-10 flex justify-between items-end">
+                        <div>
+                          <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase">🏠 Inmobiliaria</span>
+                          <h2 className="text-xl font-black mt-1">{comercioSel.nombre}</h2>
+                          <p className="text-xs text-slate-200">{comercioSel.direccion}</p>
+                        </div>
+                        <button
+                          onClick={() => { setModoAdmin(true); setAutenticadoAdmin(false); }}
+                          className="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1"
+                        >
+                          ✏️ Editar
+                        </button>
                       </div>
                     </div>
 
@@ -608,7 +716,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                     </div>
                   </div>
                 ) : (
-                  /* VISTA ESTÁNDAR */
+                  /* VISTA ESTÁNDAR COMPLETA CON VÍDEO, GALERÍA, REDES Y BOTONES */
                   <div>
                     <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border">
                       <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover" />
@@ -641,6 +749,104 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                       </p>
                     )}
 
+                    {/* VÍDEO PROMOCIONAL EN LA VISTA PÚBLICA */}
+                    {comercioSel.video_story_url && typeof comercioSel.video_story_url === 'string' && comercioSel.video_story_url.trim() !== '' && (
+                      <div className="mt-4">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                          🎬 Vídeo Promocional
+                        </p>
+                        <div className="w-full h-48 rounded-2xl overflow-hidden bg-black border shadow-sm">
+                          <video 
+                            src={comercioSel.video_story_url.trim()} 
+                            controls 
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* GALERÍA DE FOTOS EN LA VISTA */}
+                    {comercioSel.galeria_urls && Array.isArray(comercioSel.galeria_urls) && comercioSel.galeria_urls.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                          <Image size={14} /> Galería de Fotos
+                        </p>
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                          {comercioSel.galeria_urls.map((url, i) => (
+                            url && (
+                              <div 
+                                key={i} 
+                                onClick={() => setFotoAmpliada(url.trim())}
+                                className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border cursor-pointer hover:opacity-90"
+                              >
+                                <img src={url.trim()} alt={`Foto ${i}`} className="w-full h-full object-cover" />
+                              </div>
+                            )
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SITIO WEB Y TIENDA ONLINE EN LA VISTA PÚBLICA */}
+                    {(comercioSel.web_url || comercioSel.tienda_url) && (
+                      <div className="mt-4 pt-3 border-t flex gap-2">
+                        {comercioSel.web_url && (
+                          <a href={comercioSel.web_url.startsWith('http') ? comercioSel.web_url : `https://${comercioSel.web_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-slate-900 text-white py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
+                            🌐 Web Oficial
+                          </a>
+                        )}
+                        {comercioSel.tienda_url && (
+                          <a href={comercioSel.tienda_url.startsWith('http') ? comercioSel.tienda_url : `https://${comercioSel.tienda_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-amber-500 text-slate-950 py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
+                            🛍️ Tienda Online
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {/* REDES SOCIALES EN LA VISTA PÚBLICA */}
+                    {(() => {
+                      const insta = comercioSel.instagram_url || comercioSel.instagram_username;
+                      const tiktok = comercioSel.tiktok_url;
+                      const facebook = comercioSel.facebook_url;
+
+                      if (!insta && !tiktok && !facebook) return null;
+
+                      return (
+                        <div className="mt-3 pt-2 flex gap-2">
+                          {insta && (
+                            <a 
+                              href={insta.startsWith('http') ? insta : `https://${insta}`} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="flex-1 bg-pink-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
+                            >
+                              Instagram
+                            </a>
+                          )}
+                          {tiktok && (
+                            <a 
+                              href={tiktok.startsWith('http') ? tiktok : `https://${tiktok}`} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="flex-1 bg-black text-white py-2 rounded-xl text-center text-xs font-bold shadow"
+                            >
+                              TikTok
+                            </a>
+                          )}
+                          {facebook && (
+                            <a 
+                              href={facebook.startsWith('http') ? facebook : `https://${facebook}`} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
+                            >
+                              Facebook
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {/* BOTONES DE CONTACTO */}
                     <div className="grid grid-cols-2 gap-2 mt-4">
                       {comercioSel.whatsapp && (
@@ -668,6 +874,16 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
             )}
 
           </div>
+        </div>
+      )}
+
+      {/* AMPLIADOR DE FOTOGRAFÍAS */}
+      {fotoAmpliada && (
+        <div 
+          onClick={() => setFotoAmpliada(null)}
+          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 cursor-zoom-out"
+        >
+          <img src={fotoAmpliada} alt="Ampliación" className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl" />
         </div>
       )}
 
