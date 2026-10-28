@@ -13,7 +13,8 @@ import Pasatiempos from './pages/Pasatiempos';
 import PanelComercio from './pages/PanelComercio';
 import Admin from './pages/Admin';
 import Tablon from './pages/Tablon';
-import Teatro from './pages/Teatro'; // <-- 1. Importamos la vista del Teatro
+import Teatro from './pages/Teatro';
+import Noticias from './pages/Noticias'; // <-- 1. Importamos la página de Noticias
 import { Store, MessageSquare, Gamepad2, Home as HomeIcon, Newspaper } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 
@@ -52,7 +53,9 @@ export default function App() {
       case 'menu-agenda':
         return <MenuAgenda setPaginaActual={setPaginaActual} />;
       case 'teatro':
-        return <Teatro setPaginaActual={setPaginaActual} />; // <-- 2. Añadimos la ruta del Teatro
+        return <Teatro setPaginaActual={setPaginaActual} />;
+      case 'noticias':
+        return <Noticias setPaginaActual={setPaginaActual} />; // <-- 2. Añadimos la ruta de Noticias
       case 'conso':
         return <Conso setPaginaActual={setPaginaActual} />;
       case 'pasatiempos':
