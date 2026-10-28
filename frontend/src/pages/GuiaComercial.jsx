@@ -1,6 +1,6 @@
 // src/pages/GuiaComercial.jsx
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike, Plus, Minus, ShoppingCart, ShieldCheck } from "lucide-react";
+import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike, Plus, Minus, ShoppingCart, ShieldCheck, Home, Bed, Bath } from "lucide-react";
 import { obtenerComercios, actualizarComercio, crearComercio, subirArchivoComercio } from "../lib/comerciosService";
 
 const PIN_ADMIN_MAESTRO = "9999";
@@ -21,11 +21,12 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // Formulario de edición/creación con Redes Sociales y Galería
+  // Formulario de edición/creación con Redes Sociales, Galería y Datos Especiales (JSON)
   const [formData, setFormData] = useState({
     nombre: "",
     categoria: "Hostelería",
     subcategoria: "",
+    tipo_ficha: "normal",
     direccion: "",
     descripcion: "",
     horario_texto: "",
@@ -43,15 +44,14 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
     oferta_flash: "",
     video_story_url: "",
     pin_acceso: "1234",
-    destacado: false
+    destacado: false,
+    datos_especiales_json: ""
   });
 
-  // Estados para el Carrito
-  const [carrito, setCarrito] = useState({});
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
 
-  const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza"];
+  const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza", "Inmobiliarias"];
 
   useEffect(() => {
     cargarComercios();
@@ -100,11 +100,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
     return coincideCategoria && coincideBusqueda;
   });
 
-  const abrirMapa = (comercio) => {
-    const direccionEscapada = encodeURIComponent((comercio.direccion || comercio.nombre) + ", Utrera");
-    window.open("https://www.google.com/maps/search/?api=1&query=" + direccionEscapada, "_blank");
-  };
-
   const obtenerPortadaValida = (url) => {
     if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL") {
       return url.trim();
@@ -143,12 +138,12 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
   };
 
   const prepararEdicionComercio = (c) => {
-    setComercios(comercios);
     setComercioSel(c);
     setFormData({
       nombre: c.nombre || "",
       categoria: c.categoria || "Hostelería",
       subcategoria: c.subcategoria || "",
+      tipo_ficha: c.tipo_ficha || "normal",
       direccion: c.direccion || "",
       descripcion: c.descripcion || "",
       horario_texto: c.horario_texto || "",
@@ -166,7 +161,8 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
       oferta_flash: c.oferta_flash || "",
       video_story_url: c.video_story_url || "",
       pin_acceso: c.pin_acceso || "1234",
-      destacado: c.destacado || false
+      destacado: c.destacado || false,
+      datos_especiales_json: c.datos_especiales ? JSON.stringify(c.datos_especiales, null, 2) : ""
     });
     setModoAdmin(true);
     setAutenticadoAdmin(false);
@@ -187,7 +183,25 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
   const guardarCambiosComercio = async (e) => {
     e.preventDefault();
     setGuardando(true);
-    const res = await actualizarComercio(comercioSel.id, PIN_ADMIN_MAESTRO, formData);
+
+    let parsedDatosEspeciais = null;
+    if (formData.datos_especiales_json && formData.datos_especiales_json.trim() !== '') {
+      try {
+        parsedDatosEspeciais = JSON.parse(formData.datos_especiales_json);
+      } catch (err) {
+        setGuardando(false);
+        setMensajeAdmin({ tipo: 'error', texto: 'Error en el formato JSON de los datos especiales. Revísalo.' });
+        return;
+      }
+    }
+
+    const datosAEnviar = {
+      ...formData,
+      datos_especiales: parsedDatosEspeciais
+    };
+    delete datosAEnviar.datos_especiales_json;
+
+    const res = await actualizarComercio(comercioSel.id, PIN_ADMIN_MAESTRO, datosAEnviar);
     setGuardando(false);
 
     if (res.success) {
@@ -280,7 +294,12 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-slate-900 text-base truncate">{comercio.nombre}</h3>
+                      <div className="flex items-center gap-1.5">
+                        <h3 className="font-bold text-slate-900 text-base truncate">{comercio.nombre}</h3>
+                        {comercio.tipo_ficha === 'especial1' && (
+                          <span className="bg-blue-100 text-blue-800 text-[9px] font-black px-2 py-0.5 rounded-full">Inmobiliaria</span>
+                        )}
+                      </div>
                       <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mt-0.5">
                         {comercio.subcategoria || comercio.categoria}
                       </p>
@@ -388,6 +407,19 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                     )}
 
                     <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">Tipo de Estructura de Ficha:</label>
+                      <select
+                        value={formData.tipo_ficha}
+                        onChange={(e) => setFormData({...formData, tipo_ficha: e.target.value})}
+                        className="w-full p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-950"
+                      >
+                        <option value="normal">📄 Ficha Normal / Estándar</option>
+                        <option value="especial1">🏠 Ficha Especial 1 - Inmobiliarias (Catálogo de Inmuebles)</option>
+                        <option value="especial2">🍔 Ficha Especial 2 - Comida a domicilio / Pedidos</option>
+                      </select>
+                    </div>
+
+                    <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Nombre del Comercio:</label>
                       <input
                         type="text"
@@ -410,6 +442,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                           <option value="Comercio">Comercio</option>
                           <option value="Servicios">Servicios</option>
                           <option value="Salud y Belleza">Salud y Belleza</option>
+                          <option value="Inmobiliarias">Inmobiliarias</option>
                         </select>
                       </div>
                       <div>
@@ -433,30 +466,17 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                       />
                     </div>
 
-                    {/* SITIO WEB Y TIENDA ONLINE */}
-                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
-                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Sitio Web y Tienda Online</p>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Página Web:</label>
-                        <input
-                          type="text"
-                          value={formData.web_url}
-                          onChange={(e) => setFormData({...formData, web_url: e.target.value})}
-                          placeholder="https://www.tu-web.es"
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
+                    {formData.tipo_ficha === 'especial1' && (
+                      <div className="bg-amber-50 p-3 rounded-2xl border border-amber-200 space-y-2">
+                        <label className="block text-xs font-black uppercase text-amber-900">🏠 Datos Inmobiliaria (JSON):</label>
+                        <textarea
+                          rows="6"
+                          value={formData.datos_especiales_json}
+                          onChange={(e) => setFormData({...formData, datos_especiales_json: e.target.value})}
+                          className="w-full p-2 bg-white border border-amber-300 rounded-xl text-xs font-mono"
                         />
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Tienda Online:</label>
-                        <input
-                          type="text"
-                          value={formData.tienda_url}
-                          onChange={(e) => setFormData({...formData, tienda_url: e.target.value})}
-                          placeholder="https://tu-tienda.palbin.com"
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                    </div>
+                    )}
 
                     {/* PORTADA PRINCIPAL */}
                     <div>
@@ -503,81 +523,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                       />
                     </div>
 
-                    {/* VÍDEO PROMOCIONAL */}
-                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
-                      <p className="text-xs font-bold text-slate-800 uppercase">🎬 Vídeo Promocional</p>
-                      <input
-                        type="text"
-                        value={formData.video_story_url}
-                        onChange={(e) => setFormData({...formData, video_story_url: e.target.value})}
-                        placeholder="URL del vídeo..."
-                        className="w-full p-2 bg-white border rounded-xl text-xs"
-                      />
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => handleFileUpload(e, 'video_story_url')}
-                        disabled={subiendo}
-                        className="w-full text-xs text-slate-500"
-                      />
-                    </div>
-
-                    {/* REDES SOCIALES */}
-                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
-                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Redes Sociales</p>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Instagram:</label>
-                        <input
-                          type="text"
-                          value={formData.instagram_url}
-                          onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
-                          placeholder="https://instagram.com/..."
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">TikTok:</label>
-                        <input
-                          type="text"
-                          value={formData.tiktok_url}
-                          onChange={(e) => setFormData({...formData, tiktok_url: e.target.value})}
-                          placeholder="https://tiktok.com/@..."
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Facebook:</label>
-                        <input
-                          type="text"
-                          value={formData.facebook_url}
-                          onChange={(e) => setFormData({...formData, facebook_url: e.target.value})}
-                          placeholder="https://facebook.com/..."
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp:</label>
-                        <input
-                          type="text"
-                          value={formData.whatsapp}
-                          onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">PIN Acceso:</label>
-                        <input
-                          type="text"
-                          value={formData.pin_acceso}
-                          onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
-                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
-                        />
-                      </div>
-                    </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Descripción:</label>
                       <textarea
@@ -599,172 +544,130 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                 )}
               </div>
             ) : (
-              /* VISTA NORMAL DE LA FICHA DEL COMERCIO */
+              /* VISTA NORMAL O ESPECIAL DE LA FICHA DEL COMERCIO */
               <div>
-                <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border">
-                  <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover" />
-                </div>
-
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-800">{comercioSel.nombre}</h2>
-                    <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mt-0.5">
-                      {comercioSel.subcategoria || comercioSel.categoria}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => { setModoAdmin(true); setAutenticadoAdmin(false); }}
-                    className="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1"
-                  >
-                    ✏️ Editar
-                  </button>
-                </div>
-
-                {comercioSel.direccion && (
-                  <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
-                    <MapPin size={14} className="text-slate-400" /> {comercioSel.direccion}
-                  </p>
-                )}
-
-                {comercioSel.descripcion && (
-                  <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border">
-                    {comercioSel.descripcion}
-                  </p>
-                )}
-
-                {/* VÍDEO PROMOCIONAL EN LA VISTA PÚBLICA */}
-                {comercioSel.video_story_url && typeof comercioSel.video_story_url === 'string' && comercioSel.video_story_url.trim() !== '' && (
-                  <div className="mt-4">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                      🎬 Vídeo Promocional
-                    </p>
-                    <div className="w-full h-48 rounded-2xl overflow-hidden bg-black border shadow-sm">
-                      <video 
-                        src={comercioSel.video_story_url.trim()} 
-                        controls 
-                        className="w-full h-full object-cover"
-                      />
+                {/* SI ES FICHA ESPECIAL 1 (INMOBILIARIA) */}
+                {comercioSel.tipo_ficha === 'especial1' ? (
+                  <div className="space-y-4">
+                    <div className="h-40 bg-slate-900 rounded-2xl p-4 text-white relative overflow-hidden flex flex-col justify-end">
+                      {comercioSel.portada_url && (
+                        <div className="absolute inset-0">
+                          <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover opacity-50" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
+                        </div>
+                      )}
+                      <div className="relative z-10">
+                        <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase">🏠 Inmobiliaria</span>
+                        <h2 className="text-xl font-black mt-1">{comercioSel.nombre}</h2>
+                        <p className="text-xs text-slate-200">{comercioSel.direccion}</p>
+                      </div>
                     </div>
-                  </div>
-                )}
 
-                {/* GALERÍA DE FOTOS EN LA VISTA */}
-                {comercioSel.galeria_urls && Array.isArray(comercioSel.galeria_urls) && comercioSel.galeria_urls.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                      <Image size={14} /> Galería de Fotos
-                    </p>
-                    <div className="flex gap-2 overflow-x-auto pb-1">
-                      {comercioSel.galeria_urls.map((url, i) => (
-                        url && (
-                          <div 
-                            key={i} 
-                            onClick={() => setFotoAmpliada(url.trim())}
-                            className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border cursor-pointer hover:opacity-90"
-                          >
-                            <img src={url.trim()} alt={`Foto ${i}`} className="w-full h-full object-cover" />
+                    {comercioSel.descripcion && (
+                      <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border">
+                        {comercioSel.descripcion}
+                      </p>
+                    )}
+
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-black uppercase text-slate-500 tracking-wider">Catálogo de Inmuebles</h3>
+                      {comercioSel.datos_especiales && comercioSel.datos_especiales.inmuebles && Array.isArray(comercioSel.datos_especiales.inmuebles) ? (
+                        comercioSel.datos_especiales.inmuebles.map((inm, idx) => (
+                          <div key={idx} className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2">
+                            {inm.foto && (
+                              <div className="h-32 rounded-xl overflow-hidden bg-slate-100">
+                                <img src={inm.foto} alt={inm.titulo} className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-bold text-slate-900 text-sm">{inm.titulo}</h4>
+                                <p className="text-xs text-amber-600 font-black">{inm.precio}</p>
+                              </div>
+                              <span className="text-[10px] bg-slate-100 font-bold px-2 py-0.5 rounded-md text-slate-600">{inm.operacion || "Venta"}</span>
+                            </div>
+                            <p className="text-xs text-slate-500">{inm.ubicacion}</p>
+                            <div className="flex gap-3 text-[11px] font-bold text-slate-600 pt-1 border-t border-slate-100">
+                              {inm.habitaciones && <span className="flex items-center gap-1"><Bed size={13} className="text-slate-400" /> {inm.habitaciones} hab</span>}
+                              {inm.banos && <span className="flex items-center gap-1"><Bath size={13} className="text-slate-400" /> {inm.banos} baños</span>}
+                              {inm.m2 && <span className="flex items-center gap-1"><Home size={13} className="text-slate-400" /> {inm.m2} m²</span>}
+                            </div>
+                            <a
+                              href={`https://wa.me/${comercioSel.whatsapp?.replace("+", "").replace(/\s/g, "") || ""}?text=Hola,%20me%20interesa%20el%20inmueble:%20${encodeURIComponent(inm.titulo)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full block bg-emerald-500 hover:bg-emerald-600 text-white text-center font-bold text-xs py-2 rounded-xl shadow-sm transition-colors mt-2"
+                            >
+                              💬 Consultar por WhatsApp
+                            </a>
                           </div>
-                        )
-                      ))}
+                        ))
+                      ) : (
+                        <p className="text-xs text-slate-400 text-center py-4">No hay inmuebles cargados en el catálogo actualmente.</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  /* VISTA ESTÁNDAR */
+                  <div>
+                    <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border">
+                      <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover" />
+                    </div>
+
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-800">{comercioSel.nombre}</h2>
+                        <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mt-0.5">
+                          {comercioSel.subcategoria || comercioSel.categoria}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setModoAdmin(true); setAutenticadoAdmin(false); }}
+                        className="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1"
+                      >
+                        ✏️ Editar
+                      </button>
+                    </div>
+
+                    {comercioSel.direccion && (
+                      <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
+                        <MapPin size={14} className="text-slate-400" /> {comercioSel.direccion}
+                      </p>
+                    )}
+
+                    {comercioSel.descripcion && (
+                      <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border">
+                        {comercioSel.descripcion}
+                      </p>
+                    )}
+
+                    {/* BOTONES DE CONTACTO */}
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      {comercioSel.whatsapp && (
+                        <a
+                          href={"https://wa.me/" + comercioSel.whatsapp.replace("+", "").replace(/\s/g, "")}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow"
+                        >
+                          💬 WhatsApp
+                        </a>
+                      )}
+                      {comercioSel.telefono && (
+                        <a
+                          href={"tel:" + comercioSel.telefono}
+                          className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5"
+                        >
+                          <Phone size={14} className="text-emerald-600" /> Llamar
+                        </a>
+                      )}
                     </div>
                   </div>
                 )}
-
-                {/* SITIO WEB Y TIENDA ONLINE EN LA VISTA PÚBLICA */}
-                {(comercioSel.web_url || comercioSel.tienda_url) && (
-                  <div className="mt-4 pt-3 border-t flex gap-2">
-                    {comercioSel.web_url && (
-                      <a href={comercioSel.web_url.startsWith('http') ? comercioSel.web_url : `https://${comercioSel.web_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-slate-900 text-white py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
-                        🌐 Web Oficial
-                      </a>
-                    )}
-                    {comercioSel.tienda_url && (
-                      <a href={comercioSel.tienda_url.startsWith('http') ? comercioSel.tienda_url : `https://${comercioSel.tienda_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-amber-500 text-slate-950 py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
-                        🛍️ Tienda Online
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {/* REDES SOCIALES EN LA VISTA PÚBLICA */}
-                {(() => {
-                  const insta = comercioSel.instagram_url || comercioSel.instagram_username;
-                  const tiktok = comercioSel.tiktok_url;
-                  const facebook = comercioSel.facebook_url;
-
-                  if (!insta && !tiktok && !facebook) return null;
-
-                  return (
-                    <div className="mt-3 pt-2 flex gap-2">
-                      {insta && (
-                        <a 
-                          href={insta.startsWith('http') ? insta : `https://${insta}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="flex-1 bg-pink-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
-                        >
-                          Instagram
-                        </a>
-                      )}
-                      {tiktok && (
-                        <a 
-                          href={tiktok.startsWith('http') ? tiktok : `https://${tiktok}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="flex-1 bg-black text-white py-2 rounded-xl text-center text-xs font-bold shadow"
-                        >
-                          TikTok
-                        </a>
-                      )}
-                      {facebook && (
-                        <a 
-                          href={facebook.startsWith('http') ? facebook : `https://${facebook}`} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
-                        >
-                          Facebook
-                        </a>
-                      )}
-                    </div>
-                  );
-                })()}
-
-                {/* BOTONES DE CONTACTO */}
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                  {comercioSel.whatsapp && (
-                    <a
-                      href={"https://wa.me/" + comercioSel.whatsapp.replace("+", "").replace(/\s/g, "")}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow"
-                    >
-                      💬 WhatsApp
-                    </a>
-                  )}
-                  {comercioSel.telefono && (
-                    <a
-                      href={"tel:" + comercioSel.telefono}
-                      className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5"
-                    >
-                      <Phone size={14} className="text-emerald-600" /> Llamar
-                    </a>
-                  )}
-                </div>
               </div>
             )}
 
           </div>
-        </div>
-      )}
-
-      {/* AMPLIADOR DE FOTOGRAFÍAS */}
-      {fotoAmpliada && (
-        <div 
-          onClick={() => setFotoAmpliada(null)}
-          className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 cursor-zoom-out"
-        >
-          <img src={fotoAmpliada} alt="Ampliación" className="max-w-full max-h-[90vh] object-contain rounded-2xl shadow-2xl" />
         </div>
       )}
 
