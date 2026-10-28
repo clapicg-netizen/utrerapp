@@ -8,12 +8,10 @@ export default function Farmacias({ setPaginaActual }) {
   const [busqueda, setBusqueda] = useState("");
   const [loading, setLoading] = useState(true);
 
-  // Fecha actual (hoy es 28 de octubre de 2026)
   const hoy = new Date();
   const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
   
-  // Formato YYYY-MM-DD estricto para que coincida con la base de datos
   const year = hoy.getFullYear();
   const month = String(hoy.getMonth() + 1).padStart(2, '0');
   const day = String(hoy.getDate()).padStart(2, '0');
@@ -23,26 +21,13 @@ export default function Farmacias({ setPaginaActual }) {
     async function cargarGuardias() {
       try {
         setLoading(true);
-        
-        // Consulta exacta por la fecha de hoy con el listado que tienes metido hasta diciembre
         const { data, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
           .eq('fecha', fechaStr);
 
         if (error) throw error;
-
-        if (data && data.length > 0) {
-          setGuardiasHoy(data);
-        } else {
-          // Si por lo que sea no encuentra el día exacto, buscamos registros generales para no dejar la pantalla vacía
-          const { data: dataFallback } = await supabase
-            .from('farmacias_calendario')
-            .select('*')
-            .limit(10);
-          
-          setGuardiasHoy(dataFallback || []);
-        }
+        if (data) setGuardiasHoy(data);
       } catch (err) {
         console.error("Error al cargar las farmacias:", err);
       } finally {
@@ -56,7 +41,6 @@ export default function Farmacias({ setPaginaActual }) {
     window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(direccion), "_blank");
   };
 
-  // Filtrado por buscador en tiempo real
   const farmaciasFiltradas = guardiasHoy.filter(f => {
     const texto = busqueda.toLowerCase();
     const nombre = (f.nombre_farmacia || "").toLowerCase();
@@ -65,8 +49,16 @@ export default function Farmacias({ setPaginaActual }) {
     return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
   });
 
-  const farmaciasDia = farmaciasFiltradas.filter(f => !f.turno || f.turno.toLowerCase() === 'día' || f.turno.toLowerCase() === 'dia');
-  const farmaciasNoche = farmaciasFiltradas.filter(f => f.turno && f.turno.toLowerCase() === 'noche');
+  // Clasificación robusta basada en el turno real de la base de datos
+  const farmaciasDia = farmaciasFiltradas.filter(f => {
+    const t = (f.turno || "").toLowerCase();
+    return t === 'dia' || t === 'día' || (!t.includes('noche') && !t.includes('22:00'));
+  });
+
+  const farmaciasNoche = farmaciasFiltradas.filter(f => {
+    const t = (f.turno || "").toLowerCase();
+    return t === 'noche' || t.includes('22:00') || t.includes('madrugada');
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -111,12 +103,12 @@ export default function Farmacias({ setPaginaActual }) {
       <div className="px-4 mt-5 space-y-6 max-w-lg mx-auto">
         
         {loading ? (
-          <div className="text-center py-12 text-xs text-slate-500">Consultando registros oficiales de farmacias...</div>
+          <div className="text-center py-12 text-xs text-slate-500">Consultando registros oficiales...</div>
         ) : guardiasHoy.length === 0 ? (
           <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
             <div className="text-2xl">⚠️</div>
             <p className="font-bold text-slate-800 text-sm">Sin registros para la fecha de hoy</p>
-            <p className="text-xs text-slate-500">Revisa la tabla en Supabase para el día <span className="font-bold">{fechaStr}</span>.</p>
+            <p className="text-xs text-slate-500">Comprueba la fecha <span className="font-bold">{fechaStr}</span> en Supabase.</p>
           </div>
         ) : (
           <>
