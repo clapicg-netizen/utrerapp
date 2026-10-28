@@ -17,7 +17,6 @@ export default function Farmacias({ setPaginaActual }) {
     async function cargarGuardias() {
       try {
         setLoading(true);
-        // 1. Intentamos buscar por la fecha exacta de hoy
         let { data, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
@@ -25,7 +24,6 @@ export default function Farmacias({ setPaginaActual }) {
 
         if (error) throw error;
 
-        // 2. Si no hay datos exactos para hoy, traemos un listado general de respaldo para que nunca falle
         if (!data || data.length === 0) {
           const { data: fallback } = await supabase
             .from('farmacias_calendario')
@@ -56,6 +54,7 @@ export default function Farmacias({ setPaginaActual }) {
     return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
   });
 
+  // Separación exacta por horario/turno oficial
   const farmaciasDia = farmaciasFiltradas.filter(f => {
     const horario = (f.horario || "").toLowerCase();
     const turno = (f.turno || "").toLowerCase();
@@ -70,7 +69,7 @@ export default function Farmacias({ setPaginaActual }) {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
+    <div className="min-h-screen bg-slate-50 pb-32 text-slate-800 font-sans">
       
       {/* Cabecera */}
       <div className="bg-emerald-900 text-white p-6 rounded-b-3xl shadow-lg">
@@ -118,7 +117,7 @@ export default function Farmacias({ setPaginaActual }) {
             <p className="text-xs text-slate-500">Revisa la tabla en Supabase.</p>
           </div>
         ) : (
-          <>
+          <div className="space-y-6">
             {/* TURNO DE DÍA */}
             {farmaciasDia.length > 0 && (
               <div className="space-y-3">
@@ -159,7 +158,7 @@ export default function Farmacias({ setPaginaActual }) {
 
             {/* TURNO DE NOCHE */}
             {farmaciasNoche.length > 0 && (
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3 pt-4">
                 <div className="flex items-center gap-2 px-1 text-indigo-900 font-black text-xs uppercase tracking-wider">
                   <Moon size={15} className="text-indigo-600" />
                   <span>Turno de Noche (22:00 a 9:30 h)</span>
@@ -194,10 +193,10 @@ export default function Farmacias({ setPaginaActual }) {
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
 
-        <div className="pt-2 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
+        <div className="pt-4 pb-4 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-400 italic">
           <HeartPulse size={13} className="text-emerald-500" />
           <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
         </div>
