@@ -1,339 +1,106 @@
 // src/pages/Home.jsx
-import React, { useState, useEffect } from "react";
-import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed, Newspaper } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import React from 'react';
+import { Newspaper, Store, HeartPulse, Building2, MapPin, Gamepad2, CalendarDays, ShieldAlert } from 'lucide-react';
 
-export default function Home({ setPaginaActual, setTab }) {
-  const [slideActual, setSlideActual] = useState(0);
-  const [avisos, setAvisos] = useState([
-    {
-      id: 1,
-      tipo: "CONSO TE AYUDA 🤝",
-      color_badge: "bg-rose-500 text-white",
-      titulo: "Habla con Conso, tu asistente de Utrera",
-      subtitulo: "Pregúntale horarios, teléfonos de interés y ayuda local",
-      bg_gradient: "from-rose-600 to-pink-700",
-      icono: "💬",
-      accion_tab: "conso"
-    },
-    {
-      id: 2,
-      tipo: "JUEGO & PREMIOS 🏆",
-      color_badge: "bg-amber-500 text-slate-900",
-      titulo: "La Búsqueda del Mostachón",
-      subtitulo: "Encuentra las pistas por los comercios y gana premios",
-      bg_gradient: "from-amber-600 to-yellow-600",
-      icono: "🧁",
-      accion_tab: "pasatiempos"
-    },
-    {
-      id: 3,
-      tipo: "OFERTA DEL DÍA ⚡",
-      color_badge: "bg-amber-500 text-white",
-      titulo: "Bar Alonsi: 2x1 en tapas de arroz",
-      subtitulo: "Muestra la PWA Utrerapp al hacer tu pedido hoy",
-      bg_gradient: "from-amber-600 to-orange-700",
-      icono: "⚡",
-      accion_tab: "market"
-    },
-    {
-      id: 4,
-      tipo: "PAELLA EN LA CHANA 🥘",
-      color_badge: "bg-sky-500 text-white",
-      titulo: "Hoy Domingo a partir de las 13:30 horas",
-      subtitulo: "¿Te la vas a perder?",
-      bg_gradient: "from-slate-800 to-slate-900",
-      icono: "📢",
-      accion_tab: "market"
-    }
-  ]);
-
-  useEffect(() => {
-    async function cargarAnuncios() {
-      try {
-        const { data } = await supabase
-          .from('anuncios')
-          .select('*')
-          .eq('activo', true)
-          .order('orden', { ascending: true });
-
-        if (data && data.length > 0) {
-          setAvisos(data);
-        }
-      } catch (err) {
-        console.error("Error cargando anuncios de Supabase:", err);
-      }
-    }
-    cargarAnuncios();
-  }, []);
-
-  const cambiarPestana = (e, destino) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    const fnNavegacion = setPaginaActual || setTab;
-    if (typeof fnNavegacion === "function") {
-      fnNavegacion(destino);
-    }
-  };
-
-  useEffect(() => {
-    if (avisos.length === 0) return;
-    const timer = setInterval(() => {
-      setSlideActual((prev) => (prev + 1) % avisos.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [avisos.length]);
-
+export default function Home({ setPaginaActual }) {
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
       {/* CABECERA */}
-      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+      <div className="bg-slate-900 text-white p-6 rounded-b-3xl shadow-lg relative">
+        <div className="max-w-md mx-auto flex items-center justify-between">
           <div>
-            <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
-              <MapPin size={12} /> Utrera en tu bolsillo
+            <p className="text-xs text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+              <MapPin size={12} /> Utrera (Sevilla)
             </p>
-            <h1 className="text-2xl font-black mt-0.5">¡Hola, Utrera! 👋</h1>
+            <h1 className="text-xl font-black mt-1">Utrerapp</h1>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => cambiarPestana(e, "admin")}
-              className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base shadow-inner hover:bg-amber-500/30 transition-colors cursor-pointer"
-              title="Panel de Administración"
-            >
-              👑
-            </button>
-
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg shadow-inner">
-              🏰
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 relative max-w-md mx-auto">
-          <input
-            type="text"
-            placeholder="¿Qué buscas hoy en Utrera?"
-            className="w-full bg-slate-800 text-white placeholder-slate-400 pl-10 pr-4 py-3 rounded-2xl text-xs border border-slate-700 focus:outline-none focus:border-amber-500 transition-colors"
-          />
-          <Search className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
-        </div>
-      </div>
-
-      {/* CARRUSEL */}
-      <div className="px-4 mt-4 max-w-md mx-auto">
-        <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
-          <div 
-            className="flex transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${slideActual * 100}%)` }}
+          <button
+            onClick={() => setPaginaActual('admin')}
+            className="w-10 h-10 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 hover:bg-slate-700 transition-colors cursor-pointer text-xs"
+            title="Panel de Administración"
           >
-            {avisos.map((aviso) => (
-              <div 
-                key={aviso.id}
-                onClick={(e) => cambiarPestana(e, aviso.accion_tab)}
-                className={`w-full flex-shrink-0 bg-gradient-to-r ${aviso.bg_gradient} p-4 text-white relative cursor-pointer min-h-[110px] flex flex-col justify-between active:opacity-90`}
-              >
-                <div className="flex justify-between items-center">
-                  <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-sm ${aviso.color_badge}`}>
-                    {aviso.tipo}
-                  </span>
-                  <span className="text-xl">{aviso.icono}</span>
-                </div>
-
-                <div className="mt-1">
-                  <h3 className="font-bold text-sm leading-tight truncate">{aviso.titulo}</h3>
-                  <p className="text-xs text-slate-200 mt-0.5 line-clamp-1">{aviso.subtitulo}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="absolute bottom-2 right-3 flex gap-1 z-10">
-            {avisos.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSlideActual(idx);
-                }}
-                className={`h-1.5 rounded-full transition-all ${slideActual === idx ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
-              />
-            ))}
-          </div>
+            ⚙️
+          </button>
         </div>
       </div>
 
-      {/* TARJETA CONSO */}
-      <div className="px-4 mt-4 max-w-md mx-auto">
-        <div 
-          onClick={(e) => cambiarPestana(e, "conso")}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-950 via-rose-900 to-red-950 p-6 text-white shadow-xl border border-rose-800/50 cursor-pointer hover:scale-[0.99] transition-transform"
-        >
-          <div className="absolute -right-6 -top-6 w-28 h-28 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
-          
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 border border-amber-400/30 rounded-full text-amber-300 text-[11px] font-bold uppercase tracking-wider">
-                <span>✨ IA Oficial</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              </div>
-              <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                Conso, tu asistente 🤖
-              </h2>
-              <p className="text-xs text-rose-200/90 font-medium leading-relaxed max-w-[220px]">
-                Conectada en directo con inteligencia artificial. Horarios, farmacias y gestión de Utrera al instante.
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-rose-700 flex items-center justify-center text-3xl shadow-lg shadow-rose-950/60 border-2 border-white/25">
-                🧠✨
-              </div>
-              <span className="text-[10px] font-bold text-amber-300 mt-1.5 uppercase tracking-wider">Utrerapp</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SERVICIOS Y GUÍA */}
-      <div className="px-4 mt-5 max-w-md mx-auto">
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Servicios y Guía de Utrera
+      {/* CONTENIDO DE ACCESOS DIRECTOS */}
+      <div className="px-4 mt-6 max-w-md mx-auto">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 px-1">
+          Accesos Directos
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
-          {/* Farmacias */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "farmacias")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
+          {/* TARJETA DE NOTICIAS */}
+          <button
+            onClick={() => setPaginaActual('noticias')}
+            className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center cursor-pointer group"
           >
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-              <Pill size={18} />
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Newspaper size={24} />
             </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Farmacias</p>
-              <p className="text-[10px] text-slate-500 truncate">Salud & Guardia</p>
-            </div>
+            <span className="text-sm font-bold text-slate-800">Noticias</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Prensa y actualidad</span>
           </button>
 
-          {/* Salud */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "salud")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
+          {/* COMERCIO Y HOSTELERÍA */}
+          <button
+            onClick={() => setPaginaActual('market')}
+            className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center cursor-pointer group"
           >
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
-              <HeartPulse size={18} />
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Store size={24} />
             </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Salud</p>
-              <p className="text-[10px] text-slate-500 truncate">Centros & Urgencias</p>
-            </div>
+            <span className="text-sm font-bold text-slate-800">Comercio</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Guía local y tiendas</span>
           </button>
 
-          {/* Agenda Y Gestiones */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "agenda-gestiones")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
+          {/* AGENDA Y TEATRO */}
+          <button
+            onClick={() => setPaginaActual('menu-agenda')}
+            className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center cursor-pointer group"
           >
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-              <Building2 size={18} />
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <CalendarDays size={24} />
             </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Agenda Y Gestiones</p>
-              <p className="text-[10px] text-slate-500 truncate">Admin. & Suministros</p>
-            </div>
+            <span className="text-sm font-bold text-slate-800">Agenda</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Teatro y eventos</span>
           </button>
 
-          {/* Visita Utrera */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "que-ver")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
+          {/* SALUD Y FARMACIAS */}
+          <button
+            onClick={() => setPaginaActual('farmacias')}
+            className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center cursor-pointer group"
           >
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-              <Landmark size={18} />
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <HeartPulse size={24} />
             </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Visita Utrera</p>
-              <p className="text-[10px] text-slate-500 truncate">Monumentos y Patrimonio</p>
-            </div>
+            <span className="text-sm font-bold text-slate-800">Salud</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Farmacias y guardias</span>
           </button>
 
-          {/* Eventos y Teatro */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "menu-agenda")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all text-left col-span-2 cursor-pointer"
+          {/* QUÉ VER */}
+          <button
+            onClick={() => setPaginaActual('que-ver')}
+            className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center cursor-pointer group"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
-                <CalendarDays size={18} />
-              </div>
-              <div className="min-w-0">
-                <p className="font-bold text-slate-900 text-xs truncate">Agenda Cultural y Eventos</p>
-                <p className="text-[10px] text-slate-500 truncate">Teatro Municipal y programación local</p>
-              </div>
+            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Building2 size={24} />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md flex-shrink-0 ml-2">Explorar</span>
-          </button>
-        </div>
-      </div>
-
-      {/* OCIO, CLASIFICADOS Y ENTRETENIMIENTO */}
-      <div className="px-4 mt-5 max-w-md mx-auto">
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Ocio y Tablón Local
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {/* TARJETA TABLÓN DE ANUNCIOS CLASIFICADOS */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "tablon")}
-            className="bg-gradient-to-br from-amber-600 to-orange-700 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-500/40 active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
-              <Newspaper size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-black text-amber-200 tracking-wider">Tablón</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Anuncios y Empleo</h3>
-            </div>
+            <span className="text-sm font-bold text-slate-800">Qué Ver</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Patrimonio y turismo</span>
           </button>
 
-          {/* TARJETA PASATIEMPOS (ZONA DE JUEGOS) */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "pasatiempos")}
-            className="bg-gradient-to-br from-purple-600 to-indigo-700 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-purple-500/40 active:scale-[0.98] transition-transform cursor-pointer"
+          {/* JUEGOS Y PASATIEMPOS */}
+          <button
+            onClick={() => setPaginaActual('pasatiempos')}
+            className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col items-center text-center cursor-pointer group"
           >
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-lg shadow-inner flex-shrink-0">
-              🎮
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <Gamepad2 size={24} />
             </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-black text-purple-200 tracking-wider">Relajación</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Pasatiempos y Juegos</h3>
-            </div>
-          </button>
-
-          {/* GASTRONOMÍA - BARES Y HOSTELERÍA (FILTRADO) */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "hosteleria")}
-            className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform col-span-2 cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
-              <UtensilsCrossed size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-black text-orange-200 tracking-wider">Gastronomía</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Bares, Tapas y Copas</h3>
-            </div>
+            <span className="text-sm font-bold text-slate-800">Juegos</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Pasatiempos locales</span>
           </button>
         </div>
       </div>
