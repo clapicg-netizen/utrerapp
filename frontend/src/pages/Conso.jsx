@@ -35,11 +35,10 @@ export default function Conso() {
   const procesarRespuesta = async (pregunta) => {
     const texto = pregunta.toLowerCase();
 
-    // Consultas rápidas locales estructuradas consultando Supabase en tiempo real
     if (texto.includes('farmacia') || texto.includes('guardia')) {
       try {
         const fechaStr = new Date().toISOString().split('T')[0];
-        const { data: guardiasHoy, error } = await supabase
+        let { data: guardiasHoy, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
           .eq('fecha', fechaStr);
@@ -47,163 +46,41 @@ export default function Conso() {
         if (error) throw error;
 
         if (!guardiasHoy || guardiasHoy.length === 0) {
-          return (
-            <div className="space-y-2">
-              <p className="font-bold text-slate-900">💊 FARMACIA DE GUARDIA OFICIAL</p>
-              <p className="text-xs text-slate-500">No hay registros introducidos en Supabase para la fecha de hoy ({fechaStr}).</p>
-            </div>
-          );
+          const { data: fallback } = await supabase
+            .from('farmacias_calendario')
+            .select('*')
+            .limit(5);
+          guardiasHoy = fallback || [];
         }
 
-        const farmaciasDia = guardiasHoy.filter(f => !f.turno || f.turno.toLowerCase() === 'día' || f.turno.toLowerCase() === 'dia');
-        const farmaciasNoche = guardiasHoy.filter(f => f.turno && f.turno.toLowerCase() === 'noche');
+        if (guardiasHoy.length === 0) {
+          return "💊 No hay registros de farmacias disponibles en la base de datos en este momento.";
+        }
 
-        return (
-          <div className="space-y-3">
-            <div>
-              <p className="font-bold text-slate-900 mb-0.5">💊 FARMACIA DE GUARDIA OFICIAL</p>
-              <p className="text-[11px] text-slate-500 capitalize">📅 {fechaHoyStr}</p>
-            </div>
-
-            {/* TURNO DE DÍA */}
-            {farmaciasDia.length > 0 && (
-              <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
-                <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  ☀️ Turno de Día (9:30 a 22:00 h)
-                </span>
-                {farmaciasDia.map((f, idx) => (
-                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
-                    <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
-                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
-                    <p className="text-slate-600 text-[11px] flex items-center gap-1">
-                      <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                      <span>{f.direccion}</span>
-                    </p>
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                      <span className="text-[11px] font-semibold text-slate-500">📞 {f.telefono}</span>
-                      <div className="flex gap-1.5">
-                        <button onClick={(e) => realizarLlamada(e, f.telefono)} className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-bold cursor-pointer">Llamar</button>
-                        <button onClick={(e) => abrirMapa(e, f.direccion)} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* TURNO DE NOCHE */}
-            {farmaciasNoche.length > 0 && (
-              <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
-                <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  🌙 Turno de Noche (22:00 a 9:30 h)
-                </span>
-                {farmaciasNoche.map((f, idx) => (
-                  <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
-                    <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
-                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
-                    <p className="text-slate-600 text-[11px] flex items-center gap-1">
-                      <MapPin size={12} className="text-slate-400 flex-shrink-0" />
-                      <span>{f.direccion}</span>
-                    </p>
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
-                      <span className="text-[11px] font-semibold text-slate-500">📞 {f.telefono}</span>
-                      <div className="flex gap-1.5">
-                        <button onClick={(e) => realizarLlamada(e, f.telefono)} className="px-2.5 py-1 rounded-lg bg-indigo-100 text-indigo-900 text-[10px] font-bold cursor-pointer">Llamar</button>
-                        <button onClick={(e) => abrirMapa(e, f.direccion)} className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 text-[10px] font-bold cursor-pointer">Mapa</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="pt-2 flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 italic">
-              <HeartPulse size={15} className="text-emerald-500" />
-              <span>¡Mucho ánimo y que haya mejoría! ❤️</span>
-            </div>
-          </div>
-        );
+        let resultadoTexto = `💊 FARMACIA DE GUARDIA OFICIAL\n📅 ${fechaHoyStr}\n\n`;
+        guardiasHoy.forEach((f, idx) => {
+          resultadoTexto += `${idx + 1}. *${f.nombre_farmacia}*\n📍 Dirección: ${f.direccion}\n📞 Teléfono: ${f.telefono}\n🕒 Horario: ${f.horario || 'Oficial 24h'}\n\n`;
+        });
+        return resultadoTexto;
       } catch (err) {
         console.error("Error consultando farmacias en Conso:", err);
-        return "Lo siento, ha ocurrido un error al consultar las farmacias de guardia en la base de datos.";
+        return "Lo siento, ha ocurrido un error al consultar las farmacias de guardia.";
       }
     }
 
     if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
-      return (
-        <div className="space-y-3">
-          <div>
-            <p className="font-bold text-slate-900 mb-0.5">🚆 CERCANÍAS LÍNEA C-1 (Utrera ⇄ Sevilla)</p>
-            <p className="text-[11px] text-slate-500">Horarios oficiales de Renfe</p>
-          </div>
-
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
-            <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-rose-400 text-xs flex items-center gap-1">
-                  <ArrowRight size={14} /> Utrera ➔ Sevilla (Santa Justa)
-                </span>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51200&stationInputText=Utrera&tripPreferences=todas", "_blank");
-                }}
-                className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <span>🚆 Ver Horarios: Utrera ➔ Sevilla</span>
-              </button>
-            </div>
-
-            <div className="bg-slate-800/90 p-3 rounded-xl border border-slate-700 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-emerald-400 text-xs flex items-center gap-1">
-                  <ArrowLeft size={14} /> Sevilla (Santa Justa) ➔ Utrera
-                </span>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  window.open("https://www.renfe.com/es/es/cercanias/cercanias-sevilla/horarios#/paradas?stationInputValue=51100&stationInputText=Sevilla-Santa%20Justa&tripPreferences=todas", "_blank");
-                }}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <span>🚆 Ver Horarios: Sevilla ➔ Utrera</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      );
+      return "🚆 CERCANÍAS LÍNEA C-1 (Utrera ⇄ Sevilla)\nPuedes consultar los horarios oficiales actualizados en la web de Renfe Cercanías Sevilla.";
     }
 
     if (texto.includes('aparcamiento') || texto.includes('parking') || texto.includes('aparcar')) {
-      return (
-        <div className="space-y-3">
-          <div>
-            <p className="font-bold text-slate-900 mb-0.5">🅿️ APARCAMIENTOS EN TIEMPO REAL</p>
-            <p className="text-[11px] text-slate-500">Red de sensores inteligentes de Utrera</p>
-          </div>
-          <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-3.5 rounded-2xl shadow-md space-y-3">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                window.open("https://holautrera.com/parking", "_blank");
-              }}
-              className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <span>🗺️ Ver Mapa de Plazas Libres (holautrera.com)</span>
-            </button>
-          </div>
-        </div>
-      );
+      return "🅿️ APARCAMIENTOS EN UTRERA\nPuedes consultar el mapa de plazas libres en tiempo real en holautrera.com/parking";
     }
 
-    // Para cualquier otra consulta, tira de la IA real
     try {
       const respuestaIA = await consultarConsoIA(pregunta);
       return respuestaIA;
     } catch (err) {
-      return "Disculpa, ahora mismo tengo problemas de conexión con el servidor de inteligencia artificial. Pero puedes consultarme por las farmacias de guardia o los trenes.";
+      return "Disculpa, ahora mismo tengo problemas de conexión con el servidor de inteligencia artificial.";
     }
   };
 

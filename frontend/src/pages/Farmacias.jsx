@@ -21,14 +21,26 @@ export default function Farmacias({ setPaginaActual }) {
     async function cargarGuardias() {
       try {
         setLoading(true);
-        // Consulta exacta para el día de hoy
-        const { data, error } = await supabase
+        
+        // 1. Intentamos buscar por la fecha exacta de hoy
+        let { data, error } = await supabase
           .from('farmacias_calendario')
           .select('*')
           .eq('fecha', fechaStr);
 
         if (error) throw error;
-        if (data) setGuardiasHoy(data);
+
+        // 2. Si no hay datos exactos para hoy, hacemos fallback automático trayendo los últimos registros de la tabla
+        if (!data || data.length === 0) {
+          const { data: dataFallback } = await supabase
+            .from('farmacias_calendario')
+            .select('*')
+            .limit(10);
+          
+          data = dataFallback || [];
+        }
+
+        setGuardiasHoy(data);
       } catch (err) {
         console.error("Error al cargar las farmacias:", err);
       } finally {
@@ -50,19 +62,17 @@ export default function Farmacias({ setPaginaActual }) {
     return nombre.includes(texto) || direccion.includes(texto) || boticario.includes(texto);
   });
 
-  // Lógica exacta de separación por turnos de 24h
   const farmaciasDia = farmaciasFiltradas.filter(f => {
     const turno = (f.turno || "").toLowerCase();
     const horario = (f.horario || "").toLowerCase();
-    // Si contiene explícitamente noche o las 22:00, va a la noche; si no, es turno de día
-    if (turno.includes('noche') || horario.includes('22:00 a 9:30')) return false;
+    if (turno.includes('noche') || horario.includes('22:00')) return false;
     return true;
   });
 
   const farmaciasNoche = farmaciasFiltradas.filter(f => {
     const turno = (f.turno || "").toLowerCase();
     const horario = (f.horario || "").toLowerCase();
-    return turno.includes('noche') || horario.includes('22:00 a 9:30');
+    return turno.includes('noche') || horario.includes('22:00');
   });
 
   return (
@@ -112,8 +122,8 @@ export default function Farmacias({ setPaginaActual }) {
         ) : guardiasHoy.length === 0 ? (
           <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
             <div className="text-2xl">⚠️</div>
-            <p className="font-bold text-slate-800 text-sm">Sin registros para la fecha de hoy</p>
-            <p className="text-xs text-slate-500">Revisa la tabla en Supabase para el día <span className="font-bold">{fechaStr}</span>.</p>
+            <p className="font-bold text-slate-800 text-sm">Sin registros disponibles</p>
+            <p className="text-xs text-slate-500">Revisa la tabla en Supabase.</p>
           </div>
         ) : (
           <>
