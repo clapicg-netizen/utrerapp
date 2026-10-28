@@ -265,40 +265,34 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Eventos y Teatro (Ancho completo) */}
+          {/* AGENDA CULTURAL Y EVENTOS */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "menu-agenda")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all text-left col-span-2 cursor-pointer"
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
-                <CalendarDays size={18} />
-              </div>
-              <div className="min-w-0">
-                <p className="font-bold text-slate-900 text-xs truncate">Agenda Cultural y Eventos</p>
-                <p className="text-[10px] text-slate-500 truncate">Teatro Municipal y programación local</p>
-              </div>
+            <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+              <CalendarDays size={18} />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md flex-shrink-0 ml-2">Explorar</span>
+            <div className="min-w-0">
+              <p className="font-bold text-slate-900 text-xs truncate">Agenda Cultural</p>
+              <p className="text-[10px] text-slate-500 truncate">Teatro y eventos</p>
+            </div>
           </button>
 
-          {/* NOTICIAS (Ancho completo compartiendo estilo con Agenda) */}
+          {/* TITULARES DE UTRERA (NOTICIAS) */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "noticias")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all text-left col-span-2 cursor-pointer"
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
           >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-                <Newspaper size={18} />
-              </div>
-              <div className="min-w-0">
-                <p className="font-bold text-slate-900 text-xs truncate">Titulares de Utrera</p>
-                <p className="text-[10px] text-slate-500 truncate">Prensa, actualidad y medios locales</p>
-              </div>
+            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+              <Newspaper size={18} />
             </div>
-            <span className="text-[9px] font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md flex-shrink-0 ml-2">Leer</span>
+            <div className="min-w-0">
+              <p className="font-bold text-slate-900 text-xs truncate">Titulares</p>
+              <p className="text-[10px] text-slate-500 truncate">Prensa y actualidad</p>
+            </div>
           </button>
         </div>
       </div>
