@@ -265,7 +265,7 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Eventos y Teatro */}
+          {/* Eventos y Teatro (Ancho completo) */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "menu-agenda")}
@@ -281,6 +281,24 @@ export default function Home({ setPaginaActual, setTab }) {
               </div>
             </div>
             <span className="text-[9px] font-bold px-2 py-0.5 bg-purple-100 text-purple-700 rounded-md flex-shrink-0 ml-2">Explorar</span>
+          </button>
+
+          {/* NOTICIAS (Ancho completo compartiendo estilo con Agenda) */}
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "noticias")}
+            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between hover:shadow-md transition-all text-left col-span-2 cursor-pointer"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <Newspaper size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-slate-900 text-xs truncate">Titulares de Utrera</p>
+                <p className="text-[10px] text-slate-500 truncate">Prensa, actualidad y medios locales</p>
+              </div>
+            </div>
+            <span className="text-[9px] font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-md flex-shrink-0 ml-2">Leer</span>
           </button>
         </div>
       </div>
