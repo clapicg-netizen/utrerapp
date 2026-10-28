@@ -11,7 +11,8 @@ import Conso from './pages/Conso';
 import Pasatiempos from './pages/Pasatiempos';
 import PanelComercio from './pages/PanelComercio';
 import Admin from './pages/Admin';
-import Tablon from './pages/Tablon'; // <-- Importamos la página del tablón
+import Tablon from './pages/Tablon';
+import Teatro from './pages/Teatro'; // <-- 1. Importamos la vista del Teatro
 import { Store, MessageSquare, Gamepad2, Home as HomeIcon, Newspaper } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 
@@ -49,12 +50,14 @@ export default function App() {
         return <QueVer setPaginaActual={setPaginaActual} />;
       case 'menu-agenda':
         return <MenuAgenda setPaginaActual={setPaginaActual} />;
+      case 'teatro':
+        return <Teatro setPaginaActual={setPaginaActual} />; // <-- 2. Añadimos la ruta del Teatro
       case 'conso':
         return <Conso setPaginaActual={setPaginaActual} />;
       case 'pasatiempos':
         return <Pasatiempos setPaginaActual={setPaginaActual} />;
       case 'tablon':
-        return <Tablon setPaginaActual={setPaginaActual} />; // <-- Añadimos la ruta del tablón
+        return <Tablon setPaginaActual={setPaginaActual} />;
       case 'admin':
         return <Admin setPaginaActual={setPaginaActual} />;
       default:
@@ -84,7 +87,6 @@ export default function App() {
           <span className="text-[10px]">Comercio</span>
         </button>
 
-        {/* Botón directo al Tablón en la barra inferior */}
         <button 
           onClick={() => setPaginaActual('tablon')}
           className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${paginaActual === 'tablon' ? 'text-amber-600 font-bold' : 'text-slate-400 hover:text-slate-600'}`}
