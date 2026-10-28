@@ -14,7 +14,7 @@ import PanelComercio from './pages/PanelComercio';
 import Admin from './pages/Admin';
 import Tablon from './pages/Tablon';
 import Teatro from './pages/Teatro';
-import Noticias from './pages/Noticias'; // <-- 1. Importamos la página de Noticias
+import Noticias from './pages/Noticias';
 import { Store, MessageSquare, Gamepad2, Home as HomeIcon, Newspaper } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 
@@ -38,7 +38,7 @@ export default function App() {
 
     switch (paginaActual) {
       case 'home':
-        return <Home setPaginaActual={setPaginaActual} />;
+        return <Home setPaginaActual={setPaginaActual} setTab={setPaginaActual} />;
       case 'market':
       case 'hosteleria':
         return <GuiaComercial setPaginaActual={setPaginaActual} categoriaInicial={paginaActual === 'hosteleria' ? 'hosteleria' : null} />;
@@ -55,7 +55,7 @@ export default function App() {
       case 'teatro':
         return <Teatro setPaginaActual={setPaginaActual} />;
       case 'noticias':
-        return <Noticias setPaginaActual={setPaginaActual} />; // <-- 2. Añadimos la ruta de Noticias
+        return <Noticias setPaginaActual={setPaginaActual} />;
       case 'conso':
         return <Conso setPaginaActual={setPaginaActual} />;
       case 'pasatiempos':
@@ -65,7 +65,7 @@ export default function App() {
       case 'admin':
         return <Admin setPaginaActual={setPaginaActual} />;
       default:
-        return <Home setPaginaActual={setPaginaActual} />;
+        return <Home setPaginaActual={setPaginaActual} setTab={setPaginaActual} />;
     }
   };
 
