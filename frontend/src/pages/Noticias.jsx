@@ -16,14 +16,19 @@ const MEDIA_SOURCES = [
     name: "Uvitel Online",
     color: "bg-emerald-100 text-emerald-700",
     url: "https://uvitelonline.com/"
+  },
+  {
+    name: "Utrera al Día",
+    color: "bg-amber-100 text-amber-800",
+    url: "https://www.utreraaldia.com"
   }
 ];
 
 export default function Noticias({ setPaginaActual }) {
-  const [pestanaActiva, setPestanaActiva] = useState("todos"); // 'todos', 'Utrera Digital', 'Utrera Web', 'Uvitel Online', 'tv'
+  const [pestanaActiva, setPestanaActiva] = useState("todos"); // 'todos', 'Utrera Digital', 'Utrera Web', 'Uvitel Online', 'Utrera al Día', 'tv'
   const [noticiaSeleccionada, setNoticiaSeleccionada] = useState(null);
 
-  // Noticias iniciales preparadas con los enlaces y fuentes oficiales de Utrera
+  // Noticias principales con enlaces directos a sus respectivas fuentes oficiales
   const [news] = useState([
     {
       id: 1,
@@ -51,6 +56,15 @@ export default function Noticias({ setPaginaActual }) {
       summary: "Toda la información de Utrera y los municipios vecinos recogida en los boletines informativos y magazines de la jornada.",
       published_at: "2026-10-27",
       url: "https://uvitelonline.com/"
+    },
+    {
+      id: 4,
+      source: "Utrera al Día",
+      category: "Actualidad",
+      headline: "Accede a la portada y última hora de Utrera al Día",
+      summary: "Consulta en directo la información diaria, reportajes y la actualidad de nuestro municipio desde su edición oficial.",
+      published_at: "2026-10-31",
+      url: "https://www.utreraaldia.com"
     }
   ]);
 
