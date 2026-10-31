@@ -342,7 +342,7 @@ export default function DashboardAdmin() {
         </button>
       </div>
 
-      {/* PESTAÑAS DE NAVEGACIÓN EN ADMIN */}
+      {/* PESTAÑAS DE NAVEGACIÓN EN ADMIN (AQUÍ ESTABAN FALTANDO EN PANTALLA) */}
       <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
         <button
           type="button"
