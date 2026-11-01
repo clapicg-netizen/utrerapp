@@ -14,7 +14,7 @@ export default function PanelAdmin() {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // 'normal' o 'inmobiliaria'
+  // 'normal', 'inmobiliaria' o 'comida'
   const [tipoRegistro, setTipoRegistro] = useState('normal');
 
   // Formulario completo original para comercios estándar
@@ -22,6 +22,7 @@ export default function PanelAdmin() {
     nombre: '',
     categoria: 'Hostelería',
     subcategoria: '',
+    tipo_ficha: 'normal',
     direccion: '',
     telefono: '',
     whatsapp: '',
@@ -38,7 +39,7 @@ export default function PanelAdmin() {
     pin_acceso: '1234'
   };
 
-  // Formulario completo para inmobiliaria (exacto a tus columnas de Supabase)
+  // Formulario completo para inmobiliaria (especial1_inmobiliaria)
   const formInmobiliariaInicial = {
     titulo: '',
     tipo_operacion: 'Venta',
@@ -52,8 +53,19 @@ export default function PanelAdmin() {
     activo: true
   };
 
+  // Formulario completo para comida / pedidos (especial2_items)
+  const formComidaInicial = {
+    categoria: 'Entrantes',
+    nombre_producto: '',
+    descripcion_ingredientes: '',
+    precio: '',
+    imagen_producto: '',
+    disponible: true
+  };
+
   const [formData, setFormData] = useState(formComercioInicial);
   const [formInmobiliaria, setFormInmobiliaria] = useState(formInmobiliariaInicial);
+  const [formComida, setFormComida] = useState(formComidaInicial);
 
   const cargarLista = async () => {
     const data = await obtenerComercios("Todos");
@@ -76,7 +88,7 @@ export default function PanelAdmin() {
     }
   };
 
-  const handleFileUpload = async (e, campo, esGaleria = false) => {
+  const handleFileUpload = async (e, campo, esGaleria = false, esComida = false) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -87,7 +99,9 @@ export default function PanelAdmin() {
     setSubiendo(false);
 
     if (res.success) {
-      if (esGaleria) {
+      if (esComida) {
+        setFormComida((prev) => ({ ...prev, [campo]: res.url }));
+      } else if (esGaleria) {
         setFormData((prev) => ({
           ...prev,
           galeria_urls: [...prev.galeria_urls, res.url]
@@ -132,6 +146,24 @@ export default function PanelAdmin() {
         setMensaje({ tipo: 'exito', texto: '¡Inmueble registrado con éxito en Supabase!' });
         setFormInmobiliaria(formInmobiliariaInicial);
 
+      } else if (tipoRegistro === 'comida') {
+        const { error } = await supabase.from('especial2_items').insert([
+          {
+            categoria: formComida.categoria,
+            nombre_producto: formComida.nombre_producto,
+            descripcion_ingredientes: formComida.descripcion_ingredientes,
+            precio: Number(formComida.precio) || 0,
+            imagen_producto: formComida.imagen_producto,
+            disponible: formComida.disponible
+          }
+        ]);
+
+        if (error) throw error;
+
+        setGuardando(false);
+        setMensaje({ tipo: 'exito', texto: '¡Plato o producto de comida registrado con éxito!' });
+        setFormComida(formComidaInicial);
+
       } else {
         if (editandoId) {
           const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, formData);
@@ -170,6 +202,7 @@ export default function PanelAdmin() {
       nombre: c.nombre || '',
       categoria: c.categoria || 'Hostelería',
       subcategoria: c.subcategoria || '',
+      tipo_ficha: c.tipo_ficha || 'normal',
       direccion: c.direccion || '',
       telefono: c.telefono || '',
       whatsapp: c.whatsapp || '',
@@ -282,7 +315,7 @@ export default function PanelAdmin() {
         {!editandoId && (
           <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
             <label className="block text-xs font-bold text-slate-700 mb-2">Selecciona el tipo de registro:</label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => setTipoRegistro('normal')}
@@ -299,7 +332,16 @@ export default function PanelAdmin() {
                   tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 text-white shadow' : 'bg-white text-slate-600 border'
                 }`}
               >
-                🏢 Inmueble / Inmobiliaria (VIP ⭐)
+                🏢 Ficha 1: Inmobiliaria
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipoRegistro('comida')}
+                className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                  tipoRegistro === 'comida' ? 'bg-rose-600 text-white shadow' : 'bg-white text-slate-600 border'
+                }`}
+              >
+                🍔 Ficha 2: Comida / Pedidos
               </button>
             </div>
           </div>
@@ -308,7 +350,7 @@ export default function PanelAdmin() {
         <form onSubmit={handleGuardar} className="space-y-6">
           
           {tipoRegistro === 'inmobiliaria' ? (
-            // FORMULARIO INMOBILIARIA
+            // FORMULARIO INMOBILIARIA (Ficha 1)
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
@@ -430,8 +472,87 @@ export default function PanelAdmin() {
                 </label>
               </div>
             </div>
+          ) : tipoRegistro === 'comida' ? (
+            // FORMULARIO COMIDA / PEDIDOS (Ficha 2)
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📂 Categoría del Plato</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Entrantes, Pizzas, Bebidas, Postres"
+                    value={formComida.categoria}
+                    onChange={(e) => setFormComida({...formComida, categoria: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🍽️ Nombre del Producto *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Hamburguesa Smash Utrerapp"
+                    value={formComida.nombre_producto}
+                    onChange={(e) => setFormComida({...formComida, nombre_producto: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">💰 Precio (€)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Ej. 8.50"
+                    value={formComida.precio}
+                    onChange={(e) => setFormComida({...formComida, precio: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto del Plato</label>
+                  {formComida.imagen_producto && (
+                    <img src={formComida.imagen_producto} alt="Plato" className="w-full h-24 object-cover rounded-xl mb-1 border" />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'imagen_producto', false, true)}
+                    disabled={subiendo}
+                    className="w-full text-xs text-slate-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción e Ingredientes</label>
+                <textarea
+                  rows="3"
+                  placeholder="Ej. Doble carne 100% buey, queso cheddar, bacón crujiente..."
+                  value={formComida.descripcion_ingredientes}
+                  onChange={(e) => setFormComida({...formComida, descripcion_ingredientes: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 bg-rose-50 p-3 rounded-xl border border-rose-200">
+                <input
+                  type="checkbox"
+                  id="disponible"
+                  checked={formComida.disponible}
+                  onChange={(e) => setFormComida({...formComida, disponible: e.target.checked})}
+                  className="w-4 h-4 text-rose-600 rounded cursor-pointer"
+                />
+                <label htmlFor="disponible" className="text-xs font-bold text-rose-900 cursor-pointer">
+                  🟢 Disponible en Carta (Activo para pedidos)
+                </label>
+              </div>
+            </div>
           ) : (
-            // FORMULARIO COMERCIO ESTÁNDAR (CON TODAS SUS OPCIONES ORIGINALES)
+            // FORMULARIO COMERCIO ESTÁNDAR
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -457,6 +578,7 @@ export default function PanelAdmin() {
                     <option value="Comercio">Comercio</option>
                     <option value="Servicios">Servicios</option>
                     <option value="Salud">Salud</option>
+                    <option value="Inmobiliarias">Inmobiliarias</option>
                   </select>
                 </div>
 
@@ -472,6 +594,19 @@ export default function PanelAdmin() {
                 </div>
 
                 <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">⭐ Tipo de Estructura de Ficha</label>
+                  <select
+                    value={formData.tipo_ficha}
+                    onChange={(e) => setFormData({...formData, tipo_ficha: e.target.value})}
+                    className="w-full p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-950"
+                  >
+                    <option value="normal">📄 Ficha Normal / Estándar</option>
+                    <option value="especial1">🏠 Ficha Especial 1 - Inmobiliaria</option>
+                    <option value="especial2">🍔 Ficha Especial 2 - Comida y Pedidos</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">📍 Dirección en Utrera</label>
                   <input
                     type="text"
@@ -618,10 +753,10 @@ export default function PanelAdmin() {
             type="submit"
             disabled={guardando || subiendo}
             className={`w-full font-bold text-sm py-4 rounded-2xl shadow-lg transition cursor-pointer text-white ${
-              tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-blue-600 hover:bg-blue-700'
+              tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 hover:bg-amber-700' : tipoRegistro === 'comida' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {guardando ? 'Guardando en Supabase...' : tipoRegistro === 'inmobiliaria' ? '🏢 Guardar Inmueble en la Tabla Inmobiliaria' : '🚀 Registrar Comercio Estándar'}
+            {guardando ? 'Guardando en Supabase...' : tipoRegistro === 'inmobiliaria' ? '🏢 Guardar Inmueble en la Tabla Inmobiliaria' : tipoRegistro === 'comida' ? '🍔 Guardar Plato en la Carta de Comida' : '🚀 Registrar Comercio Estándar'}
           </button>
         </form>
       </div>
@@ -642,7 +777,11 @@ export default function PanelAdmin() {
                   <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-lg">🏪</div>
                 )}
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900">{c.nombre}</h3>
+                  <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    {c.nombre}
+                    {c.tipo_ficha === 'especial1' && <span className="bg-blue-100 text-blue-800 text-[9px] px-2 py-0.5 rounded-full">Inmobiliaria</span>}
+                    {c.tipo_ficha === 'especial2' && <span className="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full">Comida VIP</span>}
+                  </h3>
                   <p className="text-[11px] text-slate-500">
                     {c.categoria} {c.subcategoria ? `• ${c.subcategoria}` : ''} | PIN: <span className="font-bold text-blue-600">{c.pin_acceso || '1234'}</span>
                   </p>
