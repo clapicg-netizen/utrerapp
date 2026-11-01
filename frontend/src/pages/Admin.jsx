@@ -14,10 +14,10 @@ export default function PanelAdmin() {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // 'normal', 'inmobiliaria' o 'comida'
+  // 'normal', 'especial1' (Inmobiliaria) o 'especial2' (Comida)
   const [tipoRegistro, setTipoRegistro] = useState('normal');
 
-  // Formulario completo original para comercios estándar (con vídeo incluido)
+  // Formulario Comercio Estándar (Completo)
   const formComercioInicial = {
     nombre: '',
     categoria: 'Hostelería',
@@ -36,37 +36,55 @@ export default function PanelAdmin() {
     galeria_urls: [],
     video_story_url: '',
     destacado: true,
-    pin_acceso: '1234'
+    pin_acceso: '1234',
+    // Configuración específica Ficha 2 (Comida)
+    horario_pedidos: '',
+    pedido_minimo: '',
+    coste_envio: '',
+    opciones_entrega: ['A domicilio', 'Recogida en local'],
+    metodos_pago_aceptados: ['Bizum', 'Efectivo', 'Tarjeta en entrega'],
+    whatsapp_recepcion_pedidos: '',
+    // Configuración específica Ficha 1 (Inmobiliaria)
+    titulo_seccion_catalogo: 'Inmuebles destacados',
+    mostrar_boton_captacion: true,
+    texto_boton_captacion: 'Solicitar valoración gratuita'
   };
 
-  // Formulario completo para inmobiliaria (con foto del inmueble)
-  const formInmobiliariaInicial = {
+  // Formulario Ficha 1: Ítem Propiedad (especial1_items) con TODOS los campos
+  const formInmobiliariaItemInicial = {
+    negocio_id: '',
     titulo: '',
-    tipo_operacion: 'Venta',
-    tipo_inmueble: 'Piso',
+    subtitulo_zona: '',
+    modalidad: 'Venta',
     precio: '',
     habitaciones: '',
-    baños: '',
+    banos: '',
     metros_cuadrados: '',
+    planta: '',
+    garaje: false,
     descripcion: '',
-    contacto: '',
-    foto: '',
-    activo: true
+    etiqueta_destacado: 'Novedad',
+    referencia_interna: '',
+    whatsapp_contacto_directo: '',
+    imagen: ''
   };
 
-  // Formulario completo para comida / pedidos (con imagen del plato)
-  const formComidaInicial = {
+  // Formulario Ficha 2: Ítem Plato / Producto (especial2_items) con TODOS los campos
+  const formComidaItemInicial = {
+    negocio_id: '',
     categoria: 'Entrantes',
     nombre_producto: '',
     descripcion_ingredientes: '',
     precio: '',
     imagen_producto: '',
+    etiquetas: 'Top ventas',
+    opciones_personalizables: '',
     disponible: true
   };
 
   const [formData, setFormData] = useState(formComercioInicial);
-  const [formInmobiliaria, setFormInmobiliaria] = useState(formInmobiliariaInicial);
-  const [formComida, setFormComida] = useState(formComidaInicial);
+  const [formInmobiliariaItem, setFormInmobiliariaItem] = useState(formInmobiliariaItemInicial);
+  const [formComidaItem, setFormComidaItem] = useState(formComidaItemInicial);
 
   const cargarLista = async () => {
     const data = await obtenerComercios("Todos");
@@ -89,7 +107,7 @@ export default function PanelAdmin() {
     }
   };
 
-  const handleFileUpload = async (e, campo, esGaleria = false, tipoForm = 'normal') => {
+  const handleFileUpload = async (e, campo, esGaleria = false, destinoForm = 'normal') => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -100,20 +118,14 @@ export default function PanelAdmin() {
     setSubiendo(false);
 
     if (res.success) {
-      if (tipoForm === 'comida') {
-        setFormComida((prev) => ({ ...prev, [campo]: res.url }));
-      } else if (tipoForm === 'inmobiliaria') {
-        setFormInmobiliaria((prev) => ({ ...prev, [campo]: res.url }));
+      if (destinoForm === 'inmobiliaria') {
+        setFormInmobiliariaItem(prev => ({ ...prev, [campo]: res.url }));
+      } else if (destinoForm === 'comida') {
+        setFormComidaItem(prev => ({ ...prev, [campo]: res.url }));
       } else if (esGaleria) {
-        setFormData((prev) => ({
-          ...prev,
-          galeria_urls: [...prev.galeria_urls, res.url]
-        }));
+        setFormData(prev => ({ ...prev, galeria_urls: [...prev.galeria_urls, res.url] }));
       } else {
-        setFormData((prev) => ({
-          ...prev,
-          [campo]: res.url
-        }));
+        setFormData(prev => ({ ...prev, [campo]: res.url }));
       }
       setMensaje({ tipo: 'exito', texto: '¡Archivo subido correctamente!' });
     } else {
@@ -127,50 +139,74 @@ export default function PanelAdmin() {
     setMensaje({ tipo: '', texto: '' });
 
     try {
-      if (tipoRegistro === 'inmobiliaria') {
-        const { error } = await supabase.from('especial1_inmobiliaria').insert([
+      if (tipoRegistro === 'especial1') {
+        if (!formInmobiliariaItem.negocio_id) {
+          setGuardando(false);
+          setMensaje({ tipo: 'error', texto: 'Selecciona la Inmobiliaria de destino.' });
+          return;
+        }
+
+        const { error } = await supabase.from('especial1_items').insert([
           {
-            titulo: formInmobiliaria.titulo,
-            tipo_operacion: formInmobiliaria.tipo_operacion,
-            tipo_inmueble: formInmobiliaria.tipo_inmueble,
-            precio: Number(formInmobiliaria.precio) || 0,
-            habitaciones: Number(formInmobiliaria.habitaciones) || 0,
-            baños: Number(formInmobiliaria.baños) || 0,
-            metros_cuadrados: Number(formInmobiliaria.metros_cuadrados) || 0,
-            descripcion: formInmobiliaria.descripcion,
-            contacto: formInmobiliaria.contacto,
-            foto: formInmobiliaria.foto,
-            activo: formInmobiliaria.activo
+            negocio_id: formInmobiliariaItem.negocio_id,
+            titulo: formInmobiliariaItem.titulo,
+            subtitulo_zona: formInmobiliariaItem.subtitulo_zona,
+            modalidad: formInmobiliariaItem.modalidad,
+            precio: Number(formInmobiliariaItem.precio) || 0,
+            imagenes: formInmobiliariaItem.imagen ? [formInmobiliariaItem.imagen] : [],
+            caracteristicas_clave: {
+              habitaciones: Number(formInmobiliariaItem.habitaciones) || 0,
+              banos: Number(formInmobiliariaItem.banos) || 0,
+              m2: Number(formInmobiliariaItem.metros_cuadrados) || 0,
+              planta: formInmobiliariaItem.planta,
+              garaje: formInmobiliariaItem.garaje
+            },
+            descripcion: formInmobiliariaItem.descripcion,
+            etiqueta_destacado: formInmobiliariaItem.etiqueta_destacado,
+            referencia_interna: formInmobiliariaItem.referencia_interna,
+            whatsapp_contacto_directo: formInmobiliariaItem.whatsapp_contacto_directo
           }
         ]);
 
         if (error) throw error;
-
         setGuardando(false);
-        setMensaje({ tipo: 'exito', texto: '¡Inmueble registrado con éxito en Supabase!' });
-        setFormInmobiliaria(formInmobiliariaInicial);
+        setMensaje({ tipo: 'exito', texto: '¡Inmueble añadido al catálogo con éxito!' });
+        setFormInmobiliariaItem(formInmobiliariaItemInicial);
 
-      } else if (tipoRegistro === 'comida') {
+      } else if (tipoRegistro === 'especial2') {
+        if (!formComidaItem.negocio_id) {
+          setGuardando(false);
+          setMensaje({ tipo: 'error', texto: 'Selecciona el Restaurante de destino.' });
+          return;
+        }
+
         const { error } = await supabase.from('especial2_items').insert([
           {
-            categoria: formComida.categoria,
-            nombre_producto: formComida.nombre_producto,
-            descripcion_ingredientes: formComida.descripcion_ingredientes,
-            precio: Number(formComida.precio) || 0,
-            imagen_producto: formComida.imagen_producto,
-            disponible: formComida.disponible
+            negocio_id: formComidaItem.negocio_id,
+            categoria: formComidaItem.categoria,
+            nombre_producto: formComidaItem.nombre_producto,
+            descripcion_ingredientes: formComidaItem.descripcion_ingredientes,
+            precio: Number(formComidaItem.precio) || 0,
+            imagen_producto: formComidaItem.imagen_producto,
+            etiquetas: formComidaItem.etiquetas ? formComidaItem.etiquetas.split(',').map(s => s.trim()) : [],
+            opciones_personalizables: formComidaItem.opciones_personalizables ? { notas: formComidaItem.opciones_personalizables } : null,
+            disponible: formComidaItem.disponible
           }
         ]);
 
         if (error) throw error;
-
         setGuardando(false);
-        setMensaje({ tipo: 'exito', texto: '¡Plato o producto de comida registrado con éxito!' });
-        setFormComida(formComidaInicial);
+        setMensaje({ tipo: 'exito', texto: '¡Plato añadido a la carta con éxito!' });
+        setFormComidaItem(formComidaItemInicial);
 
       } else {
+        const datosAEnviar = {
+          ...formData,
+          tipo_ficha: formData.categoria === 'Inmobiliarias' ? 'especial1' : formData.horario_pedidos ? 'especial2' : 'normal'
+        };
+
         if (editandoId) {
-          const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, formData);
+          const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, datosAEnviar);
           setGuardando(false);
           if (res.success) {
             setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado con éxito!' });
@@ -181,10 +217,10 @@ export default function PanelAdmin() {
             setMensaje({ tipo: 'error', texto: res.message });
           }
         } else {
-          const res = await crearComercio(formData);
+          const res = await crearComercio(datosAEnviar);
           setGuardando(false);
           if (res.success) {
-            setMensaje({ tipo: 'exito', texto: '¡Nuevo comercio dado de alta en Utrerapp!' });
+            setMensaje({ tipo: 'exito', texto: '¡Nuevo negocio dado de alta!' });
             setFormData(formComercioInicial);
             cargarLista();
           } else {
@@ -220,13 +256,20 @@ export default function PanelAdmin() {
       galeria_urls: c.galeria_urls || [],
       video_story_url: c.video_story_url || '',
       destacado: c.destacado ?? true,
-      pin_acceso: c.pin_acceso || '1234'
+      pin_acceso: c.pin_acceso || '1234',
+      horario_pedidos: c.horario_pedidos || '',
+      pedido_minimo: c.pedido_minimo || '',
+      coste_envio: c.coste_envio || '',
+      whatsapp_recepcion_pedidos: c.whatsapp_recepcion_pedidos || '',
+      titulo_seccion_catalogo: c.titulo_seccion_catalogo || 'Inmuebles destacados',
+      mostrar_boton_captacion: c.mostrar_boton_captacion ?? true,
+      texto_boton_captacion: c.texto_boton_captacion || 'Solicitar valoración gratuita'
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleEliminar = async (id, nombre) => {
-    if (window.confirm(`¿Seguro que quieres borrar "${nombre}" de Utrerapp?`)) {
+    if (window.confirm(`¿Seguro que quieres borrar "${nombre}"?`)) {
       const res = await eliminarComercio(id);
       if (res.success) {
         setMensaje({ tipo: 'exito', texto: `Comercio ${nombre} eliminado.` });
@@ -301,7 +344,7 @@ export default function PanelAdmin() {
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-6">
         <div className="flex justify-between items-center border-b pb-4">
           <h2 className="text-lg font-black text-slate-800">
-            {editandoId ? `✏️ Editando Comercio: ${formData.nombre}` : "➕ Registrar Nuevo Elemento"}
+            {editandoId ? `✏️ Editando: ${formData.nombre}` : "➕ Registrar Nuevo Elemento o Catálogo"}
           </h2>
           {editandoId && (
             <button
@@ -327,25 +370,25 @@ export default function PanelAdmin() {
                   tipoRegistro === 'normal' ? 'bg-blue-600 text-white shadow' : 'bg-white text-slate-600 border'
                 }`}
               >
-                🏪 Comercio Estándar
+                🏪 Negocio Base (Estándar / VIP)
               </button>
               <button
                 type="button"
-                onClick={() => setTipoRegistro('inmobiliaria')}
+                onClick={() => setTipoRegistro('especial1')}
                 className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                  tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 text-white shadow' : 'bg-white text-slate-600 border'
+                  tipoRegistro === 'especial1' ? 'bg-amber-600 text-white shadow' : 'bg-white text-slate-600 border'
                 }`}
               >
-                🏢 Ficha 1: Inmobiliaria
+                🏢 Añadir Inmueble (Ficha 1)
               </button>
               <button
                 type="button"
-                onClick={() => setTipoRegistro('comida')}
+                onClick={() => setTipoRegistro('especial2')}
                 className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                  tipoRegistro === 'comida' ? 'bg-rose-600 text-white shadow' : 'bg-white text-slate-600 border'
+                  tipoRegistro === 'especial2' ? 'bg-rose-600 text-white shadow' : 'bg-white text-slate-600 border'
                 }`}
               >
-                🍔 Ficha 2: Comida / Pedidos
+                🍔 Añadir Plato (Ficha 2)
               </button>
             </div>
           </div>
@@ -353,27 +396,53 @@ export default function PanelAdmin() {
 
         <form onSubmit={handleGuardar} className="space-y-6">
           
-          {tipoRegistro === 'inmobiliaria' ? (
-            // FORMULARIO INMOBILIARIA (Ficha 1)
+          {tipoRegistro === 'especial1' ? (
+            // FORMULARIO COMPLETO FICHA 1: INMUEBLES
             <div className="space-y-4">
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                <label className="block text-xs font-bold text-amber-900 mb-1">🏢 Selecciona la Inmobiliaria de destino *</label>
+                <select
+                  required
+                  value={formInmobiliariaItem.negocio_id}
+                  onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, negocio_id: e.target.value})}
+                  className="w-full p-3 bg-white border border-amber-300 rounded-xl text-xs font-bold text-slate-900"
+                >
+                  <option value="">-- Elige un negocio inmobiliario --</option>
+                  {comercios.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nombre} ({c.categoria})</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Título del Inmueble *</label>
                   <input
                     type="text"
                     required
-                    placeholder="Ej. Espectacular piso luminoso en zona Centro"
-                    value={formInmobiliaria.titulo}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, titulo: e.target.value})}
+                    placeholder="Ej. Piso luminoso en zona Centro"
+                    value={formInmobiliariaItem.titulo}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, titulo: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📂 Tipo de Operación</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📍 Subtítulo / Zona</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Zona San José / Av. de España"
+                    value={formInmobiliariaItem.subtitulo_zona}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, subtitulo_zona: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📂 Modalidad</label>
                   <select
-                    value={formInmobiliaria.tipo_operacion}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, tipo_operacion: e.target.value})}
+                    value={formInmobiliariaItem.modalidad}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, modalidad: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
                   >
                     <option value="Venta">Venta</option>
@@ -383,37 +452,24 @@ export default function PanelAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">🏠 Tipo de Inmueble</label>
-                  <select
-                    value={formInmobiliaria.tipo_inmueble}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, tipo_inmueble: e.target.value})}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
-                  >
-                    <option value="Piso">Piso</option>
-                    <option value="Casa">Casa / Chalet</option>
-                    <option value="Local">Local Comercial</option>
-                    <option value="Terreno">Terreno / Solar</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">💰 Precio (€)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">💰 Precio (€) *</label>
                   <input
                     type="number"
+                    required
                     placeholder="Ej. 135000"
-                    value={formInmobiliaria.precio}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, precio: e.target.value})}
+                    value={formInmobiliariaItem.precio}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, precio: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📞 Contacto / WhatsApp</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🔖 Referencia Interna</label>
                   <input
                     type="text"
-                    placeholder="Ej. 34600000000"
-                    value={formInmobiliaria.contacto}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, contacto: e.target.value})}
+                    placeholder="Ej. REF-1042"
+                    value={formInmobiliariaItem.referencia_interna}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, referencia_interna: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                   />
                 </div>
@@ -423,8 +479,8 @@ export default function PanelAdmin() {
                   <input
                     type="number"
                     placeholder="Ej. 3"
-                    value={formInmobiliaria.habitaciones}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, habitaciones: e.target.value})}
+                    value={formInmobiliariaItem.habitaciones}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, habitaciones: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                   />
                 </div>
@@ -434,8 +490,8 @@ export default function PanelAdmin() {
                   <input
                     type="number"
                     placeholder="Ej. 2"
-                    value={formInmobiliaria.baños}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, baños: e.target.value})}
+                    value={formInmobiliariaItem.banos}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, banos: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                   />
                 </div>
@@ -445,21 +501,56 @@ export default function PanelAdmin() {
                   <input
                     type="number"
                     placeholder="Ej. 110"
-                    value={formInmobiliaria.metros_cuadrados}
-                    onChange={(e) => setFormInmobiliaria({...formInmobiliaria, metros_cuadrados: e.target.value})}
+                    value={formInmobiliariaItem.metros_cuadrados}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, metros_cuadrados: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto del Inmueble</label>
-                  {formInmobiliaria.foto && (
-                    <img src={formInmobiliaria.foto} alt="Inmueble" className="w-full h-24 object-cover rounded-xl mb-1 border" />
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🏢 Planta</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. 2ª Planta con ascensor"
+                    value={formInmobiliariaItem.planta}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, planta: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">⭐ Etiqueta Destacado</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Novedad / Oportunidad"
+                    value={formInmobiliariaItem.etiqueta_destacado}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, etiqueta_destacado: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 bg-amber-50 p-3 rounded-xl border border-amber-200">
+                  <input
+                    type="checkbox"
+                    id="garaje"
+                    checked={formInmobiliariaItem.garaje}
+                    onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, garaje: e.target.checked})}
+                    className="w-4 h-4 text-amber-600 rounded cursor-pointer"
+                  />
+                  <label htmlFor="garaje" className="text-xs font-bold text-amber-900 cursor-pointer">
+                    🚗 Incluye Garaje
+                  </label>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de la Propiedad</label>
+                  {formInmobiliariaItem.imagen && (
+                    <img src={formInmobiliariaItem.imagen} alt="Inmueble" className="w-full h-32 object-cover rounded-xl mb-2 border" />
                   )}
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, 'foto', false, 'inmobiliaria')}
+                    onChange={(e) => handleFileUpload(e, 'imagen', false, 'inmobiliaria')}
                     disabled={subiendo}
                     className="w-full text-xs text-slate-500"
                   />
@@ -467,41 +558,44 @@ export default function PanelAdmin() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción del Inmueble</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción Completa</label>
                 <textarea
-                  rows="4"
-                  placeholder="Detalla calidades, garaje, ascensor, orientación..."
-                  value={formInmobiliaria.descripcion}
-                  onChange={(e) => setFormInmobiliaria({...formInmobiliaria, descripcion: e.target.value})}
+                  rows="3"
+                  placeholder="Detalla calidades, orientación, extras..."
+                  value={formInmobiliariaItem.descripcion}
+                  onChange={(e) => setFormInmobiliariaItem({...formInmobiliariaItem, descripcion: e.target.value})}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                 />
               </div>
-
-              <div className="flex items-center gap-3 bg-amber-50 p-3 rounded-xl border border-amber-200">
-                <input
-                  type="checkbox"
-                  id="activo"
-                  checked={formInmobiliaria.activo}
-                  onChange={(e) => setFormInmobiliaria({...formInmobiliaria, activo: e.target.checked})}
-                  className="w-4 h-4 text-amber-600 rounded cursor-pointer"
-                />
-                <label htmlFor="activo" className="text-xs font-bold text-amber-900 cursor-pointer">
-                  🟢 Inmueble Activo y Visible en la App
-                </label>
-              </div>
             </div>
-          ) : tipoRegistro === 'comida' ? (
-            // FORMULARIO COMIDA / PEDIDOS (Ficha 2)
+
+          ) : tipoRegistro === 'especial2' ? (
+            // FORMULARIO COMPLETO FICHA 2: COMIDA / PLATOS
             <div className="space-y-4">
+              <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200">
+                <label className="block text-xs font-bold text-rose-900 mb-1">🍔 Selecciona el Restaurante / Bar de destino *</label>
+                <select
+                  required
+                  value={formComidaItem.negocio_id}
+                  onChange={(e) => setFormComidaItem({...formComidaItem, negocio_id: e.target.value})}
+                  className="w-full p-3 bg-white border border-rose-300 rounded-xl text-xs font-bold text-slate-900"
+                >
+                  <option value="">-- Elige un establecimiento de hostelería --</option>
+                  {comercios.map((c) => (
+                    <option key={c.id} value={c.id}>{c.nombre} ({c.categoria})</option>
+                  ))}
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📂 Categoría del Plato</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📂 Categoría del Plato *</label>
                   <input
                     type="text"
                     required
                     placeholder="Ej. Entrantes, Pizzas, Bebidas, Postres"
-                    value={formComida.categoria}
-                    onChange={(e) => setFormComida({...formComida, categoria: e.target.value})}
+                    value={formComidaItem.categoria}
+                    onChange={(e) => setFormComidaItem({...formComidaItem, categoria: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                   />
                 </div>
@@ -512,28 +606,40 @@ export default function PanelAdmin() {
                     type="text"
                     required
                     placeholder="Ej. Hamburguesa Smash Utrerapp"
-                    value={formComida.nombre_producto}
-                    onChange={(e) => setFormComida({...formComida, nombre_producto: e.target.value})}
+                    value={formComidaItem.nombre_producto}
+                    onChange={(e) => setFormComidaItem({...formComidaItem, nombre_producto: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">💰 Precio (€)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">💰 Precio (€) *</label>
                   <input
                     type="number"
                     step="0.01"
+                    required
                     placeholder="Ej. 8.50"
-                    value={formComida.precio}
-                    onChange={(e) => setFormComida({...formComida, precio: e.target.value})}
+                    value={formComidaItem.precio}
+                    onChange={(e) => setFormComidaItem({...formComidaItem, precio: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
                   />
                 </div>
 
                 <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Etiquetas (Separadas por comas)</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Top ventas, Picante, Sin Gluten"
+                    value={formComidaItem.etiquetas}
+                    onChange={(e) => setFormComidaItem({...formComidaItem, etiquetas: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto del Plato</label>
-                  {formComida.imagen_producto && (
-                    <img src={formComida.imagen_producto} alt="Plato" className="w-full h-24 object-cover rounded-xl mb-1 border" />
+                  {formComidaItem.imagen_producto && (
+                    <img src={formComidaItem.imagen_producto} alt="Plato" className="w-full h-28 object-cover rounded-xl mb-1 border" />
                   )}
                   <input
                     type="file"
@@ -550,8 +656,19 @@ export default function PanelAdmin() {
                 <textarea
                   rows="3"
                   placeholder="Ej. Doble carne 100% buey, queso cheddar, bacón crujiente..."
-                  value={formComida.descripcion_ingredientes}
-                  onChange={(e) => setFormComida({...formComida, descripcion_ingredientes: e.target.value})}
+                  value={formComidaItem.descripcion_ingredientes}
+                  onChange={(e) => setFormComidaItem({...formComidaItem, descripcion_ingredientes: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">⚙️ Opciones personalizables / Extras</label>
+                <input
+                  type="text"
+                  placeholder="Ej. Elegir punto de la carne, salsas, etc."
+                  value={formComidaItem.opciones_personalizables}
+                  onChange={(e) => setFormComidaItem({...formComidaItem, opciones_personalizables: e.target.value})}
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                 />
               </div>
@@ -560,8 +677,8 @@ export default function PanelAdmin() {
                 <input
                   type="checkbox"
                   id="disponible"
-                  checked={formComida.disponible}
-                  onChange={(e) => setFormComida({...formComida, disponible: e.target.checked})}
+                  checked={formComidaItem.disponible}
+                  onChange={(e) => setFormComidaItem({...formComidaItem, disponible: e.target.checked})}
                   className="w-4 h-4 text-rose-600 rounded cursor-pointer"
                 />
                 <label htmlFor="disponible" className="text-xs font-bold text-rose-900 cursor-pointer">
@@ -569,8 +686,9 @@ export default function PanelAdmin() {
                 </label>
               </div>
             </div>
+
           ) : (
-            // FORMULARIO COMERCIO ESTÁNDAR
+            // FORMULARIO NEGOCIO BASE (ESTÁNDAR / CABECERA VIP)
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -578,7 +696,7 @@ export default function PanelAdmin() {
                   <input
                     type="text"
                     required
-                    placeholder="Ej. Bar Alonsi"
+                    placeholder="Ej. Bar Alonsi / Inmobiliaria Utrera"
                     value={formData.nombre}
                     onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
@@ -595,8 +713,8 @@ export default function PanelAdmin() {
                     <option value="Hostelería">Hostelería</option>
                     <option value="Comercio">Comercio</option>
                     <option value="Servicios">Servicios</option>
-                    <option value="Salud">Salud</option>
                     <option value="Inmobiliarias">Inmobiliarias</option>
+                    <option value="Salud y Belleza">Salud y Belleza</option>
                   </select>
                 </div>
 
@@ -604,7 +722,7 @@ export default function PanelAdmin() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría</label>
                   <input
                     type="text"
-                    placeholder="Ej. Tapas y Raciones / Ropa / Peluquería"
+                    placeholder="Ej. Tapas / Pisos en Venta"
                     value={formData.subcategoria}
                     onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
@@ -612,19 +730,6 @@ export default function PanelAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">⭐ Tipo de Estructura de Ficha</label>
-                  <select
-                    value={formData.tipo_ficha}
-                    onChange={(e) => setFormData({...formData, tipo_ficha: e.target.value})}
-                    className="w-full p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-950"
-                  >
-                    <option value="normal">📄 Ficha Normal / Estándar</option>
-                    <option value="especial1">🏠 Ficha Especial 1 - Inmobiliaria</option>
-                    <option value="especial2">🍔 Ficha Especial 2 - Comida y Pedidos</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">📍 Dirección en Utrera</label>
                   <input
                     type="text"
@@ -638,7 +743,7 @@ export default function PanelAdmin() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">💬 WhatsApp (Sin espacios)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">💬 WhatsApp</label>
                   <input
                     type="text"
                     placeholder="Ej. 34600000000"
@@ -649,7 +754,7 @@ export default function PanelAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📞 Teléfono Fijo/Móvil</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📞 Teléfono</label>
                   <input
                     type="text"
                     placeholder="Ej. 954860000"
@@ -671,11 +776,85 @@ export default function PanelAdmin() {
                 </div>
               </div>
 
-              <div className="space-y-4 border-t pt-4">
-                <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Multimedia & Archivos</h3>
+              {/* CONFIGURACIÓN EXTRA SI ES HOSTELERÍA (FICHA 2) */}
+              {formData.categoria === 'Hostelería' && (
+                <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 space-y-4">
+                  <h3 className="text-xs font-black uppercase text-rose-900">🍔 Ajustes Generales de Pedidos (Ficha 2)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">🕒 Horario de Pedidos</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 13:00 - 16:00 y 20:00 - 23:30"
+                        value={formData.horario_pedidos}
+                        onChange={(e) => setFormData({...formData, horario_pedidos: e.target.value})}
+                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">📱 WhatsApp Recepción Comanda</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 34600000000"
+                        value={formData.whatsapp_recepcion_pedidos}
+                        onChange={(e) => setFormData({...formData, whatsapp_recepcion_pedidos: e.target.value})}
+                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">💰 Pedido Mínimo (€)</label>
+                      <input
+                        type="number"
+                        placeholder="12"
+                        value={formData.pedido_minimo}
+                        onChange={(e) => setFormData({...formData, pedido_minimo: e.target.value})}
+                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">🛵 Coste de Envío (€)</label>
+                      <input
+                        type="number"
+                        placeholder="2"
+                        value={formData.coste_envio}
+                        onChange={(e) => setFormData({...formData, coste_envio: e.target.value})}
+                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
+              {/* CONFIGURACIÓN EXTRA SI ES INMOBILIARIA (FICHA 1) */}
+              {formData.categoria === 'Inmobiliarias' && (
+                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-4">
+                  <h3 className="text-xs font-black uppercase text-amber-900">🏢 Ajustes de Cabecera Inmobiliaria (Ficha 1)</h3>
+                  <div>
+                    <label className="block text-xs font-bold text-amber-900 mb-1">🏷️ Título de la Sección del Catálogo</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Inmuebles destacados"
+                      value={formData.titulo_seccion_catalogo}
+                      onChange={(e) => setFormData({...formData, titulo_seccion_catalogo: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-amber-900 mb-1">✨ Texto del Botón de Valoración / Captación</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Solicitar valoración gratuita"
+                      value={formData.texto_boton_captacion}
+                      onChange={(e) => setFormData({...formData, texto_boton_captacion: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4 border-t pt-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada Principal</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada</label>
                   {formData.portada_url && (
                     <img src={formData.portada_url} alt="Portada" className="w-full h-36 object-cover rounded-2xl mb-2 border" />
                   )}
@@ -684,78 +863,12 @@ export default function PanelAdmin() {
                     accept="image/*"
                     onChange={(e) => handleFileUpload(e, 'portada_url')}
                     disabled={subiendo}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    className="w-full text-xs text-slate-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos</label>
-                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-2">
-                    {formData.galeria_urls.map((url, idx) => (
-                      <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
-                        <img src={url} alt={`Galeria ${idx}`} className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setFormData(p => ({...p, galeria_urls: p.galeria_urls.filter((_, i) => i !== idx)}))}
-                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center cursor-pointer"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, null, true)}
-                    disabled={subiendo}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">🎬 Vídeo Promocional (MP4)</label>
-                  {formData.video_story_url && (
-                    <p className="text-[11px] text-blue-600 font-bold mb-1 truncate">✓ Vídeo subido con éxito</p>
-                  )}
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) => handleFileUpload(e, 'video_story_url')}
-                    disabled={subiendo}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú (PDF o Imagen)</label>
-                  {formData.carta_pdf_url && (
-                    <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ Archivo subido: {formData.carta_pdf_url}</p>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
-                    disabled={subiendo}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4 border-t pt-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash / Promoción Activa</label>
-                  <input
-                    type="text"
-                    placeholder="Ej. ¡Hoy 2x1 en jarras de cerveza!"
-                    value={formData.oferta_flash}
-                    onChange={(e) => setFormData({...formData, oferta_flash: e.target.value})}
-                    className="w-full p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-medium"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción del Local</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción del Negocio</label>
                   <textarea
                     rows="3"
                     placeholder="Escribe un resumen atractivo..."
@@ -763,19 +876,6 @@ export default function PanelAdmin() {
                     onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                   />
-                </div>
-
-                <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
-                  <input
-                    type="checkbox"
-                    id="destacado"
-                    checked={formData.destacado}
-                    onChange={(e) => setFormData({...formData, destacado: e.target.checked})}
-                    className="w-4 h-4 text-blue-600 rounded cursor-pointer"
-                  />
-                  <label htmlFor="destacado" className="text-xs font-bold text-blue-900 cursor-pointer">
-                    ⭐ Comercio Destacado / VIP (Aparece primero en los carruseles)
-                  </label>
                 </div>
               </div>
             </div>
@@ -785,18 +885,18 @@ export default function PanelAdmin() {
             type="submit"
             disabled={guardando || subiendo}
             className={`w-full font-bold text-sm py-4 rounded-2xl shadow-lg transition cursor-pointer text-white ${
-              tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 hover:bg-amber-700' : tipoRegistro === 'comida' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-blue-600 hover:bg-blue-700'
+              tipoRegistro === 'especial1' ? 'bg-amber-600 hover:bg-amber-700' : tipoRegistro === 'especial2' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {guardando ? 'Guardando en Supabase...' : tipoRegistro === 'inmobiliaria' ? '🏢 Guardar Inmueble en la Tabla Inmobiliaria' : tipoRegistro === 'comida' ? '🍔 Guardar Plato en la Carta de Comida' : '🚀 Registrar Comercio Estándar'}
+            {guardando ? 'Guardando en Supabase...' : tipoRegistro === 'especial1' ? '🏢 Guardar Inmueble en el Catálogo' : tipoRegistro === 'especial2' ? '🍔 Guardar Plato en la Carta' : '🚀 Registrar Negocio Base'}
           </button>
         </form>
       </div>
 
-      {/* Tabla de Comercios Existentes */}
+      {/* Lista de Negocios Registrados */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-4">
         <h2 className="text-lg font-black text-slate-800 border-b pb-3">
-          🏬 Comercios Registrados ({comercios.length})
+          🏬 Negocios Registrados ({comercios.length})
         </h2>
 
         <div className="divide-y divide-slate-100">
@@ -811,12 +911,10 @@ export default function PanelAdmin() {
                 <div>
                   <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     {c.nombre}
-                    {c.tipo_ficha === 'especial1' && <span className="bg-blue-100 text-blue-800 text-[9px] px-2 py-0.5 rounded-full">Inmobiliaria</span>}
-                    {c.tipo_ficha === 'especial2' && <span className="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full">Comida VIP</span>}
+                    {c.categoria === 'Inmobiliarias' && <span className="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full">Inmobiliaria VIP</span>}
+                    {c.categoria === 'Hostelería' && c.horario_pedidos && <span className="bg-rose-100 text-rose-800 text-[9px] px-2 py-0.5 rounded-full">Comida VIP</span>}
                   </h3>
-                  <p className="text-[11px] text-slate-500">
-                    {c.categoria} {c.subcategoria ? `• ${c.subcategoria}` : ''} | PIN: <span className="font-bold text-blue-600">{c.pin_acceso || '1234'}</span>
-                  </p>
+                  <p className="text-[11px] text-slate-500">{c.categoria} {c.subcategoria ? `• ${c.subcategoria}` : ''}</p>
                 </div>
               </div>
 
