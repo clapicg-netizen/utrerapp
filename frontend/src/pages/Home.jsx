@@ -205,7 +205,6 @@ export default function Home({ setPaginaActual, setTab }) {
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
-          {/* Farmacias */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "farmacias")}
@@ -220,7 +219,6 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Salud */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "salud")}
@@ -235,7 +233,6 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Agenda Y Gestiones */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "agenda-gestiones")}
@@ -250,7 +247,6 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* Visita Utrera */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "que-ver")}
@@ -265,7 +261,6 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* AGENDA CULTURAL Y EVENTOS */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "menu-agenda")}
@@ -280,7 +275,6 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* TITULARES DE UTRERA (NOTICIAS) */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "noticias")}
@@ -303,7 +297,6 @@ export default function Home({ setPaginaActual, setTab }) {
           Ocio y Tablón Local
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          {/* TARJETA TABLÓN DE ANUNCIOS CLASIFICADOS */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "tablon")}
@@ -318,7 +311,6 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* TARJETA PASATIEMPOS (ZONA DE JUEGOS) */}
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "pasatiempos")}
@@ -333,10 +325,9 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
           </button>
 
-          {/* GASTRONOMÍA - BARES Y HOSTELERÍA (FILTRADO) */}
           <button 
             type="button"
-            onClick={(e) => cambiarPestana(e, "hosteleria")}
+            onClick={(e) => cambiarPsubpestana || cambiarPestana(e, "hosteleria")}
             className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform col-span-2 cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
