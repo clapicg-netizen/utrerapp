@@ -1,5 +1,6 @@
+// src/pages/Market.jsx
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Search, MapPin } from "lucide-react";
+import { Phone, Navigation, Search, MapPin, FileText, Video } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
 const COMERCIOS_DE_PRUEBA = [
@@ -32,19 +33,27 @@ export default function Market() {
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(false);
 
-  const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza"];
+  const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza", "Inmobiliaria (Especial)", "Comida (Especial)"];
 
   useEffect(() => {
     async function fetchData() {
       setCargando(true);
       try {
-        let query = supabase.from('comercios_utrera').select('*');
-        if (categoriaSel && categoriaSel !== "Todos") {
+        let tabla = 'comercios_utrera';
+        if (categoriaSel === "Inmobiliaria (Especial)") {
+          tabla = 'especial1_inmobiliaria';
+        } else if (categoriaSel === "Comida (Especial)") {
+          tabla = 'especial2_comida';
+        }
+
+        let query = supabase.from(tabla).select('*');
+        if (categoriaSel && categoriaSel !== "Todos" && !categoriaSel.includes("Especial")) {
           query = query.eq('categoria', categoriaSel);
         }
+        
         const { data, error } = await query;
-        if (!error && data && data.length > 0) {
-          setComercios(data);
+        if (!error && data) {
+          setComercios(data.length > 0 ? data : COMERCIOS_DE_PRUEBA);
         }
       } catch (err) {
         console.error("Usando datos locales por error de red:", err);
@@ -72,7 +81,7 @@ export default function Market() {
       {/* Cabecera */}
       <div className="bg-slate-900 text-white p-6 rounded-b-3xl shadow-lg">
         <h1 className="text-2xl font-bold">Guía Comercial Utrera</h1>
-        <p className="text-xs text-slate-400 mt-1">Negocios y comercios locales actualizados</p>
+        <p className="text-xs text-slate-400 mt-1">Negocios, fichas especiales y servicios locales</p>
         
         {/* Buscador */}
         <div className="mt-4 relative">
@@ -96,6 +105,8 @@ export default function Market() {
             className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all shadow-sm ${
               categoriaSel === cat
                 ? "bg-slate-900 text-white"
+                : cat.includes("Especial")
+                ? "bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200"
                 : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
             }`}
           >
@@ -106,7 +117,11 @@ export default function Market() {
 
       {/* Lista de Comercios */}
       <div className="px-4 mt-4 space-y-4 max-w-lg mx-auto">
-        {comerciosFiltrados.length === 0 ? (
+        {cargando ? (
+          <div className="text-center py-12">
+            <p className="text-slate-500 text-xs font-bold animate-pulse">Cargando comercios...</p>
+          </div>
+        ) : comerciosFiltrados.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
             <p className="text-slate-500 font-medium text-sm">No hay comercios en esta categoría.</p>
           </div>
@@ -196,6 +211,35 @@ export default function Market() {
               <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
                 {comercioSel.descripcion}
               </p>
+            )}
+
+            {/* BOTÓN CARTA / PDF SI EXISTE */}
+            {comercioSel.carta_pdf_url && (
+              <a
+                href={comercioSel.carta_pdf_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-900 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow"
+              >
+                <FileText size={16} /> Ver Carta / Menú en PDF
+              </a>
+            )}
+
+            {/* VÍDEO SI EXISTE */}
+            {comercioSel.video_url && (
+              <div className="mt-3">
+                <p className="text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <Video size={14} className="text-rose-600" /> Vídeo Promocional
+                </p>
+                <div className="rounded-xl overflow-hidden bg-black aspect-video">
+                  <iframe
+                    src={comercioSel.video_url}
+                    title="Vídeo promocional"
+                    className="w-full h-full"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
             )}
 
             <div className="grid grid-cols-2 gap-2 mt-4">
