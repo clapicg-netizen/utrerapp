@@ -955,7 +955,3 @@ export default function DashboardAdmin() {
   );
 }
 EOF
-
-git add src/pages/DashboardAdmin.jsx
-git commit -m "DashboardAdmin definitivo con pestañas y anuncios comerciales"
-git push origin main
