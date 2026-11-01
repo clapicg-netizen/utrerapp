@@ -342,7 +342,7 @@ export default function DashboardAdmin() {
         </button>
       </div>
 
-      {/* PESTAÑAS DE NAVEGACIÓN EN ADMIN (AQUÍ ESTABAN FALTANDO EN PANTALLA) */}
+      {/* PESTAÑAS DE NAVEGACIÓN EN ADMIN */}
       <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
         <button
           type="button"
@@ -656,7 +656,7 @@ export default function DashboardAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú o Folleto</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú o Folleto (PDF o Imagen)</label>
                   <input
                     type="text"
                     placeholder="https://..."
@@ -669,7 +669,7 @@ export default function DashboardAdmin() {
                     accept="application/pdf,image/*"
                     onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
                     disabled={subiendo}
-                    className="w-full text-xs text-slate-500"
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
                   />
                 </div>
               </div>
