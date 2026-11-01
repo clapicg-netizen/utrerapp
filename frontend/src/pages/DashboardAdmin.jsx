@@ -1,4 +1,4 @@
-cat << 'EOF' > src/pages/DashboardAdmin.jsx
+// src/pages/DashboardAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { obtenerComercios, crearComercio, actualizarComercio, eliminarComercio, subirArchivoComercio } from '../lib/comerciosService';
 import { supabase } from '../lib/supabaseClient';
@@ -8,8 +8,9 @@ const PIN_ADMIN_MAESTRO = "9999";
 export default function DashboardAdmin() {
   const [autenticado, setAutenticado] = useState(false);
   const [pinInput, setPinInput] = useState('');
-  const [seccionActiva, setSeccionActiva] = useState('comercios');
+  const [seccionActiva, setSeccionActiva] = useState('comercios'); // 'comercios' o 'anuncios'
   
+  // Estados para Comercios
   const [comercios, setComercios] = useState([]);
   const [editandoId, setEditandoId] = useState(null);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
@@ -44,6 +45,7 @@ export default function DashboardAdmin() {
 
   const [formData, setFormData] = useState(formInicial);
 
+  // Estados para Anuncios de Portada
   const [anuncios, setAnuncios] = useState([]);
   const [editandoAnuncioId, setEditandoAnuncioId] = useState(null);
   const formAnuncioInicial = {
@@ -340,6 +342,7 @@ export default function DashboardAdmin() {
         </button>
       </div>
 
+      {/* PESTAÑAS DE NAVEGACIÓN EN ADMIN */}
       <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
         <button
           type="button"
@@ -363,6 +366,7 @@ export default function DashboardAdmin() {
         </div>
       )}
 
+      {/* SECCIÓN 1: GESTIÓN DE COMERCIOS */}
       {seccionActiva === 'comercios' && (
         <div className="space-y-8">
           <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-6">
@@ -485,6 +489,7 @@ export default function DashboardAdmin() {
                 </div>
               </div>
 
+              {/* 🌐 SITIO WEB Y TIENDA ONLINE */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                 <p className="text-xs font-black uppercase text-slate-700">🌐 Sitio Web y Tienda Online</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -511,6 +516,7 @@ export default function DashboardAdmin() {
                 </div>
               </div>
 
+              {/* 🌐 REDES SOCIALES */}
               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                 <p className="text-xs font-black uppercase text-slate-700">🌐 Redes Sociales</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -586,6 +592,7 @@ export default function DashboardAdmin() {
                   />
                 </div>
 
+                {/* 🖼️ GALERÍA DE FOTOS MÚLTIPLE */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
                   <label className="block text-xs font-bold text-slate-800 mb-2">🖼️ Galería de Fotos (Múltiples imágenes):</label>
                   <div className="grid grid-cols-3 gap-2 mb-3">
@@ -611,6 +618,7 @@ export default function DashboardAdmin() {
                   />
                 </div>
 
+                {/* 🎬 VÍDEO PROMOCIONAL (URL O SUBIDA DIRECTA) */}
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
                   <p className="text-xs font-black uppercase text-slate-700">🎬 Vídeo Promocional</p>
                   
@@ -755,6 +763,7 @@ export default function DashboardAdmin() {
         </div>
       )}
 
+      {/* SECCIÓN 2: GESTIÓN DE ANUNCIOS DE PORTADA */}
       {seccionActiva === 'anuncios' && (
         <div className="space-y-8">
           <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-6">
@@ -954,4 +963,3 @@ export default function DashboardAdmin() {
     </div>
   );
 }
-EOF
