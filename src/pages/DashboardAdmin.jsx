@@ -198,4 +198,4 @@ export default function DashboardAdmin() {
       )}
     </div>
   );
-}
+}// Actualización forzada del panel de administración
