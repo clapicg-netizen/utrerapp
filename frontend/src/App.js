@@ -1,6 +1,5 @@
 // src/App.js
 import React, { useState, useEffect } from 'react';
-import { Analytics } from '@vercel/analytics/react';
 import Home from './pages/Home';
 import GuiaComercial from './pages/GuiaComercial';
 import Farmacias from './pages/Farmacias';
