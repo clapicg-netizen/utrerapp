@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike, Plus, Minus, ShoppingCart, ShieldCheck, Home, Bed, Bath } from "lucide-react";
 import { obtenerComercios, actualizarComercio, crearComercio, subirArchivoComercio } from "../lib/comerciosService";
+import FichaInmobiliaria from "./FichaInmobiliaria";
+import FichaComida from "./FichaComida";
 
 const PIN_ADMIN_MAESTRO = "9999";
 
@@ -298,6 +300,9 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                         <h3 className="font-bold text-slate-900 text-base truncate">{comercio.nombre}</h3>
                         {comercio.tipo_ficha === 'especial1' && (
                           <span className="bg-blue-100 text-blue-800 text-[9px] font-black px-2 py-0.5 rounded-full">Inmobiliaria</span>
+                        )}
+                        {comercio.tipo_ficha === 'especial2' && (
+                          <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded-full">Comida VIP</span>
                         )}
                       </div>
                       <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mt-0.5">
@@ -646,75 +651,12 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
             ) : (
               /* VISTA NORMAL O ESPECIAL DE LA FICHA DEL COMERCIO */
               <div>
-                {/* SI ES FICHA ESPECIAL 1 (INMOBILIARIA) */}
+                {/* SI ES FICHA ESPECIAL 1 (INMOBILIARIA) -> CARGA EL COMPONENTE AVANZADO */}
                 {comercioSel.tipo_ficha === 'especial1' ? (
-                  <div className="space-y-4">
-                    <div className="h-40 bg-slate-900 rounded-2xl p-4 text-white relative overflow-hidden flex flex-col justify-end">
-                      {comercioSel.portada_url && (
-                        <div className="absolute inset-0">
-                          <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover opacity-50" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent"></div>
-                        </div>
-                      )}
-                      <div className="relative z-10 flex justify-between items-end">
-                        <div>
-                          <span className="bg-blue-600 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase">🏠 Inmobiliaria</span>
-                          <h2 className="text-xl font-black mt-1">{comercioSel.nombre}</h2>
-                          <p className="text-xs text-slate-200">{comercioSel.direccion}</p>
-                        </div>
-                        <button
-                          onClick={() => { setModoAdmin(true); setAutenticadoAdmin(false); }}
-                          className="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1"
-                        >
-                          ✏️ Editar
-                        </button>
-                      </div>
-                    </div>
-
-                    {comercioSel.descripcion && (
-                      <p className="text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border">
-                        {comercioSel.descripcion}
-                      </p>
-                    )}
-
-                    <div className="space-y-3">
-                      <h3 className="text-xs font-black uppercase text-slate-500 tracking-wider">Catálogo de Inmuebles</h3>
-                      {comercioSel.datos_especiales && comercioSel.datos_especiales.inmuebles && Array.isArray(comercioSel.datos_especiales.inmuebles) ? (
-                        comercioSel.datos_especiales.inmuebles.map((inm, idx) => (
-                          <div key={idx} className="bg-white rounded-2xl p-3 border border-slate-200 shadow-sm space-y-2">
-                            {inm.foto && (
-                              <div className="h-32 rounded-xl overflow-hidden bg-slate-100">
-                                <img src={inm.foto} alt={inm.titulo} className="w-full h-full object-cover" />
-                              </div>
-                            )}
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-bold text-slate-900 text-sm">{inm.titulo}</h4>
-                                <p className="text-xs text-amber-600 font-black">{inm.precio}</p>
-                              </div>
-                              <span className="text-[10px] bg-slate-100 font-bold px-2 py-0.5 rounded-md text-slate-600">{inm.operacion || "Venta"}</span>
-                            </div>
-                            <p className="text-xs text-slate-500">{inm.ubicacion}</p>
-                            <div className="flex gap-3 text-[11px] font-bold text-slate-600 pt-1 border-t border-slate-100">
-                              {inm.habitaciones && <span className="flex items-center gap-1"><Bed size={13} className="text-slate-400" /> {inm.habitaciones} hab</span>}
-                              {inm.banos && <span className="flex items-center gap-1"><Bath size={13} className="text-slate-400" /> {inm.banos} baños</span>}
-                              {inm.m2 && <span className="flex items-center gap-1"><Home size={13} className="text-slate-400" /> {inm.m2} m²</span>}
-                            </div>
-                            <a
-                              href={`https://wa.me/${comercioSel.whatsapp?.replace("+", "").replace(/\s/g, "") || ""}?text=Hola,%20me%20interesa%20el%20inmueble:%20${encodeURIComponent(inm.titulo)}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="w-full block bg-emerald-500 hover:bg-emerald-600 text-white text-center font-bold text-xs py-2 rounded-xl shadow-sm transition-colors mt-2"
-                            >
-                              💬 Consultar por WhatsApp
-                            </a>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-slate-400 text-center py-4">No hay inmuebles cargados en el catálogo actualmente.</p>
-                      )}
-                    </div>
-                  </div>
+                  <FichaInmobiliaria negocioId={comercioSel.id} />
+                ) : comercioSel.tipo_ficha === 'especial2' ? (
+                  /* SI ES FICHA ESPECIAL 2 (COMIDA) -> CARGA EL COMPONENTE AVANZADO DE PEDIDOS */
+                  <FichaComida negocioId={comercioSel.id} />
                 ) : (
                   /* VISTA ESTÁNDAR COMPLETA CON VÍDEO, GALERÍA, REDES Y BOTONES */
                   <div>
