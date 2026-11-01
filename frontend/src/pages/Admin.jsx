@@ -1,6 +1,7 @@
 // src/pages/PanelAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { obtenerComercios, crearComercio, actualizarComercio, eliminarComercio, subirArchivoComercio } from '../lib/comerciosService';
+import { supabase } from '../lib/supabaseClient';
 
 const PIN_ADMIN_MAESTRO = "9999";
 
@@ -12,6 +13,9 @@ export default function PanelAdmin() {
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
+
+  // NUEVO: Tipo de ficha a registrar ('normal', 'inmobiliaria', 'comida')
+  const [tipoRegistro, setTipoRegistro] = useState('normal');
 
   const formInicial = {
     nombre: '',
@@ -86,42 +90,69 @@ export default function PanelAdmin() {
 
   const handleGuardar = async (e) => {
     e.preventDefault();
-    if (!formData.nombre || !formData.categoria) {
-      setMensaje({ tipo: 'error', texto: 'Indica al menos el Nombre y la Categoría' });
+    if (!formData.nombre) {
+      setMensaje({ tipo: 'error', texto: 'Indica al menos el Nombre del negocio' });
       return;
     }
 
     setGuardando(true);
     setMensaje({ tipo: '', texto: '' });
 
-    if (editandoId) {
-      // Modificar existente
-      const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, formData);
-      setGuardando(false);
-      if (res.success) {
-        setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado con éxito!' });
-        setEditandoId(null);
+    try {
+      if (tipoRegistro === 'inmobiliaria' || tipoRegistro === 'comida') {
+        const tablaDestino = tipoRegistro === 'inmobiliaria' ? 'especial1_inmobiliaria' : 'especial2_comida';
+        
+        const datosEspeciales = {
+          nombre: formData.nombre,
+          descripcion: formData.descripcion,
+          direccion: formData.direccion,
+          telefono: formData.telefono,
+          whatsapp: formData.whatsapp,
+          portada_url: formData.portada_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+          categoria: tipoRegistro === 'inmobiliaria' ? 'Inmobiliarias' : 'Hostelería / Comida'
+        };
+
+        const { error } = await supabase.from(tablaDestino).insert([datosEspeciales]);
+        if (error) throw error;
+
+        setGuardando(false);
+        setMensaje({ tipo: 'exito', texto: `¡Ficha especial de ${tipoRegistro} registrada con éxito!` });
         setFormData(formInicial);
-        cargarLista();
       } else {
-        setMensaje({ tipo: 'error', texto: res.message });
+        // Flujo normal de comercios
+        if (editandoId) {
+          const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, formData);
+          setGuardando(false);
+          if (res.success) {
+            setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado con éxito!' });
+            setEditandoId(null);
+            setFormData(formInicial);
+            cargarLista();
+          } else {
+            setMensaje({ tipo: 'error', texto: res.message });
+          }
+        } else {
+          const res = await crearComercio(formData);
+          setGuardando(false);
+          if (res.success) {
+            setMensaje({ tipo: 'exito', texto: '¡Nuevo comercio dado de alta en Utrerapp!' });
+            setFormData(formInicial);
+            cargarLista();
+          } else {
+            setMensaje({ tipo: 'error', texto: res.message });
+          }
+        }
       }
-    } else {
-      // Crear nuevo
-      const res = await crearComercio(formData);
+    } catch (err) {
+      console.error("Error al guardar:", err);
       setGuardando(false);
-      if (res.success) {
-        setMensaje({ tipo: 'exito', texto: '¡Nuevo comercio dado de alta en Utrerapp!' });
-        setFormData(formInicial);
-        cargarLista();
-      } else {
-        setMensaje({ tipo: 'error', texto: res.message });
-      }
+      setMensaje({ tipo: 'error', texto: 'Error al guardar en la base de datos.' });
     }
   };
 
   const handleEditar = (c) => {
     setEditandoId(c.id);
+    setTipoRegistro('normal');
     setFormData({
       nombre: c.nombre || '',
       categoria: c.categoria || 'Hostelería',
@@ -159,7 +190,7 @@ export default function PanelAdmin() {
   // Login de Administrador
   if (!autenticado) {
     return (
-      <div className="max-w-md mx-auto p-6 pt-16">
+      <div className="max-w-md mx-auto p-6 pt-16 font-sans">
         <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
           <span className="text-5xl">👑</span>
           <h1 className="text-2xl font-black text-slate-900 mt-3">Panel Admin Utrerapp</h1>
@@ -194,7 +225,7 @@ export default function PanelAdmin() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 pb-24 space-y-8">
+    <div className="max-w-4xl mx-auto p-4 pb-24 space-y-8 font-sans">
       
       {/* Cabecera Admin */}
       <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-3xl shadow-lg">
@@ -204,7 +235,7 @@ export default function PanelAdmin() {
         </div>
         <button
           onClick={() => setAutenticado(false)}
-          className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+          className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer"
         >
           Cerrar Sesión
         </button>
@@ -222,7 +253,7 @@ export default function PanelAdmin() {
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-6">
         <div className="flex justify-between items-center border-b pb-4">
           <h2 className="text-lg font-black text-slate-800">
-            {editandoId ? `✏️ Editando: ${formData.nombre}` : "➕ Registrar Nuevo Comercio"}
+            {editandoId ? `✏️ Editando Comercio: ${formData.nombre}` : "➕ Registrar Nuevo Elemento"}
           </h2>
           {editandoId && (
             <button
@@ -230,12 +261,48 @@ export default function PanelAdmin() {
                 setEditandoId(null);
                 setFormData(formInicial);
               }}
-              className="text-xs bg-slate-100 hover:bg-slate-200 font-bold px-3 py-1.5 rounded-xl text-slate-600"
+              className="text-xs bg-slate-100 hover:bg-slate-200 font-bold px-3 py-1.5 rounded-xl text-slate-600 cursor-pointer"
             >
               Cancelar Edición
             </button>
           )}
         </div>
+
+        {/* SELECTOR DE TIPO DE REGISTRO (Sólo en modo creación) */}
+        {!editandoId && (
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
+            <label className="block text-xs font-bold text-slate-700 mb-2">Selecciona el tipo de registro:</label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => setTipoRegistro('normal')}
+                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                  tipoRegistro === 'normal' ? 'bg-blue-600 text-white shadow' : 'bg-white text-slate-600 border'
+                }`}
+              >
+                🏪 Comercio Estándar
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipoRegistro('inmobiliaria')}
+                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                  tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 text-white shadow' : 'bg-white text-slate-600 border'
+                }`}
+              >
+                🏢 Inmobiliaria (Especial)
+              </button>
+              <button
+                type="button"
+                onClick={() => setTipoRegistro('comida')}
+                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                  tipoRegistro === 'comida' ? 'bg-orange-600 text-white shadow' : 'bg-white text-slate-600 border'
+                }`}
+              >
+                🍲 Comida (Especial)
+              </button>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleGuardar} className="space-y-6">
           
@@ -245,7 +312,7 @@ export default function PanelAdmin() {
               <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Nombre del Negocio *</label>
               <input
                 type="text"
-                placeholder="Ej. Bar Alonsi"
+                placeholder={tipoRegistro === 'inmobiliaria' ? 'Ej. Inmobiliaria Centro Utrera' : 'Ej. Bar Alonsi'}
                 value={formData.nombre}
                 onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
@@ -253,30 +320,34 @@ export default function PanelAdmin() {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📂 Categoría *</label>
-              <select
-                value={formData.categoria}
-                onChange={(e) => setFormData({...formData, categoria: e.target.value})}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
-              >
-                <option value="Hostelería">Hostelería</option>
-                <option value="Comercio">Comercio</option>
-                <option value="Servicios">Servicios</option>
-                <option value="Salud">Salud</option>
-              </select>
-            </div>
+            {tipoRegistro === 'normal' && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">📂 Categoría *</label>
+                <select
+                  value={formData.categoria}
+                  onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                >
+                  <option value="Hostelería">Hostelería</option>
+                  <option value="Comercio">Comercio</option>
+                  <option value="Servicios">Servicios</option>
+                  <option value="Salud">Salud</option>
+                </select>
+              </div>
+            )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría</label>
-              <input
-                type="text"
-                placeholder="Ej. Tapas y Raciones / Ropa / Peluquería"
-                value={formData.subcategoria}
-                onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
-              />
-            </div>
+            {tipoRegistro === 'normal' && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría</label>
+                <input
+                  type="text"
+                  placeholder="Ej. Tapas y Raciones / Ropa / Peluquería"
+                  value={formData.subcategoria}
+                  onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">📍 Dirección en Utrera</label>
@@ -314,16 +385,18 @@ export default function PanelAdmin() {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">🔑 PIN de Cliente (Acceso Comercio)</label>
-              <input
-                type="text"
-                placeholder="1234"
-                value={formData.pin_acceso}
-                onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
-                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
-              />
-            </div>
+            {tipoRegistro === 'normal' && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">🔑 PIN de Cliente (Acceso Comercio)</label>
+                <input
+                  type="text"
+                  placeholder="1234"
+                  value={formData.pin_acceso}
+                  onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
+                />
+              </div>
+            )}
           </div>
 
           {/* Bloque 3: Imágenes y Archivos */}
@@ -345,92 +418,102 @@ export default function PanelAdmin() {
               />
             </div>
 
-            {/* Galería de Fotos */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Añadir múltiples)</label>
-              <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-2">
-                {formData.galeria_urls.map((url, idx) => (
-                  <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
-                    <img src={url} alt={`Galeria ${idx}`} className="w-full h-full object-cover" />
-                    <button
-                      type="button"
-                      onClick={() => setFormData(p => ({...p, galeria_urls: p.galeria_urls.filter((_, i) => i !== idx)}))}
-                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center"
-                    >
-                      ✕
-                    </button>
+            {tipoRegistro === 'normal' && (
+              <>
+                {/* Galería de Fotos */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Añadir múltiples)</label>
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-2">
+                    {formData.galeria_urls.map((url, idx) => (
+                      <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
+                        <img src={url} alt={`Galeria ${idx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData(p => ({...p, galeria_urls: p.galeria_urls.filter((_, i) => i !== idx)}))}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileUpload(e, null, true)}
-                disabled={subiendo}
-                className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-              />
-            </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, null, true)}
+                    disabled={subiendo}
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                </div>
 
-            {/* Carta PDF */}
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú (PDF o Imagen)</label>
-              {formData.carta_pdf_url && (
-                <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ Archivo subido: {formData.carta_pdf_url}</p>
-              )}
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
-                disabled={subiendo}
-                className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-              />
-            </div>
+                {/* Carta PDF */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú (PDF o Imagen)</label>
+                  {formData.carta_pdf_url && (
+                    <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ Archivo subido: {formData.carta_pdf_url}</p>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
+                    disabled={subiendo}
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Bloque 4: Descripción, Oferta Flash y VIP */}
+          {/* Bloque 4: Descripción y Extras */}
           <div className="space-y-4 border-t pt-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash / Promoción Activa</label>
-              <input
-                type="text"
-                placeholder="Ej. ¡Hoy 2x1 en jarras de cerveza de 20:00 a 22:00!"
-                value={formData.oferta_flash}
-                onChange={(e) => setFormData({...formData, oferta_flash: e.target.value})}
-                className="w-full p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-medium"
-              />
-            </div>
+            {tipoRegistro === 'normal' && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash / Promoción Activa</label>
+                <input
+                  type="text"
+                  placeholder="Ej. ¡Hoy 2x1 en jarras de cerveza de 20:00 a 22:00!"
+                  value={formData.oferta_flash}
+                  onChange={(e) => setFormData({...formData, oferta_flash: e.target.value})}
+                  className="w-full p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-medium"
+                />
+              </div>
+            )}
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción del Local</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción del Local / Inmueble</label>
               <textarea
                 rows="3"
-                placeholder="Escribe un resumen atractivo para los vecinos..."
+                placeholder="Escribe un resumen atractivo..."
                 value={formData.descripcion}
                 onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
               />
             </div>
 
-            <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
-              <input
-                type="checkbox"
-                id="destacado"
-                checked={formData.destacado}
-                onChange={(e) => setFormData({...formData, destacado: e.target.checked})}
-                className="w-4 h-4 text-blue-600 rounded"
-              />
-              <label htmlFor="destacado" className="text-xs font-bold text-blue-900 cursor-pointer">
-                ⭐ Comercio Destacado / VIP (Aparece primero en los carruseles superiores)
-              </label>
-            </div>
+            {tipoRegistro === 'normal' && (
+              <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
+                <input
+                  type="checkbox"
+                  id="destacado"
+                  checked={formData.destacado}
+                  onChange={(e) => setFormData({...formData, destacado: e.target.checked})}
+                  className="w-4 h-4 text-blue-600 rounded cursor-pointer"
+                />
+                <label htmlFor="destacado" className="text-xs font-bold text-blue-900 cursor-pointer">
+                  ⭐ Comercio Destacado / VIP (Aparece primero en los carruseles superiores)
+                </label>
+              </div>
+            )}
           </div>
 
           <button
             type="submit"
             disabled={guardando || subiendo}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm py-4 rounded-2xl shadow-lg transition"
+            className={`w-full font-bold text-sm py-4 rounded-2xl shadow-lg transition cursor-pointer text-white ${
+              tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 hover:bg-amber-700' : tipoRegistro === 'comida' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
-            {guardando ? 'Guardando en la App...' : editandoId ? '💾 Guardar Cambios en Comercio' : '🚀 Dar de Alta Comercio en Utrerapp'}
+            {guardando ? 'Guardando...' : editandoId ? '💾 Guardar Cambios en Comercio' : `🚀 Registrar ${tipoRegistro === 'inmobiliaria' ? 'Inmobiliaria' : tipoRegistro === 'comida' ? 'Comida Especial' : 'Comercio'} en Utrerapp`}
           </button>
         </form>
       </div>
@@ -461,13 +544,13 @@ export default function PanelAdmin() {
               <div className="flex gap-2">
                 <button
                   onClick={() => handleEditar(c)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl transition"
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer"
                 >
                   ✏️ Editar
                 </button>
                 <button
                   onClick={() => handleEliminar(c.id, c.nombre)}
-                  className="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl transition"
+                  className="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer"
                 >
                   🗑️ Borrar
                 </button>
