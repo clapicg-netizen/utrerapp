@@ -9,12 +9,12 @@ export default function PanelAdmin() {
   const [autenticado, setAutenticado] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [comercios, setComercios] = useState([]);
-  const [editandoId, setEditandoId] = useState(null); // null = Modo Crear
+  const [editandoId, setEditandoId] = useState(null);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // NUEVO: Tipo de ficha a registrar ('normal', 'inmobiliaria', 'comida')
+  // 'normal', 'inmobiliaria', 'comida'
   const [tipoRegistro, setTipoRegistro] = useState('normal');
 
   const formInicial = {
@@ -102,6 +102,7 @@ export default function PanelAdmin() {
       if (tipoRegistro === 'inmobiliaria' || tipoRegistro === 'comida') {
         const tablaDestino = tipoRegistro === 'inmobiliaria' ? 'especial1_inmobiliaria' : 'especial2_comida';
         
+        // Fichas especiales con TODAS las opciones VIP
         const datosEspeciales = {
           nombre: formData.nombre,
           descripcion: formData.descripcion,
@@ -109,6 +110,11 @@ export default function PanelAdmin() {
           telefono: formData.telefono,
           whatsapp: formData.whatsapp,
           portada_url: formData.portada_url || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+          carta_pdf_url: formData.carta_pdf_url || '',
+          galeria_urls: formData.galeria_urls || [],
+          video_story_url: formData.video_story_url || '',
+          oferta_flash: formData.oferta_flash || '',
+          destacado: formData.destacado ?? true,
           categoria: tipoRegistro === 'inmobiliaria' ? 'Inmobiliarias' : 'Hostelería / Comida'
         };
 
@@ -116,7 +122,7 @@ export default function PanelAdmin() {
         if (error) throw error;
 
         setGuardando(false);
-        setMensaje({ tipo: 'exito', texto: `¡Ficha especial de ${tipoRegistro} registrada con éxito!` });
+        setMensaje({ tipo: 'exito', texto: `¡Ficha VIP de ${tipoRegistro} registrada con éxito!` });
         setFormData(formInicial);
       } else {
         // Flujo normal de comercios
@@ -187,7 +193,6 @@ export default function PanelAdmin() {
     }
   };
 
-  // Login de Administrador
   if (!autenticado) {
     return (
       <div className="max-w-md mx-auto p-6 pt-16 font-sans">
@@ -227,11 +232,10 @@ export default function PanelAdmin() {
   return (
     <div className="max-w-4xl mx-auto p-4 pb-24 space-y-8 font-sans">
       
-      {/* Cabecera Admin */}
       <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-3xl shadow-lg">
         <div>
           <span className="text-xs font-bold text-blue-400 uppercase tracking-wider">Dashboard de Administración</span>
-          <h1 className="text-2xl font-black">Gestión Total de Comercios</h1>
+          <h1 className="text-2xl font-black">Gestión Total de Comercios y Fichas VIP</h1>
         </div>
         <button
           onClick={() => setAutenticado(false)}
@@ -249,11 +253,10 @@ export default function PanelAdmin() {
         </div>
       )}
 
-      {/* Formulario de Alta / Edición */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-6">
         <div className="flex justify-between items-center border-b pb-4">
           <h2 className="text-lg font-black text-slate-800">
-            {editandoId ? `✏️ Editando Comercio: ${formData.nombre}` : "➕ Registrar Nuevo Elemento"}
+            {editandoId ? `✏️ Editando Comercio: ${formData.nombre}` : "➕ Registrar Nuevo Elemento / Ficha VIP"}
           </h2>
           {editandoId && (
             <button
@@ -268,7 +271,7 @@ export default function PanelAdmin() {
           )}
         </div>
 
-        {/* SELECTOR DE TIPO DE REGISTRO (Sólo en modo creación) */}
+        {/* SELECTOR DE TIPO DE REGISTRO */}
         {!editandoId && (
           <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
             <label className="block text-xs font-bold text-slate-700 mb-2">Selecciona el tipo de registro:</label>
@@ -276,7 +279,7 @@ export default function PanelAdmin() {
               <button
                 type="button"
                 onClick={() => setTipoRegistro('normal')}
-                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                   tipoRegistro === 'normal' ? 'bg-blue-600 text-white shadow' : 'bg-white text-slate-600 border'
                 }`}
               >
@@ -285,20 +288,20 @@ export default function PanelAdmin() {
               <button
                 type="button"
                 onClick={() => setTipoRegistro('inmobiliaria')}
-                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                   tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 text-white shadow' : 'bg-white text-slate-600 border'
                 }`}
               >
-                🏢 Inmobiliaria (Especial)
+                🏢 Inmobiliaria (VIP ⭐)
               </button>
               <button
                 type="button"
                 onClick={() => setTipoRegistro('comida')}
-                className={`py-2 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                className={`py-2.5 px-3 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                   tipoRegistro === 'comida' ? 'bg-orange-600 text-white shadow' : 'bg-white text-slate-600 border'
                 }`}
               >
-                🍲 Comida (Especial)
+                🍲 Comida Especial (VIP ⭐)
               </button>
             </div>
           </div>
@@ -309,10 +312,10 @@ export default function PanelAdmin() {
           {/* Bloque 1: Datos Principales */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Nombre del Negocio *</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">🏷️ Nombre del Negocio / Agencia *</label>
               <input
                 type="text"
-                placeholder={tipoRegistro === 'inmobiliaria' ? 'Ej. Inmobiliaria Centro Utrera' : 'Ej. Bar Alonsi'}
+                placeholder={tipoRegistro === 'inmobiliaria' ? 'Ej. Inmobiliaria Centro Utrera' : tipoRegistro === 'comida' ? 'Ej. Gastronomía Selecta Utrera' : 'Ej. Bar Alonsi'}
                 value={formData.nombre}
                 onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
@@ -361,8 +364,8 @@ export default function PanelAdmin() {
             </div>
           </div>
 
-          {/* Bloque 2: Contacto y Cliente */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl">
+          {/* Bloque 2: Contacto */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">💬 WhatsApp (Sin espacios)</label>
               <input
@@ -384,24 +387,11 @@ export default function PanelAdmin() {
                 className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
               />
             </div>
-
-            {tipoRegistro === 'normal' && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">🔑 PIN de Cliente (Acceso Comercio)</label>
-                <input
-                  type="text"
-                  placeholder="1234"
-                  value={formData.pin_acceso}
-                  onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
-                />
-              </div>
-            )}
           </div>
 
-          {/* Bloque 3: Imágenes y Archivos */}
+          {/* Bloque 3: Multimedia y Archivos (AHORA TAMBIÉN PARA ESPECIALES) */}
           <div className="space-y-4 border-t pt-4">
-            <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Multimedia & Archivos</h3>
+            <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Multimedia & Archivos VIP</h3>
 
             {/* Foto de Portada */}
             <div>
@@ -418,92 +408,84 @@ export default function PanelAdmin() {
               />
             </div>
 
-            {tipoRegistro === 'normal' && (
-              <>
-                {/* Galería de Fotos */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Añadir múltiples)</label>
-                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-2">
-                    {formData.galeria_urls.map((url, idx) => (
-                      <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
-                        <img src={url} alt={`Galeria ${idx}`} className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setFormData(p => ({...p, galeria_urls: p.galeria_urls.filter((_, i) => i !== idx)}))}
-                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center cursor-pointer"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
+            {/* Galería de Fotos */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Fotos (Inmuebles o Platos)</label>
+              <div className="grid grid-cols-4 md:grid-cols-6 gap-2 mb-2">
+                {formData.galeria_urls.map((url, idx) => (
+                  <div key={idx} className="relative h-20 bg-slate-100 rounded-xl overflow-hidden border">
+                    <img src={url} alt={`Galeria ${idx}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setFormData(p => ({...p, galeria_urls: p.galeria_urls.filter((_, i) => i !== idx)}))}
+                      className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-[10px] font-bold flex items-center justify-center cursor-pointer"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileUpload(e, null, true)}
-                    disabled={subiendo}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                  />
-                </div>
+                ))}
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleFileUpload(e, null, true)}
+                disabled={subiendo}
+                className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
+            </div>
 
-                {/* Carta PDF */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / Menú (PDF o Imagen)</label>
-                  {formData.carta_pdf_url && (
-                    <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ Archivo subido: {formData.carta_pdf_url}</p>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*,application/pdf"
-                    onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
-                    disabled={subiendo}
-                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
-                  />
-                </div>
-              </>
-            )}
+            {/* Carta / Dossier PDF */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📄 Dossier / Carta en PDF o Imagen</label>
+              {formData.carta_pdf_url && (
+                <p className="text-[11px] text-emerald-600 font-bold mb-1 truncate">✓ Archivo subido: {formData.carta_pdf_url}</p>
+              )}
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={(e) => handleFileUpload(e, 'carta_pdf_url')}
+                disabled={subiendo}
+                className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+              />
+            </div>
           </div>
 
-          {/* Bloque 4: Descripción y Extras */}
+          {/* Bloque 4: Descripción y Promociones */}
           <div className="space-y-4 border-t pt-4">
-            {tipoRegistro === 'normal' && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash / Promoción Activa</label>
-                <input
-                  type="text"
-                  placeholder="Ej. ¡Hoy 2x1 en jarras de cerveza de 20:00 a 22:00!"
-                  value={formData.oferta_flash}
-                  onChange={(e) => setFormData({...formData, oferta_flash: e.target.value})}
-                  className="w-full p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-medium"
-                />
-              </div>
-            )}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash / Promoción Destacada</label>
+              <input
+                type="text"
+                placeholder="Ej. ¡Valoración gratuita o menú especial de fin de semana!"
+                value={formData.oferta_flash}
+                onChange={(e) => setFormData({...formData, oferta_flash: e.target.value})}
+                className="w-full p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 font-medium"
+              />
+            </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción del Local / Inmueble</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">📝 Descripción Detallada</label>
               <textarea
                 rows="3"
-                placeholder="Escribe un resumen atractivo..."
+                placeholder="Detalla las características del inmueble, servicios de la inmobiliaria o especialidades de la carta..."
                 value={formData.descripcion}
                 onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
               />
             </div>
 
-            {tipoRegistro === 'normal' && (
-              <div className="flex items-center gap-3 bg-blue-50 p-3 rounded-xl border border-blue-100">
-                <input
-                  type="checkbox"
-                  id="destacado"
-                  checked={formData.destacado}
-                  onChange={(e) => setFormData({...formData, destacado: e.target.checked})}
-                  className="w-4 h-4 text-blue-600 rounded cursor-pointer"
-                />
-                <label htmlFor="destacado" className="text-xs font-bold text-blue-900 cursor-pointer">
-                  ⭐ Comercio Destacado / VIP (Aparece primero en los carruseles superiores)
-                </label>
-              </div>
-            )}
+            <div className="flex items-center gap-3 bg-amber-50 p-3 rounded-xl border border-amber-200">
+              <input
+                type="checkbox"
+                id="destacado"
+                checked={formData.destacado}
+                onChange={(e) => setFormData({...formData, destacado: e.target.checked})}
+                className="w-4 h-4 text-amber-600 rounded cursor-pointer"
+              />
+              <label htmlFor="destacado" className="text-xs font-bold text-amber-900 cursor-pointer">
+                ⭐ Destacado VIP (Prioridad máxima en la guía comercial)
+              </label>
+            </div>
           </div>
 
           <button
@@ -513,51 +495,9 @@ export default function PanelAdmin() {
               tipoRegistro === 'inmobiliaria' ? 'bg-amber-600 hover:bg-amber-700' : tipoRegistro === 'comida' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-blue-600 hover:bg-blue-700'
             }`}
           >
-            {guardando ? 'Guardando...' : editandoId ? '💾 Guardar Cambios en Comercio' : `🚀 Registrar ${tipoRegistro === 'inmobiliaria' ? 'Inmobiliaria' : tipoRegistro === 'comida' ? 'Comida Especial' : 'Comercio'} en Utrerapp`}
+            {guardando ? 'Guardando...' : `🚀 Registrar ${tipoRegistro === 'inmobiliaria' ? 'Inmobiliaria VIP' : tipoRegistro === 'comida' ? 'Comida Especial VIP' : 'Comercio Estándar'} en Utrerapp`}
           </button>
         </form>
-      </div>
-
-      {/* Tabla / Lista de Comercios Existentes */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-4">
-        <h2 className="text-lg font-black text-slate-800 border-b pb-3">
-          🏬 Comercios Registrados ({comercios.length})
-        </h2>
-
-        <div className="divide-y divide-slate-100">
-          {comercios.map((c) => (
-            <div key={c.id} className="py-3 flex justify-between items-center gap-4">
-              <div className="flex items-center gap-3">
-                {c.portada_url ? (
-                  <img src={c.portada_url} alt={c.nombre} className="w-12 h-12 rounded-xl object-cover border" />
-                ) : (
-                  <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-lg">🏪</div>
-                )}
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">{c.nombre}</h3>
-                  <p className="text-[11px] text-slate-500">
-                    {c.categoria} {c.subcategoria ? `• ${c.subcategoria}` : ''} | PIN: <span className="font-bold text-blue-600">{c.pin_acceso || '1234'}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleEditar(c)}
-                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer"
-                >
-                  ✏️ Editar
-                </button>
-                <button
-                  onClick={() => handleEliminar(c.id, c.nombre)}
-                  className="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold px-3 py-1.5 rounded-xl transition cursor-pointer"
-                >
-                  🗑️ Borrar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
     </div>
