@@ -17,7 +17,7 @@ export default function PanelAdmin() {
   // 'normal', 'inmobiliaria' o 'comida'
   const [tipoRegistro, setTipoRegistro] = useState('normal');
 
-  // Formulario completo original para comercios estándar
+  // Formulario completo original para comercios estándar (con vídeo incluido)
   const formComercioInicial = {
     nombre: '',
     categoria: 'Hostelería',
@@ -39,7 +39,7 @@ export default function PanelAdmin() {
     pin_acceso: '1234'
   };
 
-  // Formulario completo para inmobiliaria (especial1_inmobiliaria)
+  // Formulario completo para inmobiliaria (con foto del inmueble)
   const formInmobiliariaInicial = {
     titulo: '',
     tipo_operacion: 'Venta',
@@ -50,10 +50,11 @@ export default function PanelAdmin() {
     metros_cuadrados: '',
     descripcion: '',
     contacto: '',
+    foto: '',
     activo: true
   };
 
-  // Formulario completo para comida / pedidos (especial2_items)
+  // Formulario completo para comida / pedidos (con imagen del plato)
   const formComidaInicial = {
     categoria: 'Entrantes',
     nombre_producto: '',
@@ -88,7 +89,7 @@ export default function PanelAdmin() {
     }
   };
 
-  const handleFileUpload = async (e, campo, esGaleria = false, esComida = false) => {
+  const handleFileUpload = async (e, campo, esGaleria = false, tipoForm = 'normal') => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -99,8 +100,10 @@ export default function PanelAdmin() {
     setSubiendo(false);
 
     if (res.success) {
-      if (esComida) {
+      if (tipoForm === 'comida') {
         setFormComida((prev) => ({ ...prev, [campo]: res.url }));
+      } else if (tipoForm === 'inmobiliaria') {
+        setFormInmobiliaria((prev) => ({ ...prev, [campo]: res.url }));
       } else if (esGaleria) {
         setFormData((prev) => ({
           ...prev,
@@ -136,6 +139,7 @@ export default function PanelAdmin() {
             metros_cuadrados: Number(formInmobiliaria.metros_cuadrados) || 0,
             descripcion: formInmobiliaria.descripcion,
             contacto: formInmobiliaria.contacto,
+            foto: formInmobiliaria.foto,
             activo: formInmobiliaria.activo
           }
         ]);
@@ -446,6 +450,20 @@ export default function PanelAdmin() {
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
                   />
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto del Inmueble</label>
+                  {formInmobiliaria.foto && (
+                    <img src={formInmobiliaria.foto} alt="Inmueble" className="w-full h-24 object-cover rounded-xl mb-1 border" />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'foto', false, 'inmobiliaria')}
+                    disabled={subiendo}
+                    className="w-full text-xs text-slate-500"
+                  />
+                </div>
               </div>
 
               <div>
@@ -520,7 +538,7 @@ export default function PanelAdmin() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, 'imagen_producto', false, true)}
+                    onChange={(e) => handleFileUpload(e, 'imagen_producto', false, 'comida')}
                     disabled={subiendo}
                     className="w-full text-xs text-slate-500"
                   />
@@ -692,6 +710,20 @@ export default function PanelAdmin() {
                     onChange={(e) => handleFileUpload(e, null, true)}
                     disabled={subiendo}
                     className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🎬 Vídeo Promocional (MP4)</label>
+                  {formData.video_story_url && (
+                    <p className="text-[11px] text-blue-600 font-bold mb-1 truncate">✓ Vídeo subido con éxito</p>
+                  )}
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => handleFileUpload(e, 'video_story_url')}
+                    disabled={subiendo}
+                    className="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100"
                   />
                 </div>
 
