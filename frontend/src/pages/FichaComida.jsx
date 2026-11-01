@@ -16,13 +16,27 @@ export default function FichaComida({ negocioId }) {
 
   useEffect(() => {
     async function fetchComidaData() {
+      if (!negocioId) return;
       setCargando(true);
       try {
-        const { data: negData } = await supabase.from("especial2_negocio").select("*").maybeSingle();
+        // 1. Obtener datos generales del negocio desde la tabla unificada 'comercios'
+        const { data: negData, error: negError } = await supabase
+          .from("comercios")
+          .select("*")
+          .eq("id", negocioId)
+          .maybeSingle();
+
+        if (negError) throw negError;
         if (negData) setNegocio(negData);
 
-        const { data: prodData, error } = await supabase.from("especial2_items").select("*").eq("disponible", true);
-        if (error) throw error;
+        // 2. Obtener el catálogo de productos/carta desde 'especial2_items' filtrando por negocio_id
+        const { data: prodData, error: prodError } = await supabase
+          .from("especial2_items")
+          .select("*")
+          .eq("negocio_id", negocioId)
+          .eq("disponible", true);
+
+        if (prodError) throw prodError;
         if (prodData) setProductos(prodData);
       } catch (err) {
         console.error("Error al cargar datos de comida:", err);
@@ -88,7 +102,7 @@ export default function FichaComida({ negocioId }) {
 
     mensaje += `\n💰 *TOTAL A PAGAR: ${totalGeneral.toFixed(2)}€*`;
 
-    const whatsappNum = negocio?.whatsapp_recepcion_pedidos || "34600000000";
+    const whatsappNum = negocio?.whatsapp_recepcion_pedidos || negocio?.whatsapp || "34600000000";
     window.open(`https://wa.me/${whatsappNum}?text=${encodeURIComponent(mensaje)}`, "_blank");
   };
 
@@ -101,9 +115,10 @@ export default function FichaComida({ negocioId }) {
       
       {/* Cabecera del Negocio */}
       <div className="bg-slate-900 text-white p-6 rounded-b-3xl shadow-lg">
-        <h1 className="text-2xl font-black">{negocio?.nombre_negocio || "Gastronomía Selecta Utrera"}</h1>
-        <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-300">
-          <span className="flex items-center gap-1"><Clock size={12} className="text-amber-400" /> {negocio?.horario_pedidos || "13:00 - 23:30"}</span>
+        <h1 className="text-2xl font-black">{negocio?.nombre || "Gastronomía Selecta Utrera"}</h1>
+        <p className="text-xs text-slate-300 mt-1">{negocio?.descripcion || "Disfruta de la mejor comida a domicilio"}</p>
+        <div className="flex flex-wrap gap-3 mt-3 text-xs text-slate-300">
+          <span className="flex items-center gap-1"><Clock size={12} className="text-amber-400" /> {negocio?.horario_pedidos || negocio?.horario_texto || "13:00 - 23:30"}</span>
           <span className="flex items-center gap-1"><Bike size={12} className="text-amber-400" /> Mínimo: {negocio?.pedido_minimo || 12}€</span>
         </div>
       </div>
