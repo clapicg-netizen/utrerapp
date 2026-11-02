@@ -4,6 +4,7 @@ import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText
 import { obtenerComercios, actualizarComercio, crearComercio, subirArchivoComercio } from "../lib/comerciosService";
 import FichaInmobiliaria from "./FichaInmobiliaria";
 import FichaComida from "./FichaComida";
+import LandingComercio from "../components/LandingComercio";
 
 const PIN_ADMIN_MAESTRO = "9999";
 
@@ -304,6 +305,9 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                         {comercio.tipo_ficha === 'especial2' && (
                           <span className="bg-amber-100 text-amber-800 text-[9px] font-black px-2 py-0.5 rounded-full">Comida VIP</span>
                         )}
+                        {comercio.subcategoria && comercio.subcategoria.toLowerCase().includes('landing') && (
+                          <span className="bg-purple-100 text-purple-800 text-[9px] font-black px-2 py-0.5 rounded-full">✨ Landing</span>
+                        )}
                       </div>
                       <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mt-0.5">
                         {comercio.subcategoria || comercio.categoria}
@@ -451,12 +455,12 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría:</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría (Escribe "Landing" para portada moderna):</label>
                         <input
                           type="text"
                           value={formData.subcategoria}
                           onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
-                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
+                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs font-bold text-amber-600"
                         />
                       </div>
                     </div>
@@ -657,6 +661,19 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                 ) : comercioSel.tipo_ficha === 'especial2' ? (
                   /* SI ES FICHA ESPECIAL 2 (COMIDA) -> CARGA EL COMPONENTE AVANZADO DE PEDIDOS */
                   <FichaComida negocioId={comercioSel.id} />
+                ) : comercioSel.subcategoria && comercioSel.subcategoria.toLowerCase().includes('landing') ? (
+                  /* SI LA SUBCATEGORÍA CONTIENE "LANDING" -> RENDERIZA LA LANDING PAGE MODERNA COMO PORTADA */
+                  <div className="space-y-4">
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => { setModoAdmin(true); setAutenticadoAdmin(false); }}
+                        className="bg-amber-500 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow flex items-center gap-1 cursor-pointer"
+                      >
+                        ✏️ Editar
+                      </button>
+                    </div>
+                    <LandingComercio comercio={comercioSel} />
+                  </div>
                 ) : (
                   /* VISTA ESTÁNDAR COMPLETA CON VÍDEO, GALERÍA, REDES Y BOTONES */
                   <div>
