@@ -17,7 +17,7 @@ export default function PanelAdmin() {
   // 'normal' (Comercio Estándar), 'especial1' (Inmobiliaria), 'especial2' (Comida / Delivery)
   const [tipoRegistro, setTipoRegistro] = useState('normal');
 
-  // 1. Formulario Comercio Estándar (Normal)
+  // 1. Formulario Comercio Estándar (Normal - Completo con redes, galería, pdf y video)
   const formComercioNormalInicial = {
     nombre: '',
     categoria: 'Comercio',
@@ -39,7 +39,7 @@ export default function PanelAdmin() {
     pin_acceso: '1234'
   };
 
-  // 2. Formulario Ficha 1: Inmobiliaria (Especial 1)
+  // 2. Formulario Ficha 1: Inmobiliaria (Especial 1) - INTACTO
   const formInmobiliariaInicial = {
     nombre: '',
     categoria: 'Inmobiliarias',
@@ -53,14 +53,13 @@ export default function PanelAdmin() {
     descripcion: '',
     portada_url: '',
     pin_acceso: '1234',
-    // Campos específicos Ficha 1
     titulo_seccion_catalogo: 'Inmuebles destacados',
     banners_destacados_texto: '',
     mostrar_boton_captacion: true,
     texto_boton_captacion: 'Solicitar valoración gratuita'
   };
 
-  // 3. Formulario Ficha 2: Comida / Pedidos (Especial 2)
+  // 3. Formulario Ficha 2: Comida / Pedidos (Especial 2) - INTACTO
   const formComidaInicial = {
     nombre: '',
     categoria: 'Hostelería',
@@ -73,7 +72,6 @@ export default function PanelAdmin() {
     descripcion: '',
     portada_url: '',
     pin_acceso: '1234',
-    // Campos específicos Ficha 2
     horario_pedidos: '13:00 - 16:00 y 20:00 - 23:30',
     pedido_minimo: 12,
     coste_envio: 2,
@@ -105,7 +103,7 @@ export default function PanelAdmin() {
     }
   };
 
-  const handleFileUpload = async (e, campo, formularioDestino) => {
+  const handleFileUpload = async (e, campo, esGaleria = false, formularioDestino = 'normal') => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -117,7 +115,11 @@ export default function PanelAdmin() {
 
     if (res.success) {
       if (formularioDestino === 'normal') {
-        setFormNormal(prev => ({ ...prev, [campo]: res.url }));
+        if (esGaleria) {
+          setFormNormal(prev => ({ ...prev, galeria_urls: [...prev.galeria_urls, res.url] }));
+        } else {
+          setFormNormal(prev => ({ ...prev, [campo]: res.url }));
+        }
       } else if (formularioDestino === 'especial1') {
         setFormEspecial1(prev => ({ ...prev, [campo]: res.url }));
       } else if (formularioDestino === 'especial2') {
@@ -127,6 +129,13 @@ export default function PanelAdmin() {
     } else {
       setMensaje({ tipo: 'error', texto: res.message });
     }
+  };
+
+  const handleEliminarImagenGaleria = (index) => {
+    setFormNormal(prev => ({
+      ...prev,
+      galeria_urls: prev.galeria_urls.filter((_, i) => i !== index)
+    }));
   };
 
   const handleGuardar = async (e) => {
@@ -324,7 +333,7 @@ export default function PanelAdmin() {
         </div>
       )}
 
-      {/* Formulario Principal con Pestañas Independientes */}
+      {/* Selector de Pestañas Independientes */}
       <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl space-y-6">
         <div className="flex justify-between items-center border-b pb-4">
           <h2 className="text-lg font-black text-slate-800">
@@ -343,7 +352,6 @@ export default function PanelAdmin() {
           )}
         </div>
 
-        {/* Selector de Pestañas Independientes */}
         {!editandoId && (
           <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200">
             <label className="block text-xs font-bold text-slate-700 mb-2">Selecciona el tipo de ficha independiente:</label>
@@ -382,12 +390,12 @@ export default function PanelAdmin() {
         <form onSubmit={handleGuardar} className="space-y-6">
           
           {/* ========================================================= */}
-          {/* 1. FORMULARIO COMERCIO ESTÁNDAR (NORMAL)                   */}
+          {/* 1. FORMULARIO COMERCIO ESTÁNDAR (NORMAL - COMPLETO)       */}
           {/* ========================================================= */}
           {tipoRegistro === 'normal' && (
             <div className="space-y-6">
               <div className="bg-blue-50 p-3 rounded-xl text-xs font-bold text-blue-900 border border-blue-200">
-                🏪 Formulario independiente para comercios, tiendas, bares tradicionales y servicios.
+                🏪 Formulario completo para comercios, tiendas, bares tradicionales y servicios.
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -464,27 +472,121 @@ export default function PanelAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">🔑 PIN de Cliente</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Instagram Usuario</label>
                   <input
                     type="text"
-                    placeholder="1234"
-                    value={formNormal.pin_acceso}
-                    onChange={(e) => setFormNormal({...formNormal, pin_acceso: e.target.value})}
-                    className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold"
+                    placeholder="Ej. @tucomercio"
+                    value={formNormal.instagram_username}
+                    onChange={(e) => setFormNormal({...formNormal, instagram_username: e.target.value})}
+                    className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs"
                   />
                 </div>
               </div>
 
-              <div className="space-y-4 border-t pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada</label>
-                  {formNormal.portada_url && (
-                    <img src={formNormal.portada_url} alt="Portada" className="w-full h-36 object-cover rounded-2xl mb-2 border" />
-                  )}
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🕒 Horario</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Lunes a Sábado: 9:00 - 14:00"
+                    value={formNormal.horario_texto}
+                    onChange={(e) => setFormNormal({...formNormal, horario_texto: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">⚡ Oferta Flash / Anuncio</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. 10% de descuento este mes"
+                    value={formNormal.oferta_flash}
+                    onChange={(e) => setFormNormal({...formNormal, oferta_flash: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Archivos y Multimedia */}
+              <div className="space-y-4 border-t pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada</label>
+                    {formNormal.portada_url && (
+                      <img src={formNormal.portada_url} alt="Portada" className="w-full h-28 object-cover rounded-xl mb-1 border" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'portada_url', false, 'normal')}
+                      disabled={subiendo}
+                      className="w-full text-xs text-slate-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Logotipo</label>
+                    {formNormal.logo_url && (
+                      <img src={formNormal.logo_url} alt="Logo" className="w-16 h-16 object-cover rounded-xl mb-1 border" />
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileUpload(e, 'logo_url', false, 'normal')}
+                      disabled={subiendo}
+                      className="w-full text-xs text-slate-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">📄 Carta / PDF adjunto</label>
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => handleFileUpload(e, 'carta_pdf_url', false, 'normal')}
+                      disabled={subiendo}
+                      className="w-full text-xs text-slate-500"
+                    />
+                    {formNormal.carta_pdf_url && (
+                      <a href={formNormal.carta_pdf_url} target="_blank" rel="noreferrer" className="text-[11px] text-blue-600 underline mt-1 block">Ver PDF actual</a>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">🎬 Vídeo / Story URL (YouTube / MP4)</label>
+                    <input
+                      type="text"
+                      placeholder="https://..."
+                      value={formNormal.video_story_url}
+                      onChange={(e) => setFormNormal({...formNormal, video_story_url: e.target.value})}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Galería de Imágenes */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">🖼️ Galería de Imágenes del Comercio</label>
+                  <div className="grid grid-cols-4 gap-2 mb-2">
+                    {formNormal.galeria_urls.map((img, idx) => (
+                      <div key={idx} className="relative group h-20 bg-slate-100 rounded-xl overflow-hidden border">
+                        <img src={img} alt={`Gal ${idx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => handleEliminarImagenGaleria(idx)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 text-[10px] cursor-pointer"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, 'portada_url', 'normal')}
+                    onChange={(e) => handleFileUpload(e, 'galeria_urls', true, 'normal')}
                     disabled={subiendo}
                     className="w-full text-xs text-slate-500"
                   />
@@ -505,7 +607,7 @@ export default function PanelAdmin() {
           )}
 
           {/* ========================================================= */}
-          {/* 2. FORMULARIO FICHA 1: INMOBILIARIA (ESPECIAL 1)          */}
+          {/* 2. FORMULARIO FICHA 1: INMOBILIARIA (ESPECIAL 1) - INTACTO*/}
           {/* ========================================================= */}
           {tipoRegistro === 'especial1' && (
             <div className="space-y-6">
@@ -560,7 +662,6 @@ export default function PanelAdmin() {
                 </div>
               </div>
 
-              {/* Ajustes de Ficha 1 */}
               <div className="bg-amber-50 p-5 rounded-3xl border border-amber-200 space-y-4">
                 <h3 className="text-xs font-black uppercase text-amber-900 tracking-wider">🏢 AJUSTES DE CABECERA Y CARRUSEL (FICHA 1)</h3>
                 
@@ -621,7 +722,7 @@ export default function PanelAdmin() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, 'portada_url', 'especial1')}
+                    onChange={(e) => handleFileUpload(e, 'portada_url', false, 'especial1')}
                     disabled={subiendo}
                     className="w-full text-xs text-slate-500"
                   />
@@ -642,7 +743,7 @@ export default function PanelAdmin() {
           )}
 
           {/* ========================================================= */}
-          {/* 3. FORMULARIO FICHA 2: COMIDA / PEDIDOS (ESPECIAL 2)      */}
+          {/* 3. FORMULARIO FICHA 2: COMIDA / PEDIDOS (ESPECIAL 2) - INTACTO */}
           {/* ========================================================= */}
           {tipoRegistro === 'especial2' && (
             <div className="space-y-6">
@@ -698,7 +799,6 @@ export default function PanelAdmin() {
                 </div>
               </div>
 
-              {/* Ajustes de Ficha 2 */}
               <div className="bg-rose-50 p-5 rounded-3xl border border-rose-200 space-y-4">
                 <h3 className="text-xs font-black uppercase text-rose-900 tracking-wider">🍔 AJUSTES GENERALES DE PEDIDOS (FICHA 2)</h3>
                 
@@ -745,7 +845,7 @@ export default function PanelAdmin() {
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={(e) => handleFileUpload(e, 'portada_url', 'especial2')}
+                    onChange={(e) => handleFileUpload(e, 'portada_url', false, 'especial2')}
                     disabled={subiendo}
                     className="w-full text-xs text-slate-500"
                   />
