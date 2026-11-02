@@ -17,7 +17,7 @@ export default function PanelAdmin() {
   // 'normal', 'especial1' (Inmobiliaria) o 'especial2' (Comida)
   const [tipoRegistro, setTipoRegistro] = useState('normal');
 
-  // Formulario Comercio Estándar (Completo)
+  // Formulario Negocio Base / Estándar / VIP
   const formComercioInicial = {
     nombre: '',
     categoria: 'Hostelería',
@@ -37,20 +37,21 @@ export default function PanelAdmin() {
     video_story_url: '',
     destacado: true,
     pin_acceso: '1234',
-    // Configuración específica Ficha 2 (Comida)
+    
+    // Configuración Ficha 1 (Inmobiliaria)
+    titulo_seccion_catalogo: 'Inmuebles destacados',
+    banners_destacados_texto: '', // URLs separadas por comas o saltos de línea para el carrusel
+    mostrar_boton_captacion: true,
+    texto_boton_captacion: 'Solicitar valoración gratuita',
+
+    // Configuración Ficha 2 (Comida)
     horario_pedidos: '',
     pedido_minimo: '',
     coste_envio: '',
-    opciones_entrega: ['A domicilio', 'Recogida en local'],
-    metodos_pago_aceptados: ['Bizum', 'Efectivo', 'Tarjeta en entrega'],
-    whatsapp_recepcion_pedidos: '',
-    // Configuración específica Ficha 1 (Inmobiliaria)
-    titulo_seccion_catalogo: 'Inmuebles destacados',
-    mostrar_boton_captacion: true,
-    texto_boton_captacion: 'Solicitar valoración gratuita'
+    whatsapp_recepcion_pedidos: ''
   };
 
-  // Formulario Ficha 1: Ítem Propiedad (especial1_items) con TODOS los campos
+  // Formulario Ficha 1: Ítem Propiedad (especial1_items)
   const formInmobiliariaItemInicial = {
     negocio_id: '',
     titulo: '',
@@ -69,7 +70,7 @@ export default function PanelAdmin() {
     imagen: ''
   };
 
-  // Formulario Ficha 2: Ítem Plato / Producto (especial2_items) con TODOS los campos
+  // Formulario Ficha 2: Ítem Plato / Producto (especial2_items)
   const formComidaItemInicial = {
     negocio_id: '',
     categoria: 'Entrantes',
@@ -200,10 +201,18 @@ export default function PanelAdmin() {
         setFormComidaItem(formComidaItemInicial);
 
       } else {
+        // Procesar banners destacados en array si se introdujeron separados por comas o saltos de línea
+        let bannersArray = [];
+        if (formData.banners_destacados_texto) {
+          bannersArray = formData.banners_destacados_texto.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
+        }
+
         const datosAEnviar = {
           ...formData,
-          tipo_ficha: formData.categoria === 'Inmobiliarias' ? 'especial1' : formData.horario_pedidos ? 'especial2' : 'normal'
+          tipo_ficha: formData.categoria === 'Inmobiliarias' ? 'especial1' : formData.horario_pedidos ? 'especial2' : 'normal',
+          banners_destacados: bannersArray
         };
+        delete datosAEnviar.banners_destacados_texto;
 
         if (editandoId) {
           const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, datosAEnviar);
@@ -262,6 +271,7 @@ export default function PanelAdmin() {
       coste_envio: c.coste_envio || '',
       whatsapp_recepcion_pedidos: c.whatsapp_recepcion_pedidos || '',
       titulo_seccion_catalogo: c.titulo_seccion_catalogo || 'Inmuebles destacados',
+      banners_destacados_texto: c.banners_destacados ? c.banners_destacados.join(', ') : '',
       mostrar_boton_captacion: c.mostrar_boton_captacion ?? true,
       texto_boton_captacion: c.texto_boton_captacion || 'Solicitar valoración gratuita'
     });
@@ -688,7 +698,7 @@ export default function PanelAdmin() {
             </div>
 
           ) : (
-            // FORMULARIO NEGOCIO BASE (ESTÁNDAR / CABECERA VIP)
+            // FORMULARIO NEGOCIO BASE (ESTÁNDAR / VIP)
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -776,10 +786,10 @@ export default function PanelAdmin() {
                 </div>
               </div>
 
-              {/* CONFIGURACIÓN EXTRA SI ES HOSTELERÍA (FICHA 2) */}
+              {/* CONFIGURACIÓN ESPECÍFICA SI ES HOSTELERÍA (FICHA 2) */}
               {formData.categoria === 'Hostelería' && (
                 <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 space-y-4">
-                  <h3 className="text-xs font-black uppercase text-rose-900">🍔 Ajustes Generales de Pedidos (Ficha 2)</h3>
+                  <h3 className="text-xs font-black uppercase text-rose-900">🍔 Ajustes de Pedidos (Ficha 2)</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-rose-900 mb-1">🕒 Horario de Pedidos</label>
@@ -825,10 +835,10 @@ export default function PanelAdmin() {
                 </div>
               )}
 
-              {/* CONFIGURACIÓN EXTRA SI ES INMOBILIARIA (FICHA 1) */}
+              {/* CONFIGURACIÓN ESPECÍFICA SI ES INMOBILIARIA (FICHA 1) */}
               {formData.categoria === 'Inmobiliarias' && (
                 <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-4">
-                  <h3 className="text-xs font-black uppercase text-amber-900">🏢 Ajustes de Cabecera Inmobiliaria (Ficha 1)</h3>
+                  <h3 className="text-xs font-black uppercase text-amber-900">🏢 Ajustes de Cabecera y Carrusel (Ficha 1)</h3>
                   <div>
                     <label className="block text-xs font-bold text-amber-900 mb-1">🏷️ Título de la Sección del Catálogo</label>
                     <input
@@ -840,14 +850,38 @@ export default function PanelAdmin() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-amber-900 mb-1">✨ Texto del Botón de Valoración / Captación</label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Solicitar valoración gratuita"
-                      value={formData.texto_boton_captacion}
-                      onChange={(e) => setFormData({...formData, texto_boton_captacion: e.target.value})}
-                      className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs"
+                    <label className="block text-xs font-bold text-amber-900 mb-1">🖼️ URLs para el Carrusel Superior (Separadas por comas)</label>
+                    <textarea
+                      rows="2"
+                      placeholder="https://img1.com/foto1.jpg, https://img2.com/foto2.jpg"
+                      value={formData.banners_destacados_texto}
+                      onChange={(e) => setFormData({...formData, banners_destacados_texto: e.target.value})}
+                      className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs font-mono"
                     />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-amber-900 mb-1">✨ Texto del Botón de Captación</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Solicitar valoración gratuita"
+                        value={formData.texto_boton_captacion}
+                        onChange={(e) => setFormData({...formData, texto_boton_captacion: e.target.value})}
+                        className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pt-5">
+                      <input
+                        type="checkbox"
+                        id="mostrar_boton"
+                        checked={formData.mostrar_boton_captacion}
+                        onChange={(e) => setFormData({...formData, mostrar_boton_captacion: e.target.checked})}
+                        className="w-4 h-4 text-amber-600 rounded cursor-pointer"
+                      />
+                      <label htmlFor="mostrar_boton" className="text-xs font-bold text-amber-900 cursor-pointer">
+                        Mostrar Botón de Captación
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}
