@@ -14,13 +14,13 @@ export default function PanelAdmin() {
   const [guardando, setGuardando] = useState(false);
   const [subiendo, setSubiendo] = useState(false);
 
-  // 'normal', 'especial1' (Inmobiliaria) o 'especial2' (Comida)
+  // 'normal' (Negocio Base / Cabecera), 'especial1' (Añadir Inmueble), 'especial2' (Añadir Plato)
   const [tipoRegistro, setTipoRegistro] = useState('normal');
 
-  // Formulario Negocio Base / Estándar / VIP
+  // Formulario Negocio Base (Estándar o Cabecera VIP)
   const formComercioInicial = {
     nombre: '',
-    categoria: 'Hostelería',
+    categoria: 'Inmobiliarias',
     subcategoria: '',
     tipo_ficha: 'normal',
     direccion: '',
@@ -38,13 +38,13 @@ export default function PanelAdmin() {
     destacado: true,
     pin_acceso: '1234',
     
-    // Configuración Ficha 1 (Inmobiliaria)
+    // Configuración específica Ficha 1 (Inmobiliaria)
     titulo_seccion_catalogo: 'Inmuebles destacados',
-    banners_destacados_texto: '', // URLs separadas por comas o saltos de línea para el carrusel
+    banners_destacados_texto: '',
     mostrar_boton_captacion: true,
     texto_boton_captacion: 'Solicitar valoración gratuita',
 
-    // Configuración Ficha 2 (Comida)
+    // Configuración específica Ficha 2 (Comida)
     horario_pedidos: '',
     pedido_minimo: '',
     coste_envio: '',
@@ -201,7 +201,7 @@ export default function PanelAdmin() {
         setFormComidaItem(formComidaItemInicial);
 
       } else {
-        // Procesar banners destacados en array si se introdujeron separados por comas o saltos de línea
+        // Procesar banners destacados en array si se introdujeron
         let bannersArray = [];
         if (formData.banners_destacados_texto) {
           bannersArray = formData.banners_destacados_texto.split(/[\n,]+/).map(s => s.trim()).filter(Boolean);
@@ -209,7 +209,7 @@ export default function PanelAdmin() {
 
         const datosAEnviar = {
           ...formData,
-          tipo_ficha: formData.categoria === 'Inmobiliarias' ? 'especial1' : formData.horario_pedidos ? 'especial2' : 'normal',
+          tipo_ficha: formData.categoria === 'Inmobiliarias' ? 'especial1' : formData.categoria === 'Hostelería' ? 'especial2' : 'normal',
           banners_destacados: bannersArray
         };
         delete datosAEnviar.banners_destacados_texto;
@@ -249,7 +249,7 @@ export default function PanelAdmin() {
     setTipoRegistro('normal');
     setFormData({
       nombre: c.nombre || '',
-      categoria: c.categoria || 'Hostelería',
+      categoria: c.categoria || 'Inmobiliarias',
       subcategoria: c.subcategoria || '',
       tipo_ficha: c.tipo_ficha || 'normal',
       direccion: c.direccion || '',
@@ -407,7 +407,7 @@ export default function PanelAdmin() {
         <form onSubmit={handleGuardar} className="space-y-6">
           
           {tipoRegistro === 'especial1' ? (
-            // FORMULARIO COMPLETO FICHA 1: INMUEBLES
+            // FORMULARIO FICHA 1: AÑADIR INMUEBLE
             <div className="space-y-4">
               <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
                 <label className="block text-xs font-bold text-amber-900 mb-1">🏢 Selecciona la Inmobiliaria de destino *</label>
@@ -580,7 +580,7 @@ export default function PanelAdmin() {
             </div>
 
           ) : tipoRegistro === 'especial2' ? (
-            // FORMULARIO COMPLETO FICHA 2: COMIDA / PLATOS
+            // FORMULARIO FICHA 2: AÑADIR PLATO
             <div className="space-y-4">
               <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200">
                 <label className="block text-xs font-bold text-rose-900 mb-1">🍔 Selecciona el Restaurante / Bar de destino *</label>
@@ -698,7 +698,7 @@ export default function PanelAdmin() {
             </div>
 
           ) : (
-            // FORMULARIO NEGOCIO BASE (ESTÁNDAR / VIP)
+            // FORMULARIO NEGOCIO BASE (CON DESPLIEGUE CONDICIONAL SEGÚN CATEGORÍA)
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -706,7 +706,7 @@ export default function PanelAdmin() {
                   <input
                     type="text"
                     required
-                    placeholder="Ej. Bar Alonsi / Inmobiliaria Utrera"
+                    placeholder="Ej. Inmobiliaria Centro Utrera"
                     value={formData.nombre}
                     onChange={(e) => setFormData({...formData, nombre: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
@@ -786,59 +786,11 @@ export default function PanelAdmin() {
                 </div>
               </div>
 
-              {/* CONFIGURACIÓN ESPECÍFICA SI ES HOSTELERÍA (FICHA 2) */}
-              {formData.categoria === 'Hostelería' && (
-                <div className="bg-rose-50 p-4 rounded-2xl border border-rose-200 space-y-4">
-                  <h3 className="text-xs font-black uppercase text-rose-900">🍔 Ajustes de Pedidos (Ficha 2)</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-rose-900 mb-1">🕒 Horario de Pedidos</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. 13:00 - 16:00 y 20:00 - 23:30"
-                        value={formData.horario_pedidos}
-                        onChange={(e) => setFormData({...formData, horario_pedidos: e.target.value})}
-                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-rose-900 mb-1">📱 WhatsApp Recepción Comanda</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. 34600000000"
-                        value={formData.whatsapp_recepcion_pedidos}
-                        onChange={(e) => setFormData({...formData, whatsapp_recepcion_pedidos: e.target.value})}
-                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-rose-900 mb-1">💰 Pedido Mínimo (€)</label>
-                      <input
-                        type="number"
-                        placeholder="12"
-                        value={formData.pedido_minimo}
-                        onChange={(e) => setFormData({...formData, pedido_minimo: e.target.value})}
-                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-rose-900 mb-1">🛵 Coste de Envío (€)</label>
-                      <input
-                        type="number"
-                        placeholder="2"
-                        value={formData.coste_envio}
-                        onChange={(e) => setFormData({...formData, coste_envio: e.target.value})}
-                        className="w-full p-2.5 bg-white border border-rose-300 rounded-xl text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* CONFIGURACIÓN ESPECÍFICA SI ES INMOBILIARIA (FICHA 1) */}
+              {/* BLOQUE AMARILLO: AJUSTES DE CABECERA Y CARRUSEL (SOLO SI ES INMOBILIARIAS) */}
               {formData.categoria === 'Inmobiliarias' && (
-                <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-4">
-                  <h3 className="text-xs font-black uppercase text-amber-900">🏢 Ajustes de Cabecera y Carrusel (Ficha 1)</h3>
+                <div className="bg-amber-50 p-5 rounded-3xl border border-amber-200 space-y-4">
+                  <h3 className="text-xs font-black uppercase text-amber-900 tracking-wider">🏢 AJUSTES DE CABECERA Y CARRUSEL (FICHA 1)</h3>
+                  
                   <div>
                     <label className="block text-xs font-bold text-amber-900 mb-1">🏷️ Título de la Sección del Catálogo</label>
                     <input
@@ -846,9 +798,10 @@ export default function PanelAdmin() {
                       placeholder="Ej. Inmuebles destacados"
                       value={formData.titulo_seccion_catalogo}
                       onChange={(e) => setFormData({...formData, titulo_seccion_catalogo: e.target.value})}
-                      className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs"
+                      className="w-full p-3 bg-white border border-amber-300 rounded-xl text-xs font-bold text-slate-900"
                     />
                   </div>
+
                   <div>
                     <label className="block text-xs font-bold text-amber-900 mb-1">🖼️ URLs para el Carrusel Superior (Separadas por comas)</label>
                     <textarea
@@ -856,10 +809,11 @@ export default function PanelAdmin() {
                       placeholder="https://img1.com/foto1.jpg, https://img2.com/foto2.jpg"
                       value={formData.banners_destacados_texto}
                       onChange={(e) => setFormData({...formData, banners_destacados_texto: e.target.value})}
-                      className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs font-mono"
+                      className="w-full p-3 bg-white border border-amber-300 rounded-xl text-xs font-mono text-slate-900"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                     <div>
                       <label className="block text-xs font-bold text-amber-900 mb-1">✨ Texto del Botón de Captación</label>
                       <input
@@ -867,7 +821,7 @@ export default function PanelAdmin() {
                         placeholder="Ej. Solicitar valoración gratuita"
                         value={formData.texto_boton_captacion}
                         onChange={(e) => setFormData({...formData, texto_boton_captacion: e.target.value})}
-                        className="w-full p-2.5 bg-white border border-amber-300 rounded-xl text-xs"
+                        className="w-full p-3 bg-white border border-amber-300 rounded-xl text-xs font-bold text-slate-900"
                       />
                     </div>
                     <div className="flex items-center gap-2 pt-5">
@@ -881,6 +835,56 @@ export default function PanelAdmin() {
                       <label htmlFor="mostrar_boton" className="text-xs font-bold text-amber-900 cursor-pointer">
                         Mostrar Botón de Captación
                       </label>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* BLOQUE ROSA: AJUSTES DE PEDIDOS (SOLO SI ES HOSTELERÍA) */}
+              {formData.categoria === 'Hostelería' && (
+                <div className="bg-rose-50 p-5 rounded-3xl border border-rose-200 space-y-4">
+                  <h3 className="text-xs font-black uppercase text-rose-900 tracking-wider">🍔 AJUSTES GENERALES DE PEDIDOS (FICHA 2)</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">🕒 Horario de Pedidos</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 13:00 - 16:00 y 20:00 - 23:30"
+                        value={formData.horario_pedidos}
+                        onChange={(e) => setFormData({...formData, horario_pedidos: e.target.value})}
+                        className="w-full p-3 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">📱 WhatsApp Recepción Comanda</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. 34600000000"
+                        value={formData.whatsapp_recepcion_pedidos}
+                        onChange={(e) => setFormData({...formData, whatsapp_recepcion_pedidos: e.target.value})}
+                        className="w-full p-3 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">💰 Pedido Mínimo (€)</label>
+                      <input
+                        type="number"
+                        placeholder="12"
+                        value={formData.pedido_minimo}
+                        onChange={(e) => setFormData({...formData, pedido_minimo: e.target.value})}
+                        className="w-full p-3 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-rose-900 mb-1">🛵 Coste de Envío (€)</label>
+                      <input
+                        type="number"
+                        placeholder="2"
+                        value={formData.coste_envio}
+                        onChange={(e) => setFormData({...formData, coste_envio: e.target.value})}
+                        className="w-full p-3 bg-white border border-rose-300 rounded-xl text-xs"
+                      />
                     </div>
                   </div>
                 </div>
