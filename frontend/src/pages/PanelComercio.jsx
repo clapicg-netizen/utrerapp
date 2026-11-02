@@ -1,6 +1,7 @@
 // src/pages/PanelComercio.jsx
 import React, { useState, useEffect } from 'react';
 import { obtenerComercios, actualizarComercio, crearComercio, subirArchivoComercio } from '../lib/comerciosService';
+import LandingComercio from '../components/LandingComercio';
 
 export default function PanelComercio() {
   const [comercios, setComercios] = useState([]);
@@ -253,6 +254,16 @@ export default function PanelComercio() {
         </div>
       )}
 
+      {/* RENDERIZADO CONDICIONAL: SI LA SUBCATEGORÍA CONTIENE "LANDING", MUESTRA LA LANDING PAGE */}
+      {formData.subcategoria && formData.subcategoria.toLowerCase().includes('landing') ? (
+        <div className="mb-6">
+          <div className="bg-amber-500/10 border border-amber-500/30 p-3 rounded-2xl mb-4 text-center">
+            <p className="text-xs font-bold text-amber-500">✨ Vista previa de la Landing Page activa para este comercio</p>
+          </div>
+          <LandingComercio comercio={formData} />
+        </div>
+      ) : null}
+
       {/* FORMULARIO DE EDICIÓN */}
       <form onSubmit={handleGuardar} className="space-y-5 bg-white p-5 rounded-3xl border border-slate-100 shadow-md">
         
@@ -284,12 +295,12 @@ export default function PanelComercio() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría / Tipo:</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría / Tipo (Escribe "Landing" para activar portada):</label>
             <input
               type="text"
               value={formData.subcategoria}
               onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-amber-600"
             />
           </div>
         </div>
