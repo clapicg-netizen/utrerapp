@@ -1,11 +1,18 @@
 // src/components/LandingComercio.jsx
 import React from 'react';
-import { Globe, ShoppingBag, MessageCircle, Phone, MapPin, Sparkles, ArrowRight } from 'lucide-react';
+import { Globe, ShoppingBag, MessageCircle, Phone, MapPin, Sparkles, ArrowRight, Navigation } from 'lucide-react';
 
 export default function LandingComercio({ comercio }) {
   const portadaValida = comercio.portada_url && comercio.portada_url.trim() !== "" 
     ? comercio.portada_url 
     : "https://images.unsplash.com/photo-1555396273-367ea4eb4db5";
+
+  // Limpiar dirección duplicada si la hubiera
+  const direccionLimpia = comercio.direccion 
+    ? comercio.direccion.split(',')[0].trim() + ", Utrera, Sevilla"
+    : "Utrera, Sevilla";
+
+  const urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(comercio.nombre + " " + direccionLimpia)}`;
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-100 font-sans space-y-5 pb-6">
@@ -28,21 +35,30 @@ export default function LandingComercio({ comercio }) {
         <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight drop-shadow-md">{comercio.nombre}</h1>
           <p className="text-xs font-bold text-amber-300 uppercase tracking-wider drop-shadow">
-            {comercio.subcategoria || comercio.categoria}
+            {comercio.subcategoria && comercio.subcategoria.toLowerCase().includes('landing') ? 'Electrodomésticos, Tecnología, Descanso' : (comercio.subcategoria || comercio.categoria)}
           </p>
         </div>
       </div>
 
       <div className="px-5 space-y-5">
 
-        {/* 2. DIRECCIÓN Y DESCRIPCIÓN */}
-        {comercio.direccion && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
-            <MapPin size={14} className="text-rose-600 flex-shrink-0" />
-            <span className="font-medium">{comercio.direccion}, Utrera</span>
+        {/* 2. DIRECCIÓN Y BOTÓN DE GEOLOCALIZACIÓN / CÓMO LLEGAR */}
+        <div className="flex items-center justify-between gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+          <div className="flex items-center gap-2 text-xs text-slate-600 min-w-0">
+            <MapPin size={16} className="text-rose-600 flex-shrink-0" />
+            <span className="font-medium truncate">{direccionLimpia}</span>
           </div>
-        )}
+          <a
+            href={urlGoogleMaps}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-rose-900 hover:bg-rose-950 text-white text-[11px] font-bold py-2 px-3 rounded-xl flex items-center gap-1 shadow transition flex-shrink-0"
+          >
+            <Navigation size={12} /> Cómo llegar
+          </a>
+        </div>
 
+        {/* 3. DESCRIPCIÓN */}
         {comercio.descripcion && (
           <div className="space-y-1.5">
             <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">Sobre nosotros</h3>
@@ -52,7 +68,7 @@ export default function LandingComercio({ comercio }) {
           </div>
         )}
 
-        {/* 3. GALERÍA / OFERTAS DESTACADAS */}
+        {/* 4. GALERÍA / OFERTAS DESTACADAS */}
         {comercio.galeria_urls && comercio.galeria_urls.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">🔥 Catálogo y Ofertas</h3>
@@ -66,7 +82,7 @@ export default function LandingComercio({ comercio }) {
           </div>
         )}
 
-        {/* 4. BOTONES DE ACCIÓN PRINCIPALES (WEB Y TIENDA ONLINE) */}
+        {/* 5. BOTONES DE ACCIÓN PRINCIPALES (WEB Y TIENDA ONLINE) */}
         <div className="space-y-2 pt-1">
           {comercio.web_url && (
             <a
@@ -97,7 +113,7 @@ export default function LandingComercio({ comercio }) {
           )}
         </div>
 
-        {/* 5. BOTONES DE CONTACTO DIRECTO (WHATSAPP Y LLAMAR) */}
+        {/* 6. BOTONES DE CONTACTO DIRECTO (WHATSAPP Y LLAMAR) */}
         <div className="grid grid-cols-2 gap-2.5 pt-1">
           {comercio.whatsapp && (
             <a
