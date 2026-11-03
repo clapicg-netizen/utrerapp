@@ -61,7 +61,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 📸 SUBIDA DE IMAGEN PRINCIPAL
+  // 📸 SUBIDA DE IMAGEN PRINCIPAL (BLINDADA Y SINCRONIZADA)
   const handleSubirImagenLocal = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -78,7 +78,9 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
     setImagenSubiendo(true);
     setMensaje("Subiendo imagen principal a Supabase...");
-    setPreviewImagen(URL.createObjectURL(file));
+    
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewImagen(objectUrl);
 
     try {
       const fileExt = file.name.split('.').pop();
@@ -95,8 +97,10 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
         .from('imagenes_sanidad')
         .getPublicUrl(filePath);
 
-      setForm((prev) => ({ ...prev, imagen_url: publicUrlData.publicUrl }));
-      setMensaje("✅ ¡Imagen principal subida con éxito!");
+      const urlFinal = publicUrlData.publicUrl;
+
+      setForm((prev) => ({ ...prev, imagen_url: urlFinal }));
+      setMensaje("✅ ¡Imagen principal subida y enlazada con éxito!");
     } catch (error) {
       console.error('Error subiendo imagen:', error);
       setMensaje("❌ Error al subir la imagen: " + error.message);
