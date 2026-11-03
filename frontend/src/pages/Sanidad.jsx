@@ -1,21 +1,11 @@
 // frontend/src/pages/Sanidad.jsx
-import React, { useState } from "react";
+import React from "react";
 import { ArrowLeft, Phone, MapPin, MessageCircle, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 
 export default function Sanidad({ setPaginaActual }) {
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("todas");
-
-  const categorias = [
-    { id: "todas", label: "🌟 Todas" },
-    { id: "clinicas", label: "🏥 Clínicas" },
-    { id: "dental", label: "🦷 Dentales" },
-    { id: "estetica", label: "✨ Belleza y Estética" },
-  ];
-
   const centrosPrivados = [
     {
       id: 1,
-      tipo: "dental",
       nombre: "Clínica Dental Sonrisa Utrera",
       categoria: "Odontología Avanzada",
       eslogan: "Tu sonrisa en las mejores manos",
@@ -34,7 +24,6 @@ export default function Sanidad({ setPaginaActual }) {
     },
     {
       id: 2,
-      tipo: "estetica",
       nombre: "Centro Médico y Estética Avanzada Utrera",
       categoria: "Estética y Bienestar Integral",
       eslogan: "Ciencia y belleza para tu bienestar",
@@ -52,10 +41,6 @@ export default function Sanidad({ setPaginaActual }) {
       mapaUrl: "https://www.google.com/maps/search/?api=1&query=Calle+Alvarez+Hazanas+14+Utrera"
     }
   ];
-
-  const centrosFiltrados = categoriaSeleccionada === "todas" 
-    ? centrosPrivados 
-    : centrosPrivados.filter(c => c.tipo === categoriaSeleccionada);
 
   return (
     <div className="max-w-md mx-auto p-4 pb-28 space-y-5 animate-fadeIn font-sans">
@@ -85,134 +70,109 @@ export default function Sanidad({ setPaginaActual }) {
         </div>
       </div>
 
-      {/* FILTROS DE CATEGORÍAS */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-        {categorias.map((cat) => (
-          <button
-            key={cat.id}
-            onClick={() => setCategoriaSeleccionada(cat.id)}
-            className={`whitespace-nowrap px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
-              categoriaSeleccionada === cat.id
-                ? "bg-teal-900 text-white shadow-teal-900/30 border border-teal-700"
-                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            {cat.label}
-          </button>
-        ))}
-      </div>
-
-      {/* LISTADO DE FICHAS FILTRADAS */}
+      {/* LISTADO DIRECTO DE FICHAS */}
       <div className="space-y-6">
-        {centrosFiltrados.length === 0 ? (
-          <div className="bg-white p-8 rounded-3xl text-center space-y-2 border border-slate-200 shadow-sm">
-            <p className="text-2xl">🔍</p>
-            <p className="text-sm font-bold text-slate-800">No hay centros en esta categoría</p>
-            <p className="text-xs text-slate-500">Pronto se incorporarán más establecimientos asociados.</p>
-          </div>
-        ) : (
-          centrosFiltrados.map((centro) => (
-            <article key={centro.id} className="bg-white rounded-3xl shadow-lg border-2 border-teal-500/30 overflow-hidden space-y-0">
-              
-              {/* Imagen y Badges */}
-              <div className="relative">
-                <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10 gap-2">
-                  <span className="bg-slate-900/90 text-white text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow">
-                    {centro.categoria}
-                  </span>
-                  <span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
-                    <ShieldCheck size={12} /> {centro.registroSanitario}
-                  </span>
-                </div>
+        {centrosPrivados.map((centro) => (
+          <article key={centro.id} className="bg-white rounded-3xl shadow-lg border-2 border-teal-500/30 overflow-hidden space-y-0">
+            
+            {/* Imagen y Badges */}
+            <div className="relative">
+              <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10 gap-2">
+                <span className="bg-slate-900/90 text-white text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow">
+                  {centro.categoria}
+                </span>
+                <span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
+                  <ShieldCheck size={12} /> {centro.registroSanitario}
+                </span>
+              </div>
 
-                <div className="relative h-48 bg-slate-100">
-                  <img 
-                    src={centro.imagen} 
-                    alt={centro.nombre} 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white text-xs px-4 py-2.5 italic font-medium">
-                    "{centro.eslogan}"
-                  </div>
+              <div className="relative h-48 bg-slate-100">
+                <img 
+                  src={centro.imagen} 
+                  alt={centro.nombre} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white text-xs px-4 py-2.5 italic font-medium">
+                  "{centro.eslogan}"
+                </div>
+              </div>
+            </div>
+
+            {/* Contenido de la Ficha */}
+            <div className="p-5 space-y-4">
+              <h2 className="text-lg font-black text-slate-900 tracking-tight">{centro.nombre}</h2>
+
+              {/* Especialidades */}
+              <div className="space-y-1.5">
+                <p className="text-[10px] uppercase tracking-wider text-slate-400 font-black">Especialidades Destacadas</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {centro.especialidades.map((esp, i) => (
+                    <span key={i} className="bg-teal-50 text-teal-800 border border-teal-200/60 text-xs px-3 py-1 rounded-xl font-semibold">
+                      {esp}
+                    </span>
+                  ))}
                 </div>
               </div>
 
-              {/* Contenido de la Ficha */}
-              <div className="p-5 space-y-4">
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">{centro.nombre}</h2>
+              {/* Datos Técnicos y Médicos */}
+              <div className="text-xs text-slate-700 bg-slate-50 border border-slate-200/60 p-3.5 rounded-2xl space-y-1.5 shadow-inner">
+                <p><strong>🔬 Tecnología:</strong> {centro.tecnologia}</p>
+                <p><strong>👨‍⚕️ Especialista:</strong> {centro.medico}</p>
+              </div>
 
-                {/* Especialidades */}
-                <div className="space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-black">Especialidades Destacadas</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {centro.especialidades.map((esp, i) => (
-                      <span key={i} className="bg-teal-50 text-teal-800 border border-teal-200/60 text-xs px-3 py-1 rounded-xl font-semibold">
-                        {esp}
-                      </span>
-                    ))}
-                  </div>
+              {/* Financiación y Mutuas */}
+              <div className="grid grid-cols-1 gap-2 text-xs">
+                <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl font-bold flex items-center gap-2">
+                  <span>💳</span>
+                  <span>{centro.financiacion}</span>
                 </div>
-
-                {/* Datos Técnicos y Médicos */}
-                <div className="text-xs text-slate-700 bg-slate-50 border border-slate-200/60 p-3.5 rounded-2xl space-y-1.5 shadow-inner">
-                  <p><strong>🔬 Tecnología:</strong> {centro.tecnologia}</p>
-                  <p><strong>👨‍⚕️ Especialista:</strong> {centro.medico}</p>
-                </div>
-
-                {/* Financiación y Mutuas */}
-                <div className="grid grid-cols-1 gap-2 text-xs">
-                  <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl font-bold flex items-center gap-2">
-                    <span>💳</span>
-                    <span>{centro.financiacion}</span>
-                  </div>
-                  <div className="bg-indigo-50 text-indigo-800 border border-indigo-200 p-2.5 rounded-xl font-bold flex items-center gap-2">
-                    <span>🏥</span>
-                    <span>{centro.mutuas}</span>
-                  </div>
-                </div>
-
-                {/* Dirección y Horarios */}
-                <div className="text-xs text-slate-600 border-t border-slate-100 pt-3 space-y-1.5">
-                  <p className="flex items-center gap-2">
-                    <MapPin size={14} className="text-teal-700 shrink-0" />
-                    <span className="font-medium">{centro.direccion}</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Clock size={14} className="text-slate-400 shrink-0" />
-                    <span className="font-medium">{centro.horario}</span>
-                  </p>
+                <div className="bg-indigo-50 text-indigo-800 border border-indigo-200 p-2.5 rounded-xl font-bold flex items-center gap-2">
+                  <span>🏥</span>
+                  <span>{centro.mutuas}</span>
                 </div>
               </div>
 
-              {/* Botones de Acción Directa */}
-              <div className="grid grid-cols-3 bg-slate-100 border-t border-slate-200 text-center text-xs font-black">
-                <a 
-                  href={`https://wa.me/${centro.whatsapp}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="py-3.5 text-emerald-700 hover:bg-emerald-50 transition flex items-center justify-center gap-1"
-                >
-                  <MessageCircle size={15} /> WhatsApp
-                </a>
-                <a 
-                  href={`tel:${centro.telefono}`} 
-                  className="py-3.5 text-sky-700 hover:bg-sky-50 transition flex items-center justify-center gap-1 border-x border-slate-200"
-                >
-                  <Phone size={15} /> Llamar
-                </a>
-                <a 
-                  href={centro.mapaUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="py-3.5 text-slate-800 hover:bg-slate-200 transition flex items-center justify-center gap-1"
-                >
-                  <MapPin size={15} /> Cómo llegar
-                </a>
+              {/* Dirección y Horarios */}
+              <div className="text-xs text-slate-600 border-t border-slate-100 pt-3 space-y-1.5">
+                <p className="flex items-center gap-2">
+                  <MapPin size={14} className="text-teal-700 shrink-0" />
+                  <span className="font-medium">{centro.direccion}</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Clock size={14} className="text-slate-400 shrink-0" />
+                  <span className="font-medium">{centro.horario}</span>
+                </p>
               </div>
+            </div>
 
-            </article>
-          ))
-        )}
+            {/* Botones de Acción Directa */}
+            <div className="grid grid-cols-3 bg-slate-100 border-t border-slate-200 text-center text-xs font-black">
+              <a 
+                href={`https://wa.me/${centro.whatsapp}`} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="py-3.5 text-emerald-700 hover:bg-emerald-50 transition flex items-center justify-center gap-1"
+              >
+                <MessageCircle size={15} /> WhatsApp
+              </a>
+              <a 
+                href={`tel:${centro.telefono}`} 
+                className="py-3.5 text-sky-700 hover:bg-sky-50 transition flex items-center justify-center gap-1 border-x border-slate-200"
+              >
+                <Phone size={15} /> Llamar
+              </a>
+              <a 
+                href={centro.mapaUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="py-3.5 text-slate-800 hover:bg-slate-200 transition flex items-center justify-center gap-1"
+              >
+                <MapPin size={15} /> Cómo llegar
+              </a>
+            </div>
+
+          </article>
+        ))}
       </div>
 
       {/* BOTÓN CONSO TE INFORMA */}
