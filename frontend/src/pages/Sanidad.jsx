@@ -1,6 +1,6 @@
 // frontend/src/pages/Sanidad.jsx
 import React, { useState } from "react";
-import { ArrowLeft, Phone, MapPin, MessageCircle, ShieldCheck, Sparkles, Stethoscope, Smile, HeartPulse, Scissors } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, MessageCircle, ShieldCheck, Sparkles, Stethoscope, Smile, HeartPulse, Scissors, Settings } from "lucide-react";
 
 export default function Sanidad({ setPaginaActual }) {
   const [categoriaActiva, setCategoriaActiva] = useState("todas");
@@ -81,16 +81,29 @@ export default function Sanidad({ setPaginaActual }) {
       
       {/* CABECERA */}
       <div className="bg-slate-900 text-white p-6 shadow-xl rounded-3xl relative overflow-hidden space-y-3">
-        {setPaginaActual && (
-          <button 
-            onClick={() => setPaginaActual("home")}
-            className="inline-flex items-center gap-1.5 text-xs text-teal-300 bg-teal-950/80 px-3 py-1.5 rounded-full border border-teal-500/30 font-bold hover:bg-teal-900 transition cursor-pointer"
-          >
-            <ArrowLeft size={14} /> Volver al Inicio
-          </button>
-        )}
+        
+        {/* BOTONES SUPERIORES: VOLVER Y GESTIÓN */}
+        <div className="flex items-center justify-between relative z-10">
+          {setPaginaActual && (
+            <button 
+              onClick={() => setPaginaActual("home")}
+              className="inline-flex items-center gap-1.5 text-xs text-teal-300 bg-teal-950/80 px-3 py-1.5 rounded-full border border-teal-500/30 font-bold hover:bg-teal-900 transition cursor-pointer"
+            >
+              <ArrowLeft size={14} /> Volver al Inicio
+            </button>
+          )}
 
-        <div className="space-y-1">
+          {setPaginaActual && (
+            <button 
+              onClick={() => setPaginaActual("admin-sanidad")}
+              className="inline-flex items-center gap-1 text-xs text-amber-300 bg-amber-950/80 px-3 py-1.5 rounded-full border border-amber-500/30 font-bold hover:bg-amber-900 transition cursor-pointer shadow"
+            >
+              <Settings size={13} /> Gestionar Clientes
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2">
             <span className="bg-teal-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
               Exclusivo
