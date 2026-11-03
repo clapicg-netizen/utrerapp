@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import GuiaComercial from './pages/GuiaComercial';
 import Farmacias from './pages/Farmacias';
 import Salud from './pages/Salud';
+import Sanidad from './pages/Sanidad';
 import AgendaGestiones from './pages/AgendaGestiones';
 import QueVer from './pages/QueVer';
 import MenuAgenda from './pages/MenuAgenda';
@@ -46,6 +47,8 @@ export default function App() {
         return <Farmacias setPaginaActual={setPaginaActual} />;
       case 'salud':
         return <Salud setPaginaActual={setPaginaActual} />;
+      case 'sanidad':
+        return <Sanidad setPaginaActual={setPaginaActual} />;
       case 'agenda-gestiones':
         return <AgendaGestiones setPaginaActual={setPaginaActual} />;
       case 'que-ver':

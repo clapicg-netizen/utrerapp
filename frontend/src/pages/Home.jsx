@@ -1,6 +1,6 @@
-// src/pages/Home.jsx
+// frontend/src/pages/Home.jsx
 import React, { useState, useEffect } from "react";
-import { Search, MapPin, Pill, Building2, HeartPulse, CalendarDays, Landmark, UtensilsCrossed, Newspaper } from "lucide-react";
+import { Search, MapPin, Pill, Building2, HeartPulse, Stethoscope, CalendarDays, Landmark, UtensilsCrossed, Newspaper } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Home({ setPaginaActual, setTab }) {
@@ -198,13 +198,32 @@ export default function Home({ setPaginaActual, setTab }) {
         </div>
       </div>
 
-      {/* SERVICIOS Y GUÍA */}
+      {/* SERVICIOS Y GUÍA DE UTRERA */}
       <div className="px-4 mt-5 max-w-md mx-auto">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
           Servicios y Guía de Utrera
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
+          {/* ACCESO PREMIUM PRINCIPAL: SANIDAD PRIVADA */}
+          <button 
+            type="button"
+            onClick={(e) => cambiarPestana(e, "sanidad")}
+            className="bg-gradient-to-br from-teal-900 to-slate-900 p-3.5 rounded-2xl border border-teal-500/40 shadow-md flex items-center gap-3 hover:shadow-lg transition-all text-left cursor-pointer col-span-2 text-white"
+          >
+            <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center flex-shrink-0 border border-teal-400/30">
+              <Stethoscope size={20} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1">
+                <span className="bg-teal-400 text-slate-950 text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Exclusivo</span>
+                <p className="text-[10px] text-teal-300 font-bold uppercase tracking-wider">Cuadro Médico Privado</p>
+              </div>
+              <p className="font-extrabold text-sm text-white truncate">Clínicas, Dentistas y Estética</p>
+            </div>
+            <span className="text-teal-300 text-base font-bold pr-1">→</span>
+          </button>
+
           <button 
             type="button"
             onClick={(e) => cambiarPestana(e, "farmacias")}
@@ -229,7 +248,7 @@ export default function Home({ setPaginaActual, setTab }) {
             </div>
             <div className="min-w-0">
               <p className="font-bold text-slate-900 text-xs truncate">Salud</p>
-              <p className="text-[10px] text-slate-500 truncate">Centros & Urgencias</p>
+              <p className="text-[10px] text-slate-500 truncate">Pública & Urgencias</p>
             </div>
           </button>
 
@@ -327,7 +346,7 @@ export default function Home({ setPaginaActual, setTab }) {
 
           <button 
             type="button"
-            onClick={(e) => cambiarPsubpestana || cambiarPestana(e, "hosteleria")}
+            onClick={(e) => cambiarPestana(e, "hosteleria")}
             className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform col-span-2 cursor-pointer"
           >
             <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
