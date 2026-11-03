@@ -52,11 +52,11 @@ export default function Salud({ setPaginaActual }) {
         <p className="text-xs text-rose-100 relative z-10">Consulta rápida de ubicaciones, teléfonos y atención médica pública en Utrera.</p>
       </div>
 
-      {/* BANNER DISCRETO DE ACCESO A SANIDAD PRIVADA (NO OPACA LO PÚBLICO) */}
+      {/* TARJETA COMPACTA DE ACCESO A SANIDAD PRIVADA (MISMO ESTILO PORTADA) */}
       {setPaginaActual && (
         <div 
           onClick={() => setPaginaActual("sanidad")}
-          className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-900 text-white p-4 rounded-3xl shadow-md border border-teal-500/40 cursor-pointer flex items-center justify-between hover:scale-[0.99] transition-transform relative overflow-hidden"
+          className="bg-gradient-to-r from-teal-900 via-slate-900 to-slate-950 text-white p-4 rounded-3xl shadow-md border border-teal-500/40 cursor-pointer flex items-center justify-between hover:scale-[0.99] transition-transform relative overflow-hidden"
         >
           <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-teal-400/15 rounded-full blur-xl pointer-events-none"></div>
           <div className="flex items-center gap-3 relative z-10">
@@ -68,9 +68,9 @@ export default function Salud({ setPaginaActual }) {
                 <span className="bg-teal-400 text-slate-950 text-[8px] font-black uppercase px-2 py-0.5 rounded-full">
                   Exclusivo
                 </span>
-                <span className="text-[10px] text-teal-300 font-bold uppercase tracking-wider">Cuadro Privado</span>
+                <span className="text-[10px] text-teal-300 font-bold uppercase tracking-wider">Cuadro Médico Privado</span>
               </div>
-              <h3 className="font-extrabold text-xs text-white mt-0.5">Acceder a Clínicas, Dentistas y Estética</h3>
+              <h3 className="font-extrabold text-xs text-white mt-0.5">Clínicas, Dentistas y Estética</h3>
             </div>
           </div>
           <span className="text-teal-400 text-base font-bold pr-1">→</span>
