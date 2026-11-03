@@ -1,6 +1,6 @@
 // frontend/src/pages/AdminSanidad.jsx
 import React, { useState } from "react";
-import { ArrowLeft, Save, Lock, KeyRound, Upload, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Save, Lock, KeyRound, Upload, Image as ImageIcon, Plus, Trash2, Video } from "lucide-react";
 
 export default function AdminSanidad({ setPaginaActual, supabase }) {
   const PIN_SECRETO = "1967"; 
@@ -12,9 +12,11 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [imagenSubiendo, setImagenSubiendo] = useState(false);
+  const [galeriaSubiendo, setGaleriaSubiendo] = useState(false);
+  const [videoSubiendo, setVideoSubiendo] = useState(false);
   const [previewImagen, setPreviewImagen] = useState(null);
 
-  // Estado completo de la ficha del socio sanitario
+  // Estado completo de la ficha del socio sanitario con las nuevas columnas
   const [form, setForm] = useState({
     nombre: "",
     tipo: "dental",
@@ -22,7 +24,10 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     eslogan: "",
     registro_sanitario: "",
     imagen_url: "", 
+    galeria_fotos: [], // NUEVO: Array de URLs de estancias
     video_url: "",
+    web_oficial_url: "", // NUEVO: Enlace a su web oficial / landing
+    servicios_clinicos: [], // NUEVO: Lista de servicios con título y descripción
     especialidades: "",
     tecnologia: "",
     medico: "",
@@ -37,6 +42,9 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     tiktok_url: "",
     facebook_url: ""
   });
+
+  // Estado temporal para añadir un nuevo servicio clínico visual
+  const [nuevoServicio, setNuevoServicio] = useState({ titulo: "", descripcion: "" });
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -53,7 +61,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 📸 SUBIDA ROBUSTA A SUPABASE STORAGE
+  // 📸 SUBIDA DE IMAGEN PRINCIPAL
   const handleSubirImagenLocal = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -69,12 +77,12 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     }
 
     setImagenSubiendo(true);
-    setMensaje("Subiendo imagen a Supabase...");
+    setMensaje("Subiendo imagen principal a Supabase...");
     setPreviewImagen(URL.createObjectURL(file));
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `sanidad_${Date.now()}.${fileExt}`;
+      const fileName = `sanidad_main_${Date.now()}.${fileExt}`;
       const filePath = `socios_fundadores/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -87,11 +95,8 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
         .from('imagenes_sanidad')
         .getPublicUrl(filePath);
 
-      const urlFinal = publicUrlData.publicUrl;
-
-      // Actualizamos el formulario directamente con la URL garantizada
-      setForm((prev) => ({ ...prev, imagen_url: urlFinal }));
-      setMensaje("✅ ¡Imagen subida y enlazada con éxito!");
+      setForm((prev) => ({ ...prev, imagen_url: publicUrlData.publicUrl }));
+      setMensaje("✅ ¡Imagen principal subida con éxito!");
     } catch (error) {
       console.error('Error subiendo imagen:', error);
       setMensaje("❌ Error al subir la imagen: " + error.message);
@@ -101,13 +106,128 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     }
   };
 
+  // 🖼️ SUBIDA DE GALERÍA DE FOTOS (Estancias y Consultas)
+  const handleSubirGaleria = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setGaleriaSubiendo(true);
+    setMensaje("Subiendo fotos de la galería...");
+
+    try {
+      const nuevasUrls = [];
+
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) continue;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `sanidad_gal_${Date.now()}_${Math.random().toString(36.substring(7))}.${fileExt}`;
+        const filePath = `socios_fundadores/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('imagenes_sanidad')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from('imagenes_sanidad')
+          .getPublicUrl(filePath);
+
+        nuevasUrls.push(publicUrlData.publicUrl);
+      }
+
+      setForm((prev) => ({
+        ...prev,
+        galeria_fotos: [...prev.galeria_fotos, ...nuevasUrls]
+      }));
+      setMensaje("✅ ¡Galería de estancias actualizada!");
+    } catch (error) {
+      console.error('Error subiendo galería:', error);
+      setMensaje("❌ Error al subir las fotos de la galería: " + error.message);
+    } finally {
+      setGaleriaSubiendo(false);
+    }
+  };
+
+  // 🎬 SUBIDA DE VÍDEO LOCAL A STORAGE
+  const handleSubirVideoLocal = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')) {
+      setMensaje("❌ El archivo debe ser un vídeo válido (MP4, MOV).");
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      setMensaje("❌ El vídeo es demasiado pesado (máx 20MB).");
+      return;
+    }
+
+    setVideoSubiendo(true);
+    setMensaje("Subiendo vídeo a Supabase...");
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `sanidad_vid_${Date.now()}.${fileExt}`;
+      const filePath = `socios_fundadores/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('imagenes_sanidad')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('imagenes_sanidad')
+        .getPublicUrl(filePath);
+
+      setForm((prev) => ({ ...prev, video_url: publicUrlData.publicUrl }));
+      setMensaje("✅ ¡Vídeo subido y enlazado con éxito!");
+    } catch (error) {
+      console.error('Error subiendo vídeo:', error);
+      setMensaje("❌ Error al subir el vídeo: " + error.message);
+    } finally {
+      setVideoSubiendo(false);
+    }
+  };
+
+  // ➕ AÑADIR SERVICIO CLÍNICO DETALLADO
+  const agregarServicioClinico = () => {
+    if (!nuevoServicio.titulo || !nuevoServicio.descripcion) {
+      setMensaje("⚠️ Introduce título y descripción para el servicio clínico.");
+      return;
+    }
+    setForm((prev) => ({
+      ...prev,
+      servicios_clinicos: [...prev.servicios_clinicos, { ...nuevoServicio }]
+    }));
+    setNuevoServicio({ titulo: "", descripcion: "" });
+    setMensaje("");
+  };
+
+  // 🗑️ ELIMINAR SERVICIO CLÍNICO
+  const eliminarServicioClinico = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      servicios_clinicos: prev.servicios_clinicos.filter((_, i) => i !== index)
+    }));
+  };
+
+  // 🗑️ ELIMINAR FOTO DE LA GALERÍA
+  const eliminarFotoGaleria = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      galeria_fotos: prev.galeria_fotos.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMensaje("");
 
     try {
-      // Procesar especialidades separadas por comas en formato array
       const arrayEspecialidades = form.especialidades
         ? form.especialidades.split(",").map((item) => item.trim()).filter(Boolean)
         : [];
@@ -120,7 +240,10 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           eslogan: form.eslogan,
           registro_sanitario: form.registro_sanitario,
           imagen_url: form.imagen_url || "https://images.unsplash.com/photo-1629909613654-28e377c37b09",
+          galeria_fotos: form.galeria_fotos,
           video_url: form.video_url,
+          web_oficial_url: form.web_oficial_url,
+          servicios_clinicos: form.servicios_clinicos,
           especialidades: arrayEspecialidades,
           tecnologia: form.tecnologia,
           medico: form.medico,
@@ -140,7 +263,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
       if (error) throw error;
 
-      setMensaje("✅ ¡Centro sanitario publicado correctamente!");
+      setMensaje("✅ ¡Ficha sanitaria visual publicada correctamente!");
       setForm({
         nombre: "",
         tipo: "dental",
@@ -148,7 +271,10 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
         eslogan: "",
         registro_sanitario: "",
         imagen_url: "",
+        galeria_fotos: [],
         video_url: "",
+        web_oficial_url: "",
+        servicios_clinicos: [],
         especialidades: "",
         tecnologia: "",
         medico: "",
@@ -236,10 +362,10 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
         <div className="space-y-1">
           <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
-            Panel de Gestión Segura
+            Panel Visual Profesional
           </span>
-          <h1 className="text-xl font-black tracking-tight">Modificar y Crear Fichas Sanitarias</h1>
-          <p className="text-xs text-slate-300">Rellena los campos con los datos definitivos del socio fundador.</p>
+          <h1 className="text-xl font-black tracking-tight">Ficha Sanitaria Interactiva</h1>
+          <p className="text-xs text-slate-300">Diseña un escaparate visual con estancias, servicios y web oficial.</p>
         </div>
       </div>
 
@@ -284,72 +410,128 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Registro Sanitario Oficial *</label>
             <input type="text" name="registro_sanitario" value={form.registro_sanitario} onChange={handleChange} required placeholder="Ej: NCA 1222" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
           </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-teal-700 mb-1">🌐 Enlace a su Web Oficial o Landing Page</label>
+            <input type="url" name="web_oficial_url" value={form.web_oficial_url} onChange={handleChange} placeholder="https://www.tuclinica.com" className="w-full text-xs p-3 bg-teal-50/50 border border-teal-200 rounded-xl font-medium" />
+          </div>
         </div>
 
-        {/* 2. IMAGEN PRINCIPAL */}
+        {/* 2. IMAGEN PRINCIPAL Y GALERÍA DE ESTANCIAS */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">2. Imagen Principal del Centro *</h2>
+          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">2. Imágenes Visuales (Fachada y Estancias)</h2>
           
-          <div className="flex items-center gap-4">
-            <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border-2 border-teal-500 border-dashed text-teal-800 p-5 rounded-3xl text-center flex flex-col items-center justify-center gap-2 flex-1 transition-all">
-              <Upload size={22} className="text-teal-600" />
-              <span className="text-xs font-bold">
-                {imagenSubiendo ? "Subiendo foto..." : "Seleccionar Foto"}
-              </span>
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleSubirImagenLocal} 
-                disabled={imagenSubiendo}
-                className="hidden"
-              />
+          <div>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Foto Principal (Fachada / Portada) *</label>
+            <div className="flex items-center gap-4">
+              <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border-2 border-teal-500 border-dashed text-teal-800 p-4 rounded-2xl text-center flex flex-col items-center justify-center gap-1 flex-1 transition-all">
+                <Upload size={20} className="text-teal-600" />
+                <span className="text-[11px] font-bold">{imagenSubiendo ? "Subiendo..." : "Subir Portada"}</span>
+                <input type="file" accept="image/*" onChange={handleSubirImagenLocal} disabled={imagenSubiendo} className="hidden" />
+              </label>
+              {previewImagen ? (
+                <div className="w-20 h-20 rounded-xl border-2 border-white shadow-md overflow-hidden flex-shrink-0">
+                  <img src={previewImagen} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-xl border-2 border-slate-200 bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                  <ImageIcon size={24} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Galería de Estancias */}
+          <div className="pt-2">
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Galería de Estancias (Salas, Gabinetes, Recepción)</label>
+            <label className="cursor-pointer bg-slate-50 hover:bg-slate-100 border-2 border-slate-300 border-dashed text-slate-700 p-4 rounded-2xl text-center flex items-center justify-center gap-2 transition-all block">
+              <Upload size={18} className="text-slate-500" />
+              <span className="text-xs font-bold">{galeriaSubiendo ? "Subiendo fotos..." : "Añadir fotos a la galería"}</span>
+              <input type="file" accept="image/*" multiple onChange={handleSubirGaleria} disabled={galeriaSubiendo} className="hidden" />
             </label>
 
-            {previewImagen ? (
-              <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg overflow-hidden flex-shrink-0 relative">
-                <img src={previewImagen} alt="Preview" className="w-full h-full object-cover" />
-              </div>
-            ) : (
-              <div className="w-24 h-24 rounded-2xl border-2 border-slate-200 bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
-                <ImageIcon size={28} />
+            {form.galeria_fotos.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 mt-3">
+                {form.galeria_fotos.map((url, idx) => (
+                  <div key={idx} className="relative rounded-xl overflow-hidden h-16 border border-slate-200 group">
+                    <img src={url} alt={`Gal ${idx}`} className="w-full h-full object-cover" />
+                    <button type="button" onClick={() => eliminarFotoGaleria(idx)} className="absolute top-1 right-1 bg-rose-600 text-white rounded-full p-1 opacity-80 hover:opacity-100">
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
-          <p className="text-[10px] text-slate-500 pl-1">Se subirá de forma segura al almacenamiento de Supabase.</p>
         </div>
 
-        {/* 3. VÍDEO Y REDES */}
+        {/* 3. MULTIMEDIA Y VÍDEO */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">3. Multimedia y Redes Sociales</h2>
+          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">3. Vídeo y Redes Sociales</h2>
           
-          <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">URL del Vídeo / Reel (Opcional)</label>
-            <input type="url" name="video_url" value={form.video_url} onChange={handleChange} placeholder="Enlace de YouTube o Facebook Reel" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">URL de Vídeo Web</label>
+              <input type="url" name="video_url" value={form.video_url} onChange={handleChange} placeholder="Enlace YouTube / Reel" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-[11px] font-bold text-teal-700 mb-1">O Subir Vídeo Local (MP4)</label>
+              <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-800 p-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 text-xs font-bold transition-all">
+                <Video size={14} className="text-teal-600" />
+                <span>{videoSubiendo ? "Subiendo..." : "Subir Vídeo"}</span>
+                <input type="file" accept="video/mp4,video/mov" onChange={handleSubirVideoLocal} disabled={videoSubiendo} className="hidden" />
+              </label>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-[10px] font-bold text-slate-700 mb-1">Instagram</label>
-              <input type="url" name="instagram_url" value={form.instagram_url} onChange={handleChange} placeholder="https://instagram.com/..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="url" name="instagram_url" value={form.instagram_url} onChange={handleChange} placeholder="https://..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-slate-700 mb-1">TikTok</label>
-              <input type="url" name="tiktok_url" value={form.tiktok_url} onChange={handleChange} placeholder="https://tiktok.com/..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="url" name="tiktok_url" value={form.tiktok_url} onChange={handleChange} placeholder="https://..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
               <label className="block text-[10px] font-bold text-slate-700 mb-1">Facebook</label>
-              <input type="url" name="facebook_url" value={form.facebook_url} onChange={handleChange} placeholder="https://facebook.com/..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="url" name="facebook_url" value={form.facebook_url} onChange={handleChange} placeholder="https://..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
           </div>
         </div>
 
-        {/* 4. EQUIPO Y SERVICIOS */}
+        {/* 4. SERVICIOS CLÍNICOS DETALLADOS (Estilo Tarjetas) */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">4. Especialidades y Servicios</h2>
-          
+          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">4. Servicios Clínicos Detallados (Estilo Tarjetas)</h2>
+          <p className="text-[10px] text-slate-500">Crea fichas visuales para tratamientos (Ej: Implantología, Ortodoncia) con su descripción.</p>
+
+          <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
+            <input type="text" placeholder="Título del Servicio (Ej: Implantología)" value={nuevoServicio.titulo} onChange={(e) => setNuevoServicio({ ...nuevoServicio, titulo: e.target.value })} className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl" />
+            <textarea placeholder="Descripción breve del tratamiento..." value={nuevoServicio.descripcion} onChange={(e) => setNuevoServicio({ ...nuevoServicio, descripcion: e.target.value })} className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl h-16 resize-none" />
+            <button type="button" onClick={agregarServicioClinico} className="w-full bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
+              <Plus size={14} /> Añadir Servicio a la Lista
+            </button>
+          </div>
+
+          {form.servicios_clinicos.length > 0 && (
+            <div className="space-y-2 mt-2">
+              {form.servicios_clinicos.map((s, idx) => (
+                <div key={idx} className="bg-teal-50/60 border border-teal-200 p-3 rounded-xl flex items-start justify-between gap-2">
+                  <div>
+                    <h4 className="text-xs font-bold text-teal-950">🦷 {s.titulo}</h4>
+                    <p className="text-[11px] text-slate-600 mt-0.5">{s.descripcion}</p>
+                  </div>
+                  <button type="button" onClick={() => eliminarServicioClinico(idx)} className="text-rose-600 hover:text-rose-800 p-1">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">Especialidades (separadas por comas)</label>
-            <input type="text" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Implantología, Ortodoncia, Estética dental" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
+            <label className="block text-[11px] font-bold text-slate-700 mb-1 mt-3">Otras Especialidades (separadas por comas)</label>
+            <input type="text" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Endodoncia, Estética dental..." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -408,11 +590,11 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
         <button
           type="submit"
-          disabled={loading || imagenSubiendo}
+          disabled={loading || imagenSubiendo || galeriaSubiendo || videoSubiendo}
           className="w-full bg-gradient-to-r from-teal-900 to-teal-950 text-white hover:from-teal-800 hover:to-teal-900 p-4 rounded-2xl text-xs font-black shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 pt-4 mt-4 disabled:opacity-60"
         >
           <Save size={16} />
-          <span>{loading ? "Publicando..." : "Guardar y Publicar Ficha"}</span>
+          <span>{loading ? "Publicando..." : "Guardar y Publicar Ficha Visual"}</span>
         </button>
 
       </form>
