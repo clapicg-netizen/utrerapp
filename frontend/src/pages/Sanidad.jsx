@@ -5,15 +5,13 @@ import { ArrowLeft, Phone, MapPin, MessageCircle, ShieldCheck, Sparkles, Stethos
 export default function Sanidad({ setPaginaActual }) {
   const [categoriaActiva, setCategoriaActiva] = useState("todas");
 
-  // Categorías profesionales para ordenar el cuadro médico
   const categorias = [
-    { id: "todas", label: "🌟 Ver Todo", icono: Stethoscope },
-    { id: "clinicas", label: "🏥 Clínicas y Especialidades", icono: HeartPulse },
-    { id: "dental", label: "🦷 Odontología y Dentistas", icono: Smile },
-    { id: "estetica", label: "✨ Belleza y Estética", icono: Scissors },
+    { id: "todas", label: "🌟 Ver Todo" },
+    { id: "clinicas", label: "🏥 Clínicas" },
+    { id: "dental", label: "🦷 Dentales" },
+    { id: "estetica", label: "✨ Estética" },
   ];
 
-  // Listado completo de centros privados clasificados por categoría
   const centrosPrivados = [
     {
       id: 1,
@@ -74,171 +72,109 @@ export default function Sanidad({ setPaginaActual }) {
     }
   ];
 
-  // Filtrado estricto por categoría seleccionada
   const centrosFiltrados = categoriaActiva === "todas" 
     ? centrosPrivados 
     : centrosPrivados.filter(c => c.tipo === categoriaActiva);
 
   return (
-    <div className="max-w-md mx-auto p-4 pb-28 space-y-5 animate-fadeIn font-sans">
+    <div className="max-w-md mx-auto p-4 pb-28 space-y-5 font-sans">
       
       {/* CABECERA */}
-      <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 text-white p-6 shadow-xl rounded-3xl relative overflow-hidden space-y-3">
-        <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-teal-500/20 rounded-full blur-2xl"></div>
-        
+      <div className="bg-slate-900 text-white p-6 shadow-xl rounded-3xl relative overflow-hidden space-y-3">
         {setPaginaActual && (
           <button 
             onClick={() => setPaginaActual("home")}
-            className="inline-flex items-center gap-1.5 text-xs text-teal-300 bg-teal-950/80 px-3 py-1.5 rounded-full border border-teal-500/30 font-bold hover:bg-teal-900 transition cursor-pointer relative z-10"
+            className="inline-flex items-center gap-1.5 text-xs text-teal-300 bg-teal-950/80 px-3 py-1.5 rounded-full border border-teal-500/30 font-bold hover:bg-teal-900 transition cursor-pointer"
           >
             <ArrowLeft size={14} /> Volver al Inicio
           </button>
         )}
 
-        <div className="space-y-1 relative z-10">
+        <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="bg-teal-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
               Exclusivo
             </span>
-            <span className="text-xs text-teal-300 font-bold">Utrera 2026</span>
           </div>
           <h1 className="text-2xl font-black tracking-tight">Sanidad y Estética Privada</h1>
-          <p className="text-xs text-teal-100/90">Cuadro médico verificado, clínicas y centros especializados en Utrera.</p>
+          <p className="text-xs text-slate-300">Cuadro médico verificado y centros especializados en Utrera.</p>
         </div>
       </div>
 
-      {/* NAVEGADOR DE CATEGORÍAS MÉDICAS */}
-      <div className="space-y-2">
-        <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider px-1">Selecciona una Categoría</p>
-        <div className="grid grid-cols-2 gap-2">
-          {categorias.map((cat) => {
-            const IconoCat = cat.icono;
-            const esActiva = categoriaActiva === cat.id;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setCategoriaActiva(cat.id)}
-                className={`p-3 rounded-2xl text-xs font-bold transition-all shadow-sm flex items-center gap-2.5 text-left cursor-pointer ${
-                  esActiva
-                    ? "bg-teal-900 text-white shadow-md border-2 border-teal-600 scale-[1.02]"
-                    : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                }`}
-              >
-                <span className={`p-2 rounded-xl text-sm ${esActiva ? "bg-teal-800 text-teal-200" : "bg-teal-50 text-teal-700"}`}>
-                  <IconoCat size={16} />
-                </span>
-                <span className="leading-tight">{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* NAVEGADOR DE CATEGORÍAS */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {categorias.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => setCategoriaActiva(cat.id)}
+            className={`whitespace-nowrap px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+              categoriaActiva === cat.id
+                ? "bg-teal-900 text-white border border-teal-700"
+                : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
       </div>
 
-      {/* LISTADO DE FICHAS MÉDICAS ORDENADAS */}
-      <div className="space-y-6 pt-2">
+      {/* LISTADO DE FICHAS */}
+      <div className="space-y-6">
         {centrosFiltrados.length === 0 ? (
           <div className="bg-white p-8 rounded-3xl text-center space-y-2 border border-slate-200 shadow-sm">
-            <p className="text-2xl">🔍</p>
             <p className="text-sm font-bold text-slate-800">No hay centros en esta categoría</p>
-            <p className="text-xs text-slate-500">Pronto se incorporarán más establecimientos asociados.</p>
           </div>
         ) : (
           centrosFiltrados.map((centro) => (
             <article key={centro.id} className="bg-white rounded-3xl shadow-lg border-2 border-teal-500/30 overflow-hidden space-y-0">
               
-              {/* Imagen y Badges */}
-              <div className="relative">
-                <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10 gap-2">
-                  <span className="bg-slate-900/90 text-white text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-md shadow">
-                    {centro.categoria}
-                  </span>
-                  <span className="bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 shadow">
-                    <ShieldCheck size={12} /> {centro.registroSanitario}
-                  </span>
+              <div className="relative h-48 bg-slate-100">
+                <img 
+                  src={centro.imagen} 
+                  alt={centro.nombre} 
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-3 left-3 bg-slate-900 text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                  {centro.categoria}
                 </div>
-
-                <div className="relative h-48 bg-slate-100">
-                  <img 
-                    src={centro.imagen} 
-                    alt={centro.nombre} 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent text-white text-xs px-4 py-2.5 italic font-medium">
-                    "{centro.eslogan}"
-                  </div>
+                <div className="absolute top-3 right-3 bg-emerald-600 text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                  {centro.registroSanitario}
                 </div>
               </div>
 
-              {/* Contenido de la Ficha */}
-              <div className="p-5 space-y-4">
-                <h2 className="text-lg font-black text-slate-900 tracking-tight">{centro.nombre}</h2>
+              <div className="p-5 space-y-3">
+                <h2 className="text-lg font-black text-slate-900">{centro.nombre}</h2>
+                <p className="text-xs italic text-slate-600">"{centro.eslogan}"</p>
 
-                {/* Especialidades */}
-                <div className="space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-black">Especialidades Destacadas</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {centro.especialidades.map((esp, i) => (
-                      <span key={i} className="bg-teal-50 text-teal-800 border border-teal-200/60 text-xs px-3 py-1 rounded-xl font-semibold">
-                        {esp}
-                      </span>
-                    ))}
-                  </div>
+                <div className="flex flex-wrap gap-1">
+                  {centro.especialidades.map((esp, i) => (
+                    <span key={i} className="bg-teal-50 text-teal-800 text-xs px-2.5 py-1 rounded-lg font-medium">
+                      {esp}
+                    </span>
+                  ))}
                 </div>
 
-                {/* Datos Técnicos y Médicos */}
-                <div className="text-xs text-slate-700 bg-slate-50 border border-slate-200/60 p-3.5 rounded-2xl space-y-1.5 shadow-inner">
-                  <p><strong>🔬 Tecnología:</strong> {centro.tecnologia}</p>
-                  <p><strong>👨‍⚕️ Especialista:</strong> {centro.medico}</p>
+                <div className="text-xs bg-slate-50 p-3 rounded-xl space-y-1 text-slate-700">
+                  <p><strong>Tecnología:</strong> {centro.tecnologia}</p>
+                  <p><strong>Especialista:</strong> {centro.medico}</p>
+                  <p><strong>Financiación:</strong> {centro.financiacion}</p>
                 </div>
 
-                {/* Financiación y Mutuas */}
-                <div className="grid grid-cols-1 gap-2 text-xs">
-                  <div className="bg-emerald-50 text-emerald-800 border border-emerald-200 p-2.5 rounded-xl font-bold flex items-center gap-2">
-                    <span>💳</span>
-                    <span>{centro.financiacion}</span>
-                  </div>
-                  <div className="bg-indigo-50 text-indigo-800 border border-indigo-200 p-2.5 rounded-xl font-bold flex items-center gap-2">
-                    <span>🏥</span>
-                    <span>{centro.mutuas}</span>
-                  </div>
-                </div>
-
-                {/* Dirección y Horarios */}
-                <div className="text-xs text-slate-600 border-t border-slate-100 pt-3 space-y-1.5">
-                  <p className="flex items-center gap-2">
-                    <MapPin size={14} className="text-teal-700 shrink-0" />
-                    <span className="font-medium">{centro.direccion}</span>
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <Clock size={14} className="text-slate-400 shrink-0" />
-                    <span className="font-medium">{centro.horario}</span>
-                  </p>
+                <div className="text-xs text-slate-600 space-y-1">
+                  <p>📍 {centro.direccion}</p>
+                  <p>🕒 {centro.horario}</p>
                 </div>
               </div>
 
-              {/* Botones de Acción Directa */}
               <div className="grid grid-cols-3 bg-slate-100 border-t border-slate-200 text-center text-xs font-black">
-                <a 
-                  href={`https://wa.me/${centro.whatsapp}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="py-3.5 text-emerald-700 hover:bg-emerald-50 transition flex items-center justify-center gap-1"
-                >
-                  <MessageCircle size={15} /> WhatsApp
+                <a href={`https://wa.me/${centro.whatsapp}`} target="_blank" rel="noopener noreferrer" className="py-3 text-emerald-700 hover:bg-emerald-50 flex items-center justify-center gap-1">
+                  <MessageCircle size={14} /> WhatsApp
                 </a>
-                <a 
-                  href={`tel:${centro.telefono}`} 
-                  className="py-3.5 text-sky-700 hover:bg-sky-50 transition flex items-center justify-center gap-1 border-x border-slate-200"
-                >
-                  <Phone size={15} /> Llamar
+                <a href={`tel:${centro.telefono}`} className="py-3 text-sky-700 hover:bg-sky-50 flex items-center justify-center gap-1 border-x border-slate-200">
+                  <Phone size={14} /> Llamar
                 </a>
-                <a 
-                  href={centro.mapaUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="py-3.5 text-slate-800 hover:bg-slate-200 transition flex items-center justify-center gap-1"
-                >
-                  <MapPin size={15} /> Cómo llegar
+                <a href={centro.mapaUrl} target="_blank" rel="noopener noreferrer" className="py-3 text-slate-800 hover:bg-slate-200 flex items-center justify-center gap-1">
+                  <MapPin size={14} /> Cómo llegar
                 </a>
               </div>
 
@@ -246,23 +182,6 @@ export default function Sanidad({ setPaginaActual }) {
           ))
         )}
       </div>
-
-      {/* BOTÓN CONSO TE INFORMA */}
-      {setPaginaActual && (
-        <button
-          onClick={() => setPaginaActual("conso")}
-          className="w-full bg-gradient-to-r from-teal-950 to-teal-900 text-white hover:from-teal-900 hover:to-teal-800 p-4 rounded-2xl flex items-center justify-between text-xs font-black shadow-md transition-all cursor-pointer group"
-        >
-          <span className="flex items-center gap-2.5">
-            <span className="bg-amber-400 text-slate-950 p-1.5 rounded-xl text-sm shadow">🤖</span>
-            <div className="text-left">
-              <p className="text-sm font-black text-white">Conso te informa</p>
-              <p className="text-[10px] text-teal-200 font-medium">Consultas sobre clínicas y salud en Utrera</p>
-            </div>
-          </span>
-          <Sparkles size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
-        </button>
-      )}
 
     </div>
   );
