@@ -82,7 +82,7 @@ export default function Sanidad({ setPaginaActual }) {
       {/* CABECERA */}
       <div className="bg-slate-900 text-white p-6 shadow-xl rounded-3xl relative overflow-hidden space-y-3">
         
-        {/* BOTONES SUPERIORES: VOLVER Y GESTIÓN */}
+        {/* BOTONES SUPERIORES: VOLVER Y ACCESO UTRERAPP */}
         <div className="flex items-center justify-between relative z-10">
           {setPaginaActual && (
             <button 
@@ -96,9 +96,11 @@ export default function Sanidad({ setPaginaActual }) {
           {setPaginaActual && (
             <button 
               onClick={() => setPaginaActual("admin-sanidad")}
-              className="inline-flex items-center gap-1 text-xs text-amber-300 bg-amber-950/80 px-3 py-1.5 rounded-full border border-amber-500/30 font-bold hover:bg-amber-900 transition cursor-pointer shadow"
+              className="inline-flex items-center gap-1.5 text-xs text-amber-300 bg-amber-950/90 px-3.5 py-1.5 rounded-full border border-amber-500/40 font-black hover:bg-amber-900 transition cursor-pointer shadow"
+              title="Panel Utrerapp"
             >
-              <Settings size={13} /> Gestionar Clientes
+              <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[10px] font-black">U</span>
+              <Settings size={12} />
             </button>
           )}
         </div>
