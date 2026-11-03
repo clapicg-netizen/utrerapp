@@ -1,21 +1,27 @@
 // frontend/src/pages/AdminSanidad.jsx
 import React, { useState } from "react";
-import { ArrowLeft, PlusCircle, Save, ShieldCheck, Sparkles, Video, Globe, Phone, MapPin } from "lucide-react";
+import { ArrowLeft, Save, Lock, KeyRound } from "lucide-react";
 
 export default function AdminSanidad({ setPaginaActual, supabase }) {
+  // CLAVE DE ACCESO PRIVADA (puedes cambiarla cuando quieras)
+  const PIN_SECRETO = "1967"; 
+
+  const [autenticado, setAutenticado] = useState(false);
+  const [pinIngresado, setPinIngresado] = useState("");
+  const [errorPin, setErrorPin] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [mensaje, setMensaje] = useState("");
 
-  // Estado del formulario para un nuevo centro / socio fundador
   const [form, setForm] = useState({
     nombre: "",
-    tipo: "clinicas", // 'clinicas', 'dental', 'estetica'
+    tipo: "clinicas",
     categoria: "",
     eslogan: "",
     registro_sanitario: "",
     imagen_url: "",
     video_url: "",
-    especialidades: "", // Las separaremos por comas
+    especialidades: "",
     tecnologia: "",
     medico: "",
     financiacion: "",
@@ -30,6 +36,17 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     facebook_url: ""
   });
 
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (pinIngresado === PIN_SECRETO) {
+      setAutenticado(true);
+      setErrorPin(false);
+    } else {
+      setErrorPin(true);
+      setPinIngresado("");
+    }
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -40,12 +57,10 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     setMensaje("");
 
     try {
-      // Convertir las especialidades de texto plano ("Ortodoncia, Implantes") a Array de PostgreSQL
       const arrayEspecialidades = form.especialidades
         ? form.especialidades.split(",").map((item) => item.trim())
         : [];
 
-      // Inserción en la tabla de Supabase
       const { error } = await supabase.from("centros_sanitarios").insert([
         {
           nombre: form.nombre,
@@ -75,7 +90,6 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
       if (error) throw error;
 
       setMensaje("✅ ¡Centro dado de alta correctamente en Supabase!");
-      // Limpiar formulario básico
       setForm({
         nombre: "",
         tipo: "clinicas",
@@ -106,6 +120,57 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     }
   };
 
+  // 🔒 PANTALLA DE BLOQUEO OBLIGATORIA SI NO ESTÁ AUTENTICADO
+  if (!autenticado) {
+    return (
+      <div className="max-w-md mx-auto p-4 pt-16 pb-28 space-y-6 font-sans">
+        <div className="bg-slate-900 text-white p-8 shadow-2xl rounded-3xl text-center space-y-5 relative overflow-hidden border border-amber-500/30">
+          <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/30 shadow-inner">
+            <Lock size={30} />
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-xl font-black tracking-tight">Acceso Restringido Utrerapp</h1>
+            <p className="text-xs text-slate-400">Introduce tu PIN de administrador para gestionar los socios sanitarios.</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4 pt-2">
+            <input 
+              type="password" 
+              maxLength="6"
+              value={pinIngresado}
+              onChange={(e) => setPinIngresado(e.target.value)}
+              placeholder="••••"
+              className="w-40 text-center text-2xl tracking-widest p-3 bg-slate-950 border border-slate-700 rounded-2xl text-amber-400 focus:outline-none focus:border-amber-500 mx-auto block font-mono"
+              autoFocus
+            />
+
+            {errorPin && (
+              <p className="text-xs text-rose-400 font-bold">❌ PIN incorrecto. Inténtalo de nuevo.</p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 p-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
+            >
+              <KeyRound size={16} />
+              <span>Desbloquear Panel</span>
+            </button>
+          </form>
+
+          {setPaginaActual && (
+            <button 
+              onClick={() => setPaginaActual("sanidad")}
+              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition cursor-pointer pt-2"
+            >
+              <ArrowLeft size={14} /> Volver a Sanidad
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 📝 FORMULARIO DE ALTAS (Sólo visible si autenticado === true)
   return (
     <div className="max-w-md mx-auto p-4 pb-28 space-y-6 font-sans">
       
@@ -113,16 +178,16 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
       <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 text-white p-6 shadow-xl rounded-3xl relative overflow-hidden space-y-3">
         {setPaginaActual && (
           <button 
-            onClick={() => setPaginaActual("home")}
+            onClick={() => setPaginaActual("sanidad")}
             className="inline-flex items-center gap-1.5 text-xs text-teal-300 bg-teal-950/80 px-3 py-1.5 rounded-full border border-teal-500/30 font-bold hover:bg-teal-900 transition cursor-pointer"
           >
-            <ArrowLeft size={14} /> Volver a Utrerapp
+            <ArrowLeft size={14} /> Volver a Sanidad
           </button>
         )}
 
         <div className="space-y-1">
           <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
-            Panel de Gestión
+            Panel de Gestión Segura
           </span>
           <h1 className="text-xl font-black tracking-tight">Alta de Socio Sanitario</h1>
           <p className="text-xs text-slate-300">Introduce los datos de la clínica o centro para publicarlo al instante.</p>
