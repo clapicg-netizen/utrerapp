@@ -1,15 +1,15 @@
 // frontend/src/pages/Sanidad.jsx
 import React, { useState } from "react";
-import { ArrowLeft, Phone, MapPin, MessageCircle, ShieldCheck, Sparkles, Stethoscope, Smile, Scissors, HeartPulse } from "lucide-react";
+import { ArrowLeft, Phone, MapPin, MessageCircle, ShieldCheck, Sparkles, Stethoscope } from "lucide-react";
 
 export default function Sanidad({ setPaginaActual }) {
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState("todas");
 
   const categorias = [
-    { id: "todas", label: "🌟 Todas", icono: Stethoscope },
-    { id: "clinicas", label: "🏥 Clínicas y Especialidades", icono: HeartPulse },
-    { id: "dental", label: "🦷 Dentales", icono: Smile },
-    { id: "estetica", label: "✨ Belleza y Estética", icono: Scissors },
+    { id: "todas", label: "🌟 Todas" },
+    { id: "clinicas", label: "🏥 Clínicas" },
+    { id: "dental", label: "🦷 Dentales" },
+    { id: "estetica", label: "✨ Belleza y Estética" },
   ];
 
   const centrosPrivados = [
@@ -105,7 +105,7 @@ export default function Sanidad({ setPaginaActual }) {
       {/* LISTADO DE FICHAS FILTRADAS */}
       <div className="space-y-6">
         {centrosFiltrados.length === 0 ? (
-          <div className="bg-white p-8 rounded-3xl text-center space-y-2 border border-slate-200">
+          <div className="bg-white p-8 rounded-3xl text-center space-y-2 border border-slate-200 shadow-sm">
             <p className="text-2xl">🔍</p>
             <p className="text-sm font-bold text-slate-800">No hay centros en esta categoría</p>
             <p className="text-xs text-slate-500">Pronto se incorporarán más establecimientos asociados.</p>
