@@ -1,6 +1,6 @@
 // frontend/src/pages/AdminSanidad.jsx
 import React, { useState } from "react";
-import { ArrowLeft, Save, Lock, KeyRound, Upload, Image as ImageIcon, Plus, Trash2, Video } from "lucide-react";
+import { ArrowLeft, Save, Lock, KeyRound, Upload, Image as ImageIcon, Plus, Trash2, Video, CheckCircle2 } from "lucide-react";
 
 export default function AdminSanidad({ setPaginaActual, supabase }) {
   const PIN_SECRETO = "1967"; 
@@ -16,18 +16,18 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
   const [videoSubiendo, setVideoSubiendo] = useState(false);
   const [previewImagen, setPreviewImagen] = useState(null);
 
-  // Estado completo de la ficha del socio sanitario con las nuevas columnas
+  // Estado completo de la ficha del socio sanitario
   const [form, setForm] = useState({
     nombre: "",
     tipo: "dental",
     categoria: "",
     eslogan: "",
     registro_sanitario: "",
-    imagen_url: "", 
-    galeria_fotos: [], // NUEVO: Array de URLs de estancias
+    imagen_url: "", // URL final garantizada
+    galeria_fotos: [],
     video_url: "",
-    web_oficial_url: "", // NUEVO: Enlace a su web oficial / landing
-    servicios_clinicos: [], // NUEVO: Lista de servicios con título y descripción
+    web_oficial_url: "",
+    servicios_clinicos: [],
     especialidades: "",
     tecnologia: "",
     medico: "",
@@ -43,7 +43,6 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     facebook_url: ""
   });
 
-  // Estado temporal para añadir un nuevo servicio clínico visual
   const [nuevoServicio, setNuevoServicio] = useState({ titulo: "", descripcion: "" });
 
   const handleLogin = (e) => {
@@ -61,7 +60,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 📸 SUBIDA DE IMAGEN PRINCIPAL (BLINDADA Y SINCRONIZADA)
+  // 📸 SUBIDA DE IMAGEN PRINCIPAL (BLINDADA CON DOBLE FEEDBACK)
   const handleSubirImagenLocal = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -77,7 +76,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     }
 
     setImagenSubiendo(true);
-    setMensaje("Subiendo imagen principal a Supabase...");
+    setMensaje("Subiendo imagen principal a Supabase Storage...");
     
     const objectUrl = URL.createObjectURL(file);
     setPreviewImagen(objectUrl);
@@ -99,8 +98,9 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
       const urlFinal = publicUrlData.publicUrl;
 
+      // Actualizamos tanto la vista previa como el input de texto de forma síncrona
       setForm((prev) => ({ ...prev, imagen_url: urlFinal }));
-      setMensaje("✅ ¡Imagen principal subida y enlazada con éxito!");
+      setMensaje("✅ ¡Imagen subida con éxito y enlazada en el formulario!");
     } catch (error) {
       console.error('Error subiendo imagen:', error);
       setMensaje("❌ Error al subir la imagen: " + error.message);
@@ -110,7 +110,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     }
   };
 
-  // 🖼️ SUBIDA DE GALERÍA DE FOTOS (Estancias y Consultas)
+  // 🖼️ SUBIDA DE GALERÍA DE FOTOS
   const handleSubirGaleria = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
@@ -120,7 +120,6 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
     try {
       const nuevasUrls = [];
-
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
         const fileExt = file.name.split('.').pop();
@@ -147,24 +146,19 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
       setMensaje("✅ ¡Galería de estancias actualizada!");
     } catch (error) {
       console.error('Error subiendo galería:', error);
-      setMensaje("❌ Error al subir las fotos de la galería: " + error.message);
+      setMensaje("❌ Error al subir las fotos: " + error.message);
     } finally {
       setGaleriaSubiendo(false);
     }
   };
 
-  // 🎬 SUBIDA DE VÍDEO LOCAL A STORAGE
+  // 🎬 SUBIDA DE VÍDEO LOCAL
   const handleSubirVideoLocal = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     if (!file.type.startsWith('video/')) {
-      setMensaje("❌ El archivo debe ser un vídeo válido (MP4, MOV).");
-      return;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      setMensaje("❌ El vídeo es demasiado pesado (máx 20MB).");
+      setMensaje("❌ El archivo debe ser un vídeo válido (MP4).");
       return;
     }
 
@@ -187,19 +181,18 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
         .getPublicUrl(filePath);
 
       setForm((prev) => ({ ...prev, video_url: publicUrlData.publicUrl }));
-      setMensaje("✅ ¡Vídeo subido y enlazado con éxito!");
+      setMensaje("✅ ¡Vídeo subido con éxito!");
     } catch (error) {
       console.error('Error subiendo vídeo:', error);
-      setMensaje("❌ Error al subir el vídeo: " + error.message);
+      setMensaje("❌ Error al subir vídeo: " + error.message);
     } finally {
       setVideoSubiendo(false);
     }
   };
 
-  // ➕ AÑADIR SERVICIO CLÍNICO DETALLADO
   const agregarServicioClinico = () => {
     if (!nuevoServicio.titulo || !nuevoServicio.descripcion) {
-      setMensaje("⚠️ Introduce título y descripción para el servicio clínico.");
+      setMensaje("⚠️ Introduce título y descripción para el servicio.");
       return;
     }
     setForm((prev) => ({
@@ -210,7 +203,6 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     setMensaje("");
   };
 
-  // 🗑️ ELIMINAR SERVICIO CLÍNICO
   const eliminarServicioClinico = (index) => {
     setForm((prev) => ({
       ...prev,
@@ -218,7 +210,6 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     }));
   };
 
-  // 🗑️ ELIMINAR FOTO DE LA GALERÍA
   const eliminarFotoGaleria = (index) => {
     setForm((prev) => ({
       ...prev,
@@ -230,6 +221,12 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     e.preventDefault();
     setLoading(true);
     setMensaje("");
+
+    if (!form.imagen_url) {
+      setMensaje("❌ Falta la imagen principal. Sube una foto o introduce su URL.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const arrayEspecialidades = form.especialidades
@@ -243,7 +240,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           categoria: form.categoria,
           eslogan: form.eslogan,
           registro_sanitario: form.registro_sanitario,
-          imagen_url: form.imagen_url || "https://images.unsplash.com/photo-1629909613654-28e377c37b09",
+          imagen_url: form.imagen_url,
           galeria_fotos: form.galeria_fotos,
           video_url: form.video_url,
           web_oficial_url: form.web_oficial_url,
@@ -305,15 +302,11 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
   if (!autenticado) {
     return (
       <div className="max-w-md mx-auto p-4 pt-16 pb-28 space-y-6 font-sans">
-        <div className="bg-slate-900 text-white p-8 shadow-2xl rounded-3xl text-center space-y-5 relative overflow-hidden border border-amber-500/30">
-          <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/30 shadow-inner">
+        <div className="bg-slate-900 text-white p-8 shadow-2xl rounded-3xl text-center space-y-5 border border-amber-500/30">
+          <div className="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-2xl flex items-center justify-center mx-auto border border-amber-500/30">
             <Lock size={30} />
           </div>
-          <div className="space-y-1">
-            <h1 className="text-xl font-black tracking-tight">Acceso Restringido Utrerapp</h1>
-            <p className="text-xs text-slate-400">Introduce tu PIN de administrador para gestionar los socios sanitarios.</p>
-          </div>
-
+          <h1 className="text-xl font-black">Acceso Restringido Utrerapp</h1>
           <form onSubmit={handleLogin} className="space-y-4 pt-2">
             <input 
               type="password" 
@@ -321,31 +314,14 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
               value={pinIngresado}
               onChange={(e) => setPinIngresado(e.target.value)}
               placeholder="••••"
-              className="w-40 text-center text-2xl tracking-widest p-3 bg-slate-950 border border-slate-700 rounded-2xl text-amber-400 focus:outline-none focus:border-amber-500 mx-auto block font-mono"
+              className="w-40 text-center text-2xl tracking-widest p-3 bg-slate-950 border border-slate-700 rounded-2xl text-amber-400 mx-auto block font-mono"
               autoFocus
             />
-
-            {errorPin && (
-              <p className="text-xs text-rose-400 font-bold">❌ PIN incorrecto. Inténtalo de nuevo.</p>
-            )}
-
-            <button
-              type="submit"
-              className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 p-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition shadow-lg cursor-pointer flex items-center justify-center gap-2"
-            >
-              <KeyRound size={16} />
-              <span>Desbloquear Panel</span>
+            {errorPin && <p className="text-xs text-rose-400 font-bold">❌ PIN incorrecto.</p>}
+            <button type="submit" className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 p-3.5 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+              <KeyRound size={16} /> Desbloquear Panel
             </button>
           </form>
-
-          {setPaginaActual && (
-            <button 
-              onClick={() => setPaginaActual("sanidad")}
-              className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition cursor-pointer pt-2"
-            >
-              <ArrowLeft size={14} /> Volver a Sanidad
-            </button>
-          )}
         </div>
       </div>
     );
@@ -353,24 +329,14 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
   return (
     <div className="max-w-md mx-auto p-4 pb-28 space-y-6 font-sans">
-      
-      <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 text-white p-6 shadow-xl rounded-3xl relative overflow-hidden space-y-3">
+      <div className="bg-gradient-to-r from-teal-950 via-slate-900 to-teal-950 text-white p-6 shadow-xl rounded-3xl space-y-3">
         {setPaginaActual && (
-          <button 
-            onClick={() => setPaginaActual("sanidad")}
-            className="inline-flex items-center gap-1.5 text-xs text-teal-300 bg-teal-950/80 px-3 py-1.5 rounded-full border border-teal-500/30 font-bold hover:bg-teal-900 transition cursor-pointer"
-          >
+          <button onClick={() => setPaginaActual("sanidad")} className="inline-flex items-center gap-1.5 text-xs text-teal-300 bg-teal-950/80 px-3 py-1.5 rounded-full border border-teal-500/30 font-bold cursor-pointer">
             <ArrowLeft size={14} /> Volver a Sanidad
           </button>
         )}
-
-        <div className="space-y-1">
-          <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
-            Panel Visual Profesional
-          </span>
-          <h1 className="text-xl font-black tracking-tight">Ficha Sanitaria Interactiva</h1>
-          <p className="text-xs text-slate-300">Diseña un escaparate visual con estancias, servicios y web oficial.</p>
-        </div>
+        <h1 className="text-xl font-black">Ficha Sanitaria Interactiva</h1>
+        <p className="text-xs text-slate-300">Gestión visual avanzada de centros sanitarios.</p>
       </div>
 
       {mensaje && (
@@ -383,17 +349,15 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
         
         {/* 1. INFORMACIÓN GENERAL */}
         <div className="space-y-3">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">1. Información General</h2>
-          
+          <h2 className="text-xs font-black text-teal-900 uppercase border-b pb-1">1. Información General</h2>
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Nombre del Centro / Clínica *</label>
-            <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required placeholder="Ej: Clínica Dental Dra. Ordóñez" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
+            <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required placeholder="Ej: Clínica Dental Dra. Ordóñez" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium" />
           </div>
-
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">Categoría PWA *</label>
-              <select name="tipo" value={form.tipo} onChange={handleChange} className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium">
+              <select name="tipo" value={form.tipo} onChange={handleChange} className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium">
                 <option value="clinicas">Clínica / Especialidades</option>
                 <option value="dental">Dental / Odontología</option>
                 <option value="estetica">Estética y Belleza</option>
@@ -401,48 +365,59 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
             </div>
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">Subtítulo / Especialidad *</label>
-              <input type="text" name="categoria" value={form.categoria} onChange={handleChange} required placeholder="Ej: Odontología Avanzada" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
+              <input type="text" name="categoria" value={form.categoria} onChange={handleChange} required placeholder="Ej: Odontología Avanzada" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium" />
             </div>
           </div>
-
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Eslogan Comercial</label>
-            <input type="text" name="eslogan" value={form.eslogan} onChange={handleChange} placeholder="Ej: Tu sonrisa en las mejores manos" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
+            <input type="text" name="eslogan" value={form.eslogan} onChange={handleChange} placeholder="Ej: Tu sonrisa en las mejores manos" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium" />
           </div>
-
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Registro Sanitario Oficial *</label>
-            <input type="text" name="registro_sanitario" value={form.registro_sanitario} onChange={handleChange} required placeholder="Ej: NCA 1222" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
+            <input type="text" name="registro_sanitario" value={form.registro_sanitario} onChange={handleChange} required placeholder="Ej: NCA 1222" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium" />
           </div>
-
           <div>
             <label className="block text-[11px] font-bold text-teal-700 mb-1">🌐 Enlace a su Web Oficial o Landing Page</label>
             <input type="url" name="web_oficial_url" value={form.web_oficial_url} onChange={handleChange} placeholder="https://www.tuclinica.com" className="w-full text-xs p-3 bg-teal-50/50 border border-teal-200 rounded-xl font-medium" />
           </div>
         </div>
 
-        {/* 2. IMAGEN PRINCIPAL Y GALERÍA DE ESTANCIAS */}
+        {/* 2. IMAGEN PRINCIPAL (CON INPUT DE URL VISIBLE PARA CERO FALLOS) */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">2. Imágenes Visuales (Fachada y Estancias)</h2>
+          <h2 className="text-xs font-black text-teal-900 uppercase border-b pb-1">2. Imagen Principal (Fachada / Portada) *</h2>
           
+          <div className="flex items-center gap-4">
+            <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border-2 border-teal-500 border-dashed text-teal-800 p-4 rounded-2xl text-center flex flex-col items-center justify-center gap-1 flex-1 transition-all">
+              <Upload size={20} className="text-teal-600" />
+              <span className="text-[11px] font-bold">{imagenSubiendo ? "Subiendo..." : "Subir Portada"}</span>
+              <input type="file" accept="image/*" onChange={handleSubirImagenLocal} disabled={imagenSubiendo} className="hidden" />
+            </label>
+            {previewImagen || form.imagen_url ? (
+              <div className="w-20 h-20 rounded-xl border-2 border-white shadow-md overflow-hidden flex-shrink-0 relative">
+                <img src={previewImagen || form.imagen_url} alt="Preview" className="w-full h-full object-cover" />
+                <div className="absolute bottom-1 right-1 bg-emerald-600 text-white rounded-full p-0.5">
+                  <CheckCircle2 size={12} />
+                </div>
+              </div>
+            ) : (
+              <div className="w-20 h-20 rounded-xl border-2 border-slate-200 bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                <ImageIcon size={24} />
+              </div>
+            )}
+          </div>
+
+          {/* CAJETÍN DE TEXTO VISIBLE PARA LA URL (Garantía absoluta de que no se pierde) */}
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">Foto Principal (Fachada / Portada) *</label>
-            <div className="flex items-center gap-4">
-              <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border-2 border-teal-500 border-dashed text-teal-800 p-4 rounded-2xl text-center flex flex-col items-center justify-center gap-1 flex-1 transition-all">
-                <Upload size={20} className="text-teal-600" />
-                <span className="text-[11px] font-bold">{imagenSubiendo ? "Subiendo..." : "Subir Portada"}</span>
-                <input type="file" accept="image/*" onChange={handleSubirImagenLocal} disabled={imagenSubiendo} className="hidden" />
-              </label>
-              {previewImagen ? (
-                <div className="w-20 h-20 rounded-xl border-2 border-white shadow-md overflow-hidden flex-shrink-0">
-                  <img src={previewImagen} alt="Preview" className="w-full h-full object-cover" />
-                </div>
-              ) : (
-                <div className="w-20 h-20 rounded-xl border-2 border-slate-200 bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
-                  <ImageIcon size={24} />
-                </div>
-              )}
-            </div>
+            <label className="block text-[10px] font-bold text-slate-500 mb-1">URL de la imagen (Se rellena sola al subir o pégala directa)</label>
+            <input 
+              type="url" 
+              name="imagen_url" 
+              value={form.imagen_url} 
+              onChange={handleChange} 
+              required 
+              placeholder="https://... o sube la foto arriba" 
+              className="w-full text-[11px] p-2.5 bg-slate-100 border border-slate-300 rounded-xl font-mono text-slate-700" 
+            />
           </div>
 
           {/* Galería de Estancias */}
@@ -471,23 +446,21 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
         {/* 3. MULTIMEDIA Y VÍDEO */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">3. Vídeo y Redes Sociales</h2>
-          
+          <h2 className="text-xs font-black text-teal-900 uppercase border-b pb-1">3. Vídeo y Redes Sociales</h2>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">URL de Vídeo Web</label>
               <input type="url" name="video_url" value={form.video_url} onChange={handleChange} placeholder="Enlace YouTube / Reel" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-teal-700 mb-1">O Subir Vídeo Local (MP4)</label>
-              <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-800 p-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 text-xs font-bold transition-all">
+              <label className="block text-[11px] font-bold text-teal-700 mb-1">O Subir Vídeo (MP4)</label>
+              <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border border-teal-300 text-teal-800 p-2.5 rounded-xl text-center flex items-center justify-center gap-1.5 text-xs font-bold">
                 <Video size={14} className="text-teal-600" />
                 <span>{videoSubiendo ? "Subiendo..." : "Subir Vídeo"}</span>
-                <input type="file" accept="video/mp4,video/mov" onChange={handleSubirVideoLocal} disabled={videoSubiendo} className="hidden" />
+                <input type="file" accept="video/mp4" onChange={handleSubirVideoLocal} disabled={videoSubiendo} className="hidden" />
               </label>
             </div>
           </div>
-
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-[10px] font-bold text-slate-700 mb-1">Instagram</label>
@@ -504,16 +477,14 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           </div>
         </div>
 
-        {/* 4. SERVICIOS CLÍNICOS DETALLADOS (Estilo Tarjetas) */}
+        {/* 4. SERVICIOS CLÍNICOS DETALLADOS */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">4. Servicios Clínicos Detallados (Estilo Tarjetas)</h2>
-          <p className="text-[10px] text-slate-500">Crea fichas visuales para tratamientos (Ej: Implantología, Ortodoncia) con su descripción.</p>
-
+          <h2 className="text-xs font-black text-teal-900 uppercase border-b pb-1">4. Servicios Clínicos (Estilo Tarjetas)</h2>
           <div className="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2">
             <input type="text" placeholder="Título del Servicio (Ej: Implantología)" value={nuevoServicio.titulo} onChange={(e) => setNuevoServicio({ ...nuevoServicio, titulo: e.target.value })} className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl" />
-            <textarea placeholder="Descripción breve del tratamiento..." value={nuevoServicio.descripcion} onChange={(e) => setNuevoServicio({ ...nuevoServicio, descripcion: e.target.value })} className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl h-16 resize-none" />
-            <button type="button" onClick={agregarServicioClinico} className="w-full bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer">
-              <Plus size={14} /> Añadir Servicio a la Lista
+            <textarea placeholder="Descripción breve..." value={nuevoServicio.descripcion} onChange={(e) => setNuevoServicio({ ...nuevoServicio, descripcion: e.target.value })} className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl h-16 resize-none" />
+            <button type="button" onClick={agregarServicioClinico} className="w-full bg-teal-800 hover:bg-teal-900 text-white text-xs font-bold py-2 rounded-xl flex items-center justify-center gap-1.5 cursor-pointer">
+              <Plus size={14} /> Añadir Servicio
             </button>
           </div>
 
@@ -525,70 +496,62 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
                     <h4 className="text-xs font-bold text-teal-950">🦷 {s.titulo}</h4>
                     <p className="text-[11px] text-slate-600 mt-0.5">{s.descripcion}</p>
                   </div>
-                  <button type="button" onClick={() => eliminarServicioClinico(idx)} className="text-rose-600 hover:text-rose-800 p-1">
-                    <Trash2 size={16} />
-                  </button>
+                  <button type="button" onClick={() => eliminarServicioClinico(idx)} className="text-rose-600 p-1"><Trash2 size={16} /></button>
                 </div>
               ))}
             </div>
           )}
 
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1 mt-3">Otras Especialidades (separadas por comas)</label>
-            <input type="text" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Endodoncia, Estética dental..." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+            <label className="block text-[11px] font-bold text-slate-700 mb-1 mt-3">Otras Especialidades (comas)</label>
+            <input type="text" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Endodoncia, Estética..." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
           </div>
-
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Tecnología Destacada</label>
-              <input type="text" name="tecnologia" value={form.tecnologia} onChange={handleChange} placeholder="TAC 3D dental" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Tecnología</label>
+              <input type="text" name="tecnologia" value={form.tecnologia} onChange={handleChange} placeholder="TAC 3D" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Especialista / Colegiado</label>
-              <input type="text" name="medico" value={form.medico} onChange={handleChange} placeholder="Dra. Belén Ordóñez" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Especialista</label>
+              <input type="text" name="medico" value={form.medico} onChange={handleChange} placeholder="Dr. / Dra." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
           </div>
-
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">Financiación</label>
-              <input type="text" name="financiacion" value={form.financiacion} onChange={handleChange} placeholder="Hasta 36 meses sin intereses" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="text" name="financiacion" value={form.financiacion} onChange={handleChange} placeholder="Hasta 36 meses" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Mutuas / Seguros</label>
-              <input type="text" name="mutuas" value={form.mutuas} onChange={handleChange} placeholder="Sanitas, Adeslas..." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Mutuas</label>
+              <input type="text" name="mutuas" value={form.mutuas} onChange={handleChange} placeholder="Sanitas, Adeslas" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
           </div>
         </div>
 
         {/* 5. CONTACTO Y UBICACIÓN */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">5. Contacto y Ubicación</h2>
-          
+          <h2 className="text-xs font-black text-teal-900 uppercase border-b pb-1">5. Contacto y Ubicación</h2>
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">Dirección Completa *</label>
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Dirección *</label>
             <input type="text" name="direccion" value={form.direccion} onChange={handleChange} required placeholder="Calle Real, Utrera" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
           </div>
-
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Horario *</label>
             <input type="text" name="horario" value={form.horario} onChange={handleChange} required placeholder="L-V: 9:00 - 20:00" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
           </div>
-
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">WhatsApp (con prefijo) *</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">WhatsApp *</label>
               <input type="text" name="whatsapp" value={form.whatsapp} onChange={handleChange} required placeholder="34600000000" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">Teléfono Fijo / Móvil *</label>
+              <label className="block text-[11px] font-bold text-slate-700 mb-1">Teléfono *</label>
               <input type="text" name="telefono" value={form.telefono} onChange={handleChange} required placeholder="955000000" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
           </div>
-
           <div>
-            <label className="block text-[11px] font-bold text-slate-700 mb-1">Enlace Google Maps (Cómo llegar)</label>
-            <input type="url" name="mapa_url" value={form.mapa_url} onChange={handleChange} placeholder="https://www.google.com/maps/search/?api=1&query=..." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+            <label className="block text-[11px] font-bold text-slate-700 mb-1">Google Maps URL</label>
+            <input type="url" name="mapa_url" value={form.mapa_url} onChange={handleChange} placeholder="https://..." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
           </div>
         </div>
 
@@ -602,7 +565,6 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
         </button>
 
       </form>
-
     </div>
   );
 }
