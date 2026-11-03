@@ -120,7 +120,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
       for (const file of files) {
         if (!file.type.startsWith('image/')) continue;
         const fileExt = file.name.split('.').pop();
-        const fileName = `sanidad_gal_${Date.now()}_${Math.random().toString(36.substring(7))}.${fileExt}`;
+        const fileName = `sanidad_gal_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
         const filePath = `socios_fundadores/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
