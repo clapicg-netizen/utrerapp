@@ -14,6 +14,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
   const [imagenSubiendo, setImagenSubiendo] = useState(false);
   const [previewImagen, setPreviewImagen] = useState(null);
 
+  // Estado completo de la ficha del socio sanitario
   const [form, setForm] = useState({
     nombre: "",
     tipo: "dental",
@@ -52,54 +53,51 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // 📸 SUBIDA CORREGIDA PARA CAPTURAR LA URL PÚBLICA CORRECTAMENTE
+  // 📸 SUBIDA ROBUSTA A SUPABASE STORAGE
   const handleSubirImagenLocal = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setMensaje("❌ El archivo debe ser una imagen (jpg, png, webp).");
+      setMensaje("❌ El archivo debe ser una imagen válida (JPG, PNG).");
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setMensaje("❌ La imagen es demasiado grande (máx 2MB).");
+    if (file.size > 3 * 1024 * 1024) {
+      setMensaje("❌ La imagen es demasiado grande (máx 3MB).");
       return;
     }
 
     setImagenSubiendo(true);
-    setMensaje("Subiendo imagen...");
+    setMensaje("Subiendo imagen a Supabase...");
     setPreviewImagen(URL.createObjectURL(file));
 
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const fileName = `sanidad_${Date.now()}.${fileExt}`;
       const filePath = `socios_fundadores/${fileName}`;
 
-      // 1. Subir a Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('imagenes_sanidad')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      // 2. Obtener la URL pública correctamente
       const { data: publicUrlData } = supabase.storage
         .from('imagenes_sanidad')
         .getPublicUrl(filePath);
 
       const urlFinal = publicUrlData.publicUrl;
 
-      // 3. Asignarla al estado del formulario
+      // Actualizamos el formulario directamente con la URL garantizada
       setForm((prev) => ({ ...prev, imagen_url: urlFinal }));
-      setMensaje("✅ ¡Imagen subida y enlazada correctamente!");
-      setImagenSubiendo(false);
-
+      setMensaje("✅ ¡Imagen subida y enlazada con éxito!");
     } catch (error) {
       console.error('Error subiendo imagen:', error);
       setMensaje("❌ Error al subir la imagen: " + error.message);
-      setImagenSubiendo(false);
       setPreviewImagen(null);
+    } finally {
+      setImagenSubiendo(false);
     }
   };
 
@@ -108,15 +106,10 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
     setLoading(true);
     setMensaje("");
 
-    if (!form.imagen_url) {
-      setMensaje("⚠️ Por favor, espera a que la foto termine de subirse o selecciona una válida.");
-      setLoading(false);
-      return;
-    }
-
     try {
+      // Procesar especialidades separadas por comas en formato array
       const arrayEspecialidades = form.especialidades
-        ? form.especialidades.split(",").map((item) => item.trim())
+        ? form.especialidades.split(",").map((item) => item.trim()).filter(Boolean)
         : [];
 
       const { error } = await supabase.from("centros_sanitarios").insert([
@@ -126,7 +119,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           categoria: form.categoria,
           eslogan: form.eslogan,
           registro_sanitario: form.registro_sanitario,
-          imagen_url: form.imagen_url,
+          imagen_url: form.imagen_url || "https://images.unsplash.com/photo-1629909613654-28e377c37b09",
           video_url: form.video_url,
           especialidades: arrayEspecialidades,
           tecnologia: form.tecnologia,
@@ -147,7 +140,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
       if (error) throw error;
 
-      setMensaje("✅ ¡Clínica dada de alta correctamente en Supabase!");
+      setMensaje("✅ ¡Centro sanitario publicado correctamente!");
       setForm({
         nombre: "",
         tipo: "dental",
@@ -173,7 +166,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
       setPreviewImagen(null);
     } catch (err) {
       console.error(err);
-      setMensaje("❌ Error al guardar el centro: " + err.message);
+      setMensaje("❌ Error al guardar en Supabase: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -245,8 +238,8 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
             Panel de Gestión Segura
           </span>
-          <h1 className="text-xl font-black tracking-tight">Alta de Socio Sanitario</h1>
-          <p className="text-xs text-slate-300">Introduce los datos de la clínica o centro para publicarlo al instante.</p>
+          <h1 className="text-xl font-black tracking-tight">Modificar y Crear Fichas Sanitarias</h1>
+          <p className="text-xs text-slate-300">Rellena los campos con los datos definitivos del socio fundador.</p>
         </div>
       </div>
 
@@ -258,6 +251,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
       <form onSubmit={handleSubmit} className="bg-white p-5 rounded-3xl shadow-lg border border-slate-200 space-y-4">
         
+        {/* 1. INFORMACIÓN GENERAL */}
         <div className="space-y-3">
           <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">1. Información General</h2>
           
@@ -292,15 +286,15 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           </div>
         </div>
 
-        {/* 📸 SUBIDA DE IMAGEN LOCAL */}
+        {/* 2. IMAGEN PRINCIPAL */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">2. Imagen Principal *</h2>
+          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">2. Imagen Principal del Centro *</h2>
           
           <div className="flex items-center gap-4">
-            <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border-2 border-teal-500 border-dashed text-teal-800 p-6 rounded-3xl text-center flex flex-col items-center justify-center gap-2 flex-1 transition-all">
-              <Upload size={24} className="text-teal-600" />
+            <label className="cursor-pointer bg-teal-50 hover:bg-teal-100 border-2 border-teal-500 border-dashed text-teal-800 p-5 rounded-3xl text-center flex flex-col items-center justify-center gap-2 flex-1 transition-all">
+              <Upload size={22} className="text-teal-600" />
               <span className="text-xs font-bold">
-                {imagenSubiendo ? "Subiendo..." : "Subir Foto (Local)"}
+                {imagenSubiendo ? "Subiendo foto..." : "Seleccionar Foto"}
               </span>
               <input 
                 type="file" 
@@ -312,26 +306,21 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
             </label>
 
             {previewImagen ? (
-              <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg overflow-hidden flex-shrink-0 relative group">
+              <div className="w-24 h-24 rounded-2xl border-4 border-white shadow-lg overflow-hidden flex-shrink-0 relative">
                 <img src={previewImagen} alt="Preview" className="w-full h-full object-cover" />
-                {imagenSubiendo && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  </div>
-                )}
               </div>
             ) : (
               <div className="w-24 h-24 rounded-2xl border-2 border-slate-200 bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
-                <ImageIcon size={32} />
+                <ImageIcon size={28} />
               </div>
             )}
           </div>
-          <p className="text-[10px] text-slate-500 pl-1">JPG, PNG o WebP. Máx 2MB.</p>
+          <p className="text-[10px] text-slate-500 pl-1">Se subirá de forma segura al almacenamiento de Supabase.</p>
         </div>
 
-        {/* Multimedia, Vídeo y Redes */}
+        {/* 3. VÍDEO Y REDES */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">3. Vídeo y Redes Sociales</h2>
+          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">3. Multimedia y Redes Sociales</h2>
           
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">URL del Vídeo / Reel (Opcional)</label>
@@ -340,27 +329,27 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
 
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <label className="block text-[10px] font-bold text-slate-700 mb-1">Instagram URL</label>
+              <label className="block text-[10px] font-bold text-slate-700 mb-1">Instagram</label>
               <input type="url" name="instagram_url" value={form.instagram_url} onChange={handleChange} placeholder="https://instagram.com/..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-700 mb-1">TikTok URL</label>
+              <label className="block text-[10px] font-bold text-slate-700 mb-1">TikTok</label>
               <input type="url" name="tiktok_url" value={form.tiktok_url} onChange={handleChange} placeholder="https://tiktok.com/..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-700 mb-1">Facebook URL</label>
+              <label className="block text-[10px] font-bold text-slate-700 mb-1">Facebook</label>
               <input type="url" name="facebook_url" value={form.facebook_url} onChange={handleChange} placeholder="https://facebook.com/..." className="w-full text-[11px] p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
           </div>
         </div>
 
-        {/* Equipo y Tratamientos */}
+        {/* 4. EQUIPO Y SERVICIOS */}
         <div className="space-y-3 pt-2">
-          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">4. Equipo Médico y Servicios</h2>
+          <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">4. Especialidades y Servicios</h2>
           
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Especialidades (separadas por comas)</label>
-            <input type="text" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Odontología General, Implantología, Ortodoncia" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
+            <input type="text" name="especialidades" value={form.especialidades} onChange={handleChange} placeholder="Implantología, Ortodoncia, Estética dental" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-teal-600 font-medium" />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -377,22 +366,22 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">Financiación</label>
-              <input type="text" name="financiacion" value={form.financiacion} onChange={handleChange} placeholder="Financiación a medida" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="text" name="financiacion" value={form.financiacion} onChange={handleChange} placeholder="Hasta 36 meses sin intereses" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">Mutuas / Seguros</label>
-              <input type="text" name="mutuas" value={form.mutuas} onChange={handleChange} placeholder="Consultar clínica" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="text" name="mutuas" value={form.mutuas} onChange={handleChange} placeholder="Sanitas, Adeslas..." className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
           </div>
         </div>
 
-        {/* Contacto y Ubicación */}
+        {/* 5. CONTACTO Y UBICACIÓN */}
         <div className="space-y-3 pt-2">
           <h2 className="text-xs font-black text-teal-900 uppercase tracking-wider border-b pb-1">5. Contacto y Ubicación</h2>
           
           <div>
             <label className="block text-[11px] font-bold text-slate-700 mb-1">Dirección Completa *</label>
-            <input type="text" name="direccion" value={form.direccion} onChange={handleChange} required placeholder="Utrera, Sevilla" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+            <input type="text" name="direccion" value={form.direccion} onChange={handleChange} required placeholder="Calle Real, Utrera" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
           </div>
 
           <div>
@@ -403,11 +392,11 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">WhatsApp (con prefijo) *</label>
-              <input type="text" name="whatsapp" value={form.whatsapp} onChange={handleChange} required placeholder="34699012031" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="text" name="whatsapp" value={form.whatsapp} onChange={handleChange} required placeholder="34600000000" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
             <div>
               <label className="block text-[11px] font-bold text-slate-700 mb-1">Teléfono Fijo / Móvil *</label>
-              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} required placeholder="955835312" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
+              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} required placeholder="955000000" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" />
             </div>
           </div>
 
@@ -423,7 +412,7 @@ export default function AdminSanidad({ setPaginaActual, supabase }) {
           className="w-full bg-gradient-to-r from-teal-900 to-teal-950 text-white hover:from-teal-800 hover:to-teal-900 p-4 rounded-2xl text-xs font-black shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 pt-4 mt-4 disabled:opacity-60"
         >
           <Save size={16} />
-          <span>{loading ? "Publicando..." : "Publicar Centro Sanitario"}</span>
+          <span>{loading ? "Publicando..." : "Guardar y Publicar Ficha"}</span>
         </button>
 
       </form>
