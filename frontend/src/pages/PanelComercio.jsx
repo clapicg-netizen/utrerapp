@@ -292,6 +292,7 @@ export default function PanelComercio() {
               <option value="Salud">Salud</option>
               <option value="Inmobiliarias">Inmobiliarias</option>
               <option value="Comida a domicilio">Comida a domicilio</option>
+              <option value="Formación">Formación</option>
             </select>
           </div>
           <div>
