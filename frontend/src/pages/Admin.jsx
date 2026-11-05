@@ -422,6 +422,7 @@ export default function PanelAdmin() {
                     <option value="Hostelería">Hostelería (Bar / Tapa)</option>
                     <option value="Servicios">Servicios</option>
                     <option value="Salud y Belleza">Salud y Belleza</option>
+                    <option value="Formación">Formación</option>
                   </select>
                 </div>
 
@@ -429,7 +430,7 @@ export default function PanelAdmin() {
                   <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría</label>
                   <input
                     type="text"
-                    placeholder="Ej. Moda y Complementos"
+                    placeholder="Ej. Oposiciones / Clases"
                     value={formNormal.subcategoria}
                     onChange={(e) => setFormNormal({...formNormal, subcategoria: e.target.value})}
                     className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
@@ -607,7 +608,7 @@ export default function PanelAdmin() {
           )}
 
           {/* ========================================================= */}
-          {/* 2. FORMULARIO FICHA 1: INMOBILIARIA (ESPECIAL 1) - INTACTO*/}
+          {/* 2. FORMULARIO FICHA 1: INMOBILIARIA (ESPECIAL 1)           */}
           {/* ========================================================= */}
           {tipoRegistro === 'especial1' && (
             <div className="space-y-6">
@@ -743,7 +744,7 @@ export default function PanelAdmin() {
           )}
 
           {/* ========================================================= */}
-          {/* 3. FORMULARIO FICHA 2: COMIDA / PEDIDOS (ESPECIAL 2) - INTACTO */}
+          {/* 3. FORMULARIO FICHA 2: COMIDA / PEDIDOS (ESPECIAL 2)       */}
           {/* ========================================================= */}
           {tipoRegistro === 'especial2' && (
             <div className="space-y-6">
