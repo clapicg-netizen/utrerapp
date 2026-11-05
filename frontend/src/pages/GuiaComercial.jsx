@@ -54,7 +54,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
 
-  const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza", "Inmobiliarias"];
+  const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza", "Inmobiliarias", "Formación"];
 
   useEffect(() => {
     cargarComercios();
@@ -452,6 +452,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                           <option value="Servicios">Servicios</option>
                           <option value="Salud y Belleza">Salud y Belleza</option>
                           <option value="Inmobiliarias">Inmobiliarias</option>
+                          <option value="Formación">Formación</option>
                         </select>
                       </div>
                       <div>
