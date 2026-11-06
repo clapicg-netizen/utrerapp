@@ -1,7 +1,6 @@
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, MapPin, Car } from 'lucide-react';
-import { consultarConsoIA } from '../lib/consoService';
 import { supabase } from '../lib/supabaseClient';
 
 export default function Conso() {
@@ -72,7 +71,6 @@ export default function Conso() {
               <p className="text-[11px] text-slate-500 capitalize">📅 {fechaHoyStr}</p>
             </div>
 
-            {/* TURNO DE DÍA */}
             {farmaciasDia.length > 0 && (
               <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
                 <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -98,7 +96,6 @@ export default function Conso() {
               </div>
             )}
 
-            {/* TURNO DE NOCHE */}
             {farmaciasNoche.length > 0 && (
               <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
                 <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -187,11 +184,30 @@ export default function Conso() {
       );
     }
 
+    // Consulta directa a la API de Gemini
     try {
-      const respuestaIA = await consultarConsoIA(pregunta);
-      return respuestaIA;
+      const apiKey = process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
+      const promptSistema = "Eres Conso, la asistente virtual oficial de Utrera (Sevilla). Eres amable, cercana, experta en los servicios locales, comercios, farmacias de guardia, horarios de trenes, autobuses, aparcamientos y costumbres de Utrera. Responde de forma útil, concisa, natural y con un toque andaluz cercano.";
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `${promptSistema}\n\nPregunta del vecino o visitante: ${pregunta}`
+            }]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const textoRespuesta = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      return textoRespuesta || "Lo siento, vecino, en este momento no puedo conectar con el servicio.";
     } catch (err) {
-      return "Disculpa, ahora mismo tengo problemas de conexión con el servidor de inteligencia artificial.";
+      console.error("Error al consultar Gemini:", err);
+      return "Disculpa, ahora mismo tengo un pequeño problema de conexión con el servicio de inteligencia artificial.";
     }
   };
 
