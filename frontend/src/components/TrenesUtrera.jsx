@@ -22,7 +22,7 @@ export default function TrenesUtrera() {
 
     useEffect(() => {
         fetchTrenes();
-        const intervalApi = setInterval(fetchTrenes, 30000);
+        const intervalApi = setInterval(fetchTrenes, 20000);
         const timerClock = setInterval(() => setTiempoActual(new Date()), 1000);
 
         return () => {
@@ -35,9 +35,8 @@ export default function TrenesUtrera() {
 
     const obtenerProximo = (lista) => {
         if (!lista) return null;
-        // Filtra estrictamente los trenes cuya hora sea igual o posterior al minuto actual
         const futuros = lista.filter(t => (t.h * 60 + t.m) >= ahoraMinutos);
-        return futuros.length > 0 ? futuros[0] : null; // Si no hay más hoy, devuelve null limpiamente
+        return futuros.length > 0 ? futuros[0] : null;
     };
 
     const siguientesA = (lista) => {
@@ -117,8 +116,9 @@ export default function TrenesUtrera() {
                 </div>
             )}
 
-            <div className="mb-4 text-[11px] text-[#7a6c58] font-medium">
-                <span className="font-bold text-[#4a3b2c] underline cursor-pointer">Novedades</span>: la última mejora, el 9 de noviembre
+            <div className="mb-4 text-[11px] text-[#7a6c58] font-medium flex items-center justify-between">
+                <span><span className="font-bold text-[#4a3b2c] underline cursor-pointer">Novedades</span>: la última mejora, el 9 de noviembre</span>
+                <span className="text-[10px] bg-[#e6decb]/60 px-2 py-0.5 rounded text-[#5c503d] font-mono">GPS Activo</span>
             </div>
 
             {/* ================= VISTA SEVILLA ================= */}
@@ -131,7 +131,7 @@ export default function TrenesUtrera() {
                                     <span className="bg-[#1d6fa5] text-white text-[11px] font-black px-2 py-0.5 rounded-md">C1</span>
                                     <h3 className="text-xl sm:text-2xl font-black text-[#2c2416] tracking-tight">{proximoSevilla.destino}</h3>
                                 </div>
-                                <span className="bg-[#e1f3e8] text-[#1e6b36] text-xs px-3 py-1 rounded-full font-bold">
+                                <span className={`text-xs px-3 py-1 rounded-full font-bold ${proximoSevilla.estado.includes('tarde') ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
                                     {proximoSevilla.estado}
                                 </span>
                             </div>
@@ -153,17 +153,20 @@ export default function TrenesUtrera() {
                             </div>
 
                             <div className="flex items-center gap-3 my-3">
-                                <span className="bg-[#4a3b2c] text-white text-xs px-3 py-1 rounded-xl font-bold shadow-2xs">
+                                <span className="bg-[#4a3b2c] text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-2xs">
                                     📌 {proximoSevilla.via}
+                                </span>
+                                <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${proximoSevilla.por_gps ? 'bg-blue-100 text-blue-900' : 'bg-amber-100 text-amber-900'}`}>
+                                    {proximoSevilla.por_gps ? '📍 Posición GPS' : '🕒 Horario oficial'}
                                 </span>
                             </div>
 
                             <p className="text-xs text-[#6c5d47] font-medium mb-4 bg-[#f5efe3] p-3 rounded-xl border border-[#e6decb]/60">
-                                Empieza su recorrido en Utrera; suele esperar ya en la vía.
+                                {proximoSevilla.tramo}
                             </p>
 
                             <button 
-                                onClick={() => compartirWhatsApp("hacia", proximoSevilla.destino, `${proximoSevilla.h}:${proximoSevilla.m}`, "Sale en breve")}
+                                onClick={() => compartirWhatsApp("hacia", proximoSevilla.destino, `${proximoSevilla.h}:${proximoSevilla.m}`, proximoSevilla.tramo)}
                                 className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2"
                             >
                                 <span>📤</span> Avisa a quien vaya contigo
@@ -186,10 +189,12 @@ export default function TrenesUtrera() {
                                             <div>
                                                 <span className="font-black text-[#2c2416] text-sm font-serif block">{String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
                                             </div>
-                                            <span className="px-2 py-0.5 rounded text-[10px] font-bold text-white bg-[#1d6fa5]">C1</span>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${t.destino.includes('MD') || t.destino.includes('Jaén') ? 'bg-[#2c2416]' : 'bg-[#1d6fa5]'}`}>
+                                                {t.destino.includes('Jaén') ? 'MD' : 'C1'}
+                                            </span>
                                             <span className="font-bold text-[#3c2f20]">{t.destino}</span>
                                         </div>
-                                        <span className="px-3 py-1 rounded-full font-bold text-xs bg-[#e1f3e8] text-[#1e6b36]">
+                                        <span className={`px-3 py-1 rounded-full font-bold text-xs ${t.estado.includes('tarde') ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
                                             {t.estado}
                                         </span>
                                     </div>
@@ -210,7 +215,7 @@ export default function TrenesUtrera() {
                                     <span className="bg-[#2c2416] text-white text-[11px] font-black px-2 py-0.5 rounded">MD</span>
                                     <h3 className="text-xl sm:text-2xl font-black text-[#2c2416] tracking-tight">{proximoCadiz.destino}</h3>
                                 </div>
-                                <span className="bg-[#e1f3e8] text-[#1e6b36] text-xs px-3 py-1 rounded-full font-bold">
+                                <span className={`text-xs px-3 py-1 rounded-full font-bold ${proximoCadiz.estado.includes('tarde') ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
                                     {proximoCadiz.estado}
                                 </span>
                             </div>
@@ -235,14 +240,17 @@ export default function TrenesUtrera() {
                                 <span className="bg-[#4a3b2c] text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-2xs">
                                     📌 {proximoCadiz.via}
                                 </span>
+                                <span className="text-[10px] font-bold px-2 py-1 rounded-lg bg-blue-100 text-blue-900">
+                                    📍 Posición GPS
+                                </span>
                             </div>
 
                             <p className="text-xs text-[#6c5d47] font-medium mb-4 bg-[#f5efe3] p-3 rounded-xl border border-[#e6decb]/60">
-                                Posición por GPS de Renfe
+                                {proximoCadiz.tramo}
                             </p>
 
                             <button 
-                                onClick={() => compartirWhatsApp("hacia", proximoCadiz.destino, `${proximoCadiz.h}:${proximoCadiz.m}`, "Llega en breve")}
+                                onClick={() => compartirWhatsApp("hacia", proximoCadiz.destino, `${proximoCadiz.h}:${proximoCadiz.m}`, proximoCadiz.tramo)}
                                 className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2"
                             >
                                 <span>📤</span> Avisa a quien vaya contigo
@@ -278,7 +286,7 @@ export default function TrenesUtrera() {
             {/* PIE LEGAL */}
             <div className="mt-8 text-center space-y-1 pt-4 border-t border-[#e6decb] text-xs text-[#8c7d67]">
                 <p className="font-bold">Fuente oficial: Renfe / Adif</p>
-                <p className="text-[10px]">Utrerapp Live · Servicio automatizado en tiempo real.</p>
+                <p className="text-[10px]">Utrerapp Live · Servicio automatizado con motor de tramos y GPS.</p>
             </div>
         </div>
     );
