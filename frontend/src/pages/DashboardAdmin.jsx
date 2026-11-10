@@ -1,4 +1,4 @@
-cat << 'EOF' > src/pages/DashboardAdmin.jsx
+// frontend/src/pages/DashboardAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { obtenerComercios, crearComercio, actualizarComercio, eliminarComercio, subirArchivoComercio } from '../lib/comerciosService';
 import { supabase } from '../lib/supabaseClient';
@@ -616,11 +616,25 @@ export default function DashboardAdmin() {
                   
                   {formData.video_story_url && (
                     <div className="mb-2">
-                      <video 
-                        src={formData.video_story_url} 
-                        controls 
-                        className="w-full h-40 object-cover rounded-xl border bg-black"
-                      />
+                      {formData.video_story_url.includes('youtube.com') || formData.video_story_url.includes('youtu.be') ? (
+                        <div className="relative w-full aspect-video rounded-xl overflow-hidden border bg-black">
+                          <iframe
+                            className="absolute top-0 left-0 w-full h-full border-0"
+                            src={formData.video_story_url.includes('watch?v=') 
+                              ? formData.video_story_url.replace('watch?v=', 'embed/') 
+                              : formData.video_story_url}
+                            title="Vídeo promocional"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      ) : (
+                        <video 
+                          src={formData.video_story_url} 
+                          controls 
+                          className="w-full h-40 object-cover rounded-xl border bg-black"
+                        />
+                      )}
                     </div>
                   )}
 
@@ -954,4 +968,3 @@ export default function DashboardAdmin() {
     </div>
   );
 }
-EOF
