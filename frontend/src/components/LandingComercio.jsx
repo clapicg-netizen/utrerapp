@@ -1,6 +1,6 @@
-// src/components/LandingComercio.jsx
+// frontend/src/components/LandingComercio.jsx
 import React, { useState } from 'react';
-import { Globe, ShoppingBag, MessageCircle, Phone, MapPin, Sparkles, ArrowRight, Navigation, LayoutGrid, Info, Layers } from 'lucide-react';
+import { Globe, ShoppingBag, MessageCircle, Phone, MapPin, Sparkles, ArrowRight, Navigation, LayoutGrid, Info, Layers, Film } from 'lucide-react';
 
 export default function LandingComercio({ comercio }) {
   // Estado para la pestaña activa ("general", "catalogo", "contacto")
@@ -19,6 +19,45 @@ export default function LandingComercio({ comercio }) {
     : "Utrera, Sevilla";
 
   const urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(comercio.nombre + " " + direccionLimpia)}`;
+
+  // Función auxiliar para detectar y limpiar enlaces de YouTube a formato embed
+  const renderizarVideoPromocional = (url) => {
+    if (!url) return null;
+
+    const esYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+
+    if (esYoutube) {
+      let embedUrl = url;
+      if (url.includes('watch?v=')) {
+        embedUrl = url.replace('watch?v=', 'embed/');
+      } else if (url.includes('youtu.be/')) {
+        const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+        embedUrl = `https://www.youtube.com/embed/${videoId}`;
+      }
+
+      return (
+        <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-black">
+          <iframe
+            className="absolute top-0 left-0 w-full h-full border-0"
+            src={embedUrl}
+            title={`Vídeo promocional de ${comercio.nombre}`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="rounded-2xl overflow-hidden shadow-sm border border-slate-100 bg-black">
+        <video 
+          src={url} 
+          controls 
+          className="w-full h-48 object-cover"
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-100 font-sans space-y-4 pb-6">
@@ -88,6 +127,16 @@ export default function LandingComercio({ comercio }) {
                 <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
                   {comercio.descripcion}
                 </p>
+              </div>
+            )}
+
+            {/* VÍDEO PROMOCIONAL */}
+            {comercio.video_story_url && (
+              <div className="space-y-2 pt-1">
+                <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
+                  <Film size={14} className="text-amber-500" /> Vídeo Promocional
+                </h3>
+                {renderizarVideoPromocional(comercio.video_story_url)}
               </div>
             )}
 
