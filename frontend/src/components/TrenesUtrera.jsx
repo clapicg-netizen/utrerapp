@@ -1,269 +1,145 @@
 import React, { useState, useEffect } from 'react';
 
 export default function TrenesUtrera() {
-    const [datosTrenes, setDatosTrenes] = useState(null);
-    const [cargando, setCargando] = useState(true);
-    const [pestanaActiva, setPestanaActiva] = useState('sevilla');
-    const [tiempoActual, setTiempoActual] = useState(new Date());
+  const [datos, setDatos] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [pestanaActiva, setPestanaActiva] = useState('sevilla'); // 'sevilla', 'cadiz', 'haciaUtrera'
 
-    const fetchTrenes = async () => {
-        try {
-            setCargando(true);
-            const res = await fetch('/api/trenes');
-            const data = await res.json();
-            setDatosTrenes(data);
-        } catch (err) {
-            console.error("Error sincronizando trenes:", err);
-        } finally {
-            setCargando(false);
-        }
-    };
+  useEffect(() => {
+    fetch('/api/trenes')
+      .then(res => res.json())
+      .then(data => {
+        setDatos(data);
+        setCargando(false);
+      })
+      .catch(err => {
+        console.error("Error cargando trenes:", err);
+        setCargando(false);
+      });
+  }, []);
 
-    useEffect(() => {
-        fetchTrenes();
-        const intervalApi = setInterval(fetchTrenes, 30000);
-        const timerClock = setInterval(() => setTiempoActual(new Date()), 1000);
-
-        return () => {
-            clearInterval(intervalApi);
-            clearInterval(timerClock);
-        };
-    }, []);
-
-    const ahoraMinutos = tiempoActual.getHours() * 60 + tiempoActual.getMinutes();
-
-    const obtenerProximo = (lista) => {
-        if (!lista) return null;
-        const futuros = lista.filter(t => (t.h * 60 + t.m) >= ahoraMinutos);
-        return futuros.length > 0 ? futuros[0] : lista[0];
-    };
-
-    const proximoSevilla = datosTrenes ? obtenerProximo(datosTrenes.salidasSevilla) : null;
-    const minSevilla = proximoSevilla ? Math.max((proximoSevilla.h * 60 + proximoSevilla.m) - ahoraMinutos, 1) : 0;
-    const siguientesSevilla = datosTrenes && proximoSevilla 
-        ? datosTrenes.salidasSevilla.filter(t => (t.h * 60 + t.m) > (proximoSevilla.h * 60 + proximoSevilla.m))
-        : [];
-
-    const proximoCadiz = datosTrenes ? obtenerProximo(datosTrenes.salidasCadiz) : null;
-    const minCadiz = proximoCadiz ? Math.max((proximoCadiz.h * 60 + proximoCadiz.m) - ahoraMinutos, 1) : 0;
-    const siguientesCadiz = datosTrenes && proximoCadiz 
-        ? datosTrenes.salidasCadiz.filter(t => (t.h * 60 + t.m) > (proximoCadiz.h * 60 + proximoCadiz.m))
-        : [];
-
-    const compartirWhatsApp = (tipo, destino, hora, detalle) => {
-        const texto = encodeURIComponent(`🚆 Tren ${tipo} Utrera - ${destino} (${hora}). ${detalle}. \n\n📍 Utrerapp Live: https://utrerapp.com`);
-        window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
-    };
-
+  if (cargando) {
     return (
-        <div className="min-h-screen bg-[#f7f4eb] text-[#2c2416] font-sans pb-20 max-w-xl mx-auto px-4 pt-4 selection:bg-amber-200">
-            
-            {/* CABECERA */}
-            <div className="flex justify-between items-center mb-3 pb-2 border-b border-[#e6decb]">
-                <h1 className="text-2xl font-black tracking-tight text-[#3c2f20] font-serif">
-                    El tren <span className="text-[#a67c37] font-sans font-bold text-base">en Utrera</span>
-                </h1>
-                <button 
-                    onClick={fetchTrenes}
-                    disabled={cargando}
-                    className="bg-[#eddcc3] hover:bg-[#e2ceb0] text-[#4a3b2c] px-4 py-1.5 rounded-full text-xs font-bold transition shadow-2xs flex items-center gap-1.5"
-                >
-                    <span className="text-amber-700">⚡</span> {cargando ? 'Actualizando' : 'Ahora'}
-                </button>
-            </div>
-
-            {/* PESTAÑAS SUPERIORES */}
-            <div className="flex gap-6 mb-4 border-b border-[#e6decb] pb-2">
-                <button
-                    onClick={() => setPestanaActiva('sevilla')}
-                    className={`text-xl font-black transition pb-2 relative font-serif ${
-                        pestanaActiva === 'sevilla' ? 'text-[#2c2416] border-b-2 border-[#a67c37]' : 'text-[#a39885] hover:text-[#5c503d]'
-                    }`}
-                >
-                    A Sevilla
-                </button>
-                <button
-                    onClick={() => setPestanaActiva('cadiz')}
-                    className={`text-xl font-black transition pb-2 relative font-serif ${
-                        pestanaActiva === 'cadiz' ? 'text-[#2c2416] border-b-2 border-[#a67c37]' : 'text-[#a39885] hover:text-[#5c503d]'
-                    }`}
-                >
-                    A Lebrija y Cádiz
-                </button>
-            </div>
-
-            {/* AVISOS EN TIEMPO REAL */}
-            {datosTrenes && datosTrenes.avisosHoy && (
-                <div className="space-y-2 mb-4">
-                    {datosTrenes.avisosHoy.map((aviso) => (
-                        <div key={aviso.id} className="bg-[#efe8d8] border border-[#e2d7be] p-3.5 rounded-2xl shadow-2xs">
-                            <div className="flex items-start gap-2.5">
-                                <span className="text-amber-800 text-sm mt-0.5">⚠️</span>
-                                <div className="flex-1">
-                                    <p className="text-xs font-bold text-[#3c2f20]">{aviso.texto}</p>
-                                    <p className="text-[10px] text-[#8c7d67] mt-0.5">{aviso.timestamp}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            <div className="mb-4 text-[11px] text-[#7a6c58] font-medium">
-                <span className="font-bold text-[#4a3b2c] underline cursor-pointer">Novedades</span>: la última mejora, el 10 de noviembre
-            </div>
-
-            {/* ================= VISTA SEVILLA ================= */}
-            {pestanaActiva === 'sevilla' && proximoSevilla && (
-                <div className="space-y-5">
-                    {/* ALERTA ROJA SI EL PRÓXIMO ESTÁ SUPRIMIDO */}
-                    {proximoSevilla.estado === "Suprimido" && (
-                        <div className="bg-[#fae1db] border border-[#f5c6cb] p-3.5 rounded-2xl text-[#b93822] text-xs font-bold flex items-center gap-2 shadow-2xs">
-                            <span className="text-base">🚫</span>
-                            <div>
-                                <p>Suprimido el de las {String(proximoSevilla.h).padStart(2, '0')}:{String(proximoSevilla.m).padStart(2, '0')}</p>
-                                <p className="text-[10px] font-normal text-[#8a2514]">Abajo tienes el siguiente servicio disponible.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TARJETA PRÓXIMO TREN */}
-                    <div className="bg-[#fdfbf7] rounded-3xl p-6 shadow-2xs border border-[#e6decb] relative overflow-hidden">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                                <span className="bg-[#1d6fa5] text-white text-[11px] font-black px-2 py-0.5 rounded-md">C1</span>
-                                <h3 className="text-2xl font-black text-[#2c2416] tracking-tight">{proximoSevilla.destino}</h3>
-                            </div>
-                            <span className={`text-xs px-3 py-1 rounded-full font-bold ${proximoSevilla.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
-                                {proximoSevilla.estado}
-                            </span>
-                        </div>
-                        <p className="text-xs text-[#8c7d67] mb-3 font-medium">el de las <span className="font-bold text-[#3c2f20]">{String(proximoSevilla.h).padStart(2, '0')}:{String(proximoSevilla.m).padStart(2, '0')}</span></p>
-
-                        <div className="flex items-baseline justify-between my-3">
-                            <div>
-                                <span className="text-5xl font-black text-[#2c2416] tracking-tighter font-serif">
-                                    {minSevilla}
-                                </span>
-                                <span className="text-base font-bold text-[#6c5d47] ml-1">min</span>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-[11px] text-[#8c7d67] block font-medium">Hora oficial</span>
-                                <span className="text-sm font-black text-[#2c2416]">
-                                    {String(proximoSevilla.h).padStart(2, '0')}:{String(proximoSevilla.m).padStart(2, '0')}
-                                </span>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-3 my-3">
-                            <span className="bg-[#4a3b2c] text-white text-xs px-3 py-1 rounded-xl font-bold shadow-2xs">
-                                📌 {proximoSevilla.via}
-                            </span>
-                        </div>
-
-                        <button 
-                            onClick={() => compartirWhatsApp("hacia", proximoSevilla.destino, `${proximoSevilla.h}:${proximoSevilla.m}`, "Sale en breve")}
-                            className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2 mt-4"
-                        >
-                            <span>📤</span> Avisa a quien vaya contigo
-                        </button>
-                    </div>
-
-                    {/* SECCIÓN DESPUÉS */}
-                    <div className="space-y-2.5">
-                        <h3 className="text-sm font-black text-[#3c2f20] uppercase tracking-wider font-serif">Después</h3>
-                        <div className="bg-[#fdfbf7] rounded-3xl p-2 shadow-2xs border border-[#e6decb] divide-y divide-[#e6decb]/50">
-                            {siguientesSevilla.map((t, idx) => (
-                                <div key={idx} className="py-3 px-3 flex items-center justify-between text-xs">
-                                    <div className="flex items-center gap-3">
-                                        <span className="font-black text-[#2c2416] text-sm font-serif">{String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
-                                        <span className="font-bold text-[#3c2f20]">{t.destino}</span>
-                                    </div>
-                                    <span className={`px-3 py-1 rounded-full font-bold text-xs ${t.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
-                                        {t.estado}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ================= VISTA CÁDIZ ================= */}
-            {pestanaActiva === 'cadiz' && proximoCadiz && (
-                <div className="space-y-5">
-                    {/* ALERTA ROJA SI EL PRÓXIMO ESTÁ SUPRIMIDO */}
-                    {proximoCadiz.estado === "Suprimido" && (
-                        <div className="bg-[#fae1db] border border-[#f5c6cb] p-3.5 rounded-2xl text-[#b93822] text-xs font-bold flex items-center gap-2 shadow-2xs">
-                            <span className="text-base">🚫</span>
-                            <div>
-                                <p>Suprimido el de las {String(proximoCadiz.h).padStart(2, '0')}:{String(proximoCadiz.m).padStart(2, '0')}</p>
-                                <p className="text-[10px] font-normal text-[#8a2514]">Abajo tienes el siguiente servicio disponible.</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* TARJETA PRÓXIMO TREN CÁDIZ */}
-                    <div className="bg-[#fdfbf7] rounded-3xl p-6 shadow-2xs border border-[#e6decb] relative overflow-hidden">
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex items-center gap-2">
-                                <span className="bg-[#2c2416] text-white text-[11px] font-black px-2 py-0.5 rounded">MD</span>
-                                <h3 className="text-2xl font-black text-[#2c2416] tracking-tight">{proximoCadiz.destino}</h3>
-                            </div>
-                            <span className={`text-xs px-3 py-1 rounded-full font-bold ${proximoCadiz.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
-                                {proximoCadiz.estado}
-                            </span>
-                        </div>
-                        <p className="text-xs text-[#8c7d67] mb-3 font-medium">el de las <span className="font-bold text-[#3c2f20]">{String(proximoCadiz.h).padStart(2, '0')}:{String(proximoCadiz.m).padStart(2, '0')}</span></p>
-
-                        <div className="flex items-baseline justify-between my-3">
-                            <div>
-                                <span className="text-5xl font-black text-[#2c2416] tracking-tighter font-serif">
-                                    {minCadiz}
-                                </span>
-                                <span className="text-base font-bold text-[#6c5d47] ml-1">min</span>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-[11px] text-[#8c7d67] block font-medium">Hora estimada</span>
-                                <span className="text-sm font-black text-[#2c2416]">
-                                    {String(proximoCadiz.h).padStart(2, '0')}:{String(proximoCadiz.m).padStart(2, '0')}
-                                </span>
-                            </div>
-                        </div>
-
-                        <button 
-                            onClick={() => compartirWhatsApp("hacia", proximoCadiz.destino, `${proximoCadiz.h}:${proximoCadiz.m}`, "Llega en breve")}
-                            className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2 mt-4"
-                        >
-                            <span>📤</span> Avisa a quien vaya contigo
-                        </button>
-                    </div>
-
-                    {/* SECCIÓN DESPUÉS */}
-                    <div className="space-y-2.5">
-                        <h3 className="text-sm font-black text-[#3c2f20] uppercase tracking-wider font-serif">Después</h3>
-                        <div className="bg-[#fdfbf7] rounded-3xl p-2 shadow-2xs border border-[#e6decb] divide-y divide-[#e6decb]/50">
-                            {siguientesCadiz.map((t, idx) => (
-                                <div key={idx} className="py-3 px-3 flex items-center justify-between text-xs">
-                                    <div className="flex items-center gap-3">
-                                        <span className="font-black text-[#2c2416] text-sm font-serif">{String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
-                                        <span className="font-bold text-[#3c2f20]">{t.destino}</span>
-                                    </div>
-                                    <span className={`px-3 py-1 rounded-full font-bold text-xs ${t.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
-                                        {t.estado}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* PIE LEGAL */}
-            <div className="mt-8 text-center space-y-1 pt-4 border-t border-[#e6decb] text-xs text-[#8c7d67]">
-                <p className="font-bold">Fuente oficial: Renfe / Adif</p>
-                <p className="text-[10px]">Utrerapp Live · Servicio automatizado en tiempo real.</p>
-            </div>
-        </div>
+      <div className="flex justify-center items-center py-12 text-slate-500 font-medium">
+        Sincronizando estado de los trenes en Utrera...
+      </div>
     );
+  }
+
+  return (
+    <div className="max-w-md mx-auto p-4 space-y-4 font-sans">
+      {/* Cabecera */}
+      <div className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white p-4 rounded-xl shadow-md">
+        <h2 className="text-xl font-bold flex items-center justify-between">
+          <span>Estación de Utrera</span>
+          <span className="text-xs bg-white/20 px-2 py-1 rounded-full font-normal">
+            En Directo
+          </span>
+        </h2>
+        <p className="text-xs text-blue-200 mt-1">
+          Actualizado: {datos?.actualizado || "Recién sincronizado"}
+        </p>
+      </div>
+
+      {/* Avisos Operativos */}
+      {datos?.avisosHoy && datos.avisosHoy.length > 0 && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl shadow-sm text-xs text-amber-900 space-y-1">
+          <p className="font-bold flex items-center gap-1">⚠️ Avisos de Servicio</p>
+          {datos.avisosHoy.map(aviso => (
+            <p key={aviso.id}>{aviso.texto}</p>
+          ))}
+        </div>
+      )}
+
+      {/* Pestañas de Navegación */}
+      <div className="flex rounded-lg bg-slate-200 p-1 text-xs font-semibold text-slate-700">
+        <button
+          onClick={() => setPestanaActiva('sevilla')}
+          className={`flex-1 py-2 rounded-md transition-all ${pestanaActiva === 'sevilla' ? 'bg-white text-blue-700 shadow-sm' : 'hover:text-slate-900'}`}
+        >
+          Hacia Sevilla
+        </button>
+        <button
+          onClick={() => setPestanaActiva('cadiz')}
+          className={`flex-1 py-2 rounded-md transition-all ${pestanaActiva === 'cadiz' ? 'bg-white text-blue-700 shadow-sm' : 'hover:text-slate-900'}`}
+        >
+          Hacia Cádiz
+        </button>
+        <button
+          onClick={() => setPestanaActiva('haciaUtrera')}
+          className={`flex-1 py-2 rounded-md transition-all ${pestanaActiva === 'haciaUtrera' ? 'bg-white text-blue-700 shadow-sm' : 'hover:text-slate-900'}`}
+        >
+          Hacia Utrera
+        </button>
+      </div>
+
+      {/* Listado de Trenes según pestaña */}
+      <div className="space-y-2">
+        {pestanaActiva === 'sevilla' && renderListaTrenes(datos?.salidasSevilla)}
+        {pestanaActiva === 'cadiz' && renderListaTrenes(datos?.salidasCadiz)}
+        {pestanaActiva === 'haciaUtrera' && renderListaTrenesHaciaUtrera(datos?.salidasHaciaUtrera)}
+      </div>
+    </div>
+  );
+}
+
+function renderListaTrenes(trenes) {
+  if (!trenes || trenes.length === 0) {
+    return <p className="text-center text-xs text-slate-400 py-6">No hay servicios programados en este momento.</p>;
+  }
+
+  return trenes.map((t, idx) => (
+    <div key={idx} className="bg-white border border-slate-100 p-3 rounded-xl shadow-xs flex items-center justify-between">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="text-base font-bold text-slate-800">
+            {String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}
+          </span>
+          <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">
+            {t.via}
+          </span>
+        </div>
+        <p className="text-xs font-semibold text-slate-600 mt-0.5">{t.destino}</p>
+      </div>
+      <div className="text-right">
+        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+          t.estado === 'A su hora' ? 'bg-emerald-50 text-emerald-700' :
+          t.estado === 'Suprimido' ? 'bg-rose-50 text-rose-700 font-bold' :
+          'bg-amber-50 text-amber-700'
+        }`}>
+          {t.estado}
+        </span>
+      </div>
+    </div>
+  ));
+}
+
+function renderListaTrenesHaciaUtrera(trenes) {
+  if (!trenes || trenes.length === 0) {
+    return <p className="text-center text-xs text-slate-400 py-6">No hay registros de trenes hacia Utrera.</p>;
+  }
+
+  return trenes.map((t, idx) => (
+    <div key={idx} className="bg-white border border-slate-100 p-3 rounded-xl shadow-xs flex items-center justify-between">
+      <div>
+        <div className="flex items-center gap-2">
+          <span className="text-base font-bold text-slate-800">
+            {String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}
+          </span>
+          <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-medium">
+            Desde {t.origen}
+          </span>
+        </div>
+        <p className="text-xs font-semibold text-slate-600 mt-0.5">Destino: {t.destino}</p>
+      </div>
+      <div className="text-right">
+        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+          t.estado === 'A su hora' ? 'bg-emerald-50 text-emerald-700' :
+          'bg-amber-50 text-amber-700'
+        }`}>
+          {t.estado}
+        </span>
+      </div>
+    </div>
+  ));
 }
