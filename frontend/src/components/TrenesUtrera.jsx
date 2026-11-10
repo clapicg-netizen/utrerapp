@@ -92,30 +92,27 @@ export default function TrenesUtrera() {
                 </button>
             </div>
 
-            {/* AVISOS EN TIEMPO REAL */}
-            {datosTrenes && datosTrenes.avisosHoy && (
-                <div className="space-y-2 mb-4">
-                    {datosTrenes.avisosHoy.map((aviso) => (
-                        <div key={aviso.id} className="bg-[#efe8d8] border border-[#e2d7be] p-3.5 rounded-2xl shadow-2xs">
-                            <div className="flex items-start gap-2.5">
-                                <span className="text-amber-800 text-sm mt-0.5">⚠️</span>
-                                <div className="flex-1">
-                                    <p className="text-xs font-bold text-[#3c2f20]">{aviso.texto}</p>
-                                    <p className="text-[10px] text-[#8c7d67] mt-0.5">{aviso.timestamp}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+            {/* AVISOS GENERALES */}
+            {datosTrenes && datosTrenes.avisosGenerales && datosTrenes.avisosGenerales.map((aviso) => (
+                <div key={aviso.id} className="bg-[#efe8d8] border border-[#e2d7be] p-3 rounded-2xl shadow-2xs mb-4 text-xs">
+                    <span className="font-bold text-[#3c2f20]">⚠️ {aviso.texto}</span>
                 </div>
-            )}
-
-            <div className="mb-4 text-[11px] text-[#7a6c58] font-medium">
-                <span className="font-bold text-[#4a3b2c] underline cursor-pointer">Novedades</span>: la última mejora, el 9 de noviembre
-            </div>
+            ))}
 
             {/* ================= VISTA SEVILLA ================= */}
             {pestanaActiva === 'sevilla' && proximoSevilla && (
                 <div className="space-y-5">
+                    {/* ALERTA ROJA SI ESTÁ SUPRIMIDO */}
+                    {proximoSevilla.estado === "Suprimido" && (
+                        <div className="bg-[#fae1db] border border-[#f5c6cb] p-3.5 rounded-2xl text-[#b93822] text-xs font-bold flex items-center gap-2 shadow-2xs">
+                            <span className="text-base">🚫</span>
+                            <div>
+                                <p>Suprimido el de las {String(proximoSevilla.h).padStart(2, '0')}:{String(proximoSevilla.m).padStart(2, '0')}</p>
+                                <p className="text-[10px] font-normal text-[#8a2514]">Abajo tienes el siguiente servicio disponible.</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* TARJETA PRÓXIMO TREN */}
                     <div className="bg-[#fdfbf7] rounded-3xl p-6 shadow-2xs border border-[#e6decb] relative overflow-hidden">
                         <div className="flex justify-between items-start mb-2">
@@ -123,7 +120,7 @@ export default function TrenesUtrera() {
                                 <span className="bg-[#1d6fa5] text-white text-[11px] font-black px-2 py-0.5 rounded-md">C1</span>
                                 <h3 className="text-2xl font-black text-[#2c2416] tracking-tight">{proximoSevilla.destino}</h3>
                             </div>
-                            <span className="bg-[#e1f3e8] text-[#1e6b36] text-xs px-3 py-1 rounded-full font-bold">
+                            <span className={`text-xs px-3 py-1 rounded-full font-bold ${proximoSevilla.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
                                 {proximoSevilla.estado}
                             </span>
                         </div>
@@ -150,13 +147,9 @@ export default function TrenesUtrera() {
                             </span>
                         </div>
 
-                        <p className="text-xs text-[#6c5d47] font-medium mb-4 bg-[#f5efe3] p-3 rounded-xl border border-[#e6decb]/60">
-                            Empieza su recorrido en Utrera; suele esperar ya en la vía.
-                        </p>
-
                         <button 
                             onClick={() => compartirWhatsApp("hacia", proximoSevilla.destino, `${proximoSevilla.h}:${proximoSevilla.m}`, "Sale en breve")}
-                            className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2"
+                            className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2 mt-4"
                         >
                             <span>📤</span> Avisa a quien vaya contigo
                         </button>
@@ -169,15 +162,10 @@ export default function TrenesUtrera() {
                             {siguientesSevilla.map((t, idx) => (
                                 <div key={idx} className="py-3 px-3 flex items-center justify-between text-xs">
                                     <div className="flex items-center gap-3">
-                                        <div>
-                                            <span className="font-black text-[#2c2416] text-sm font-serif block">{String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
-                                        </div>
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${t.destino.includes('MD') || t.destino.includes('Jaén') ? 'bg-[#2c2416]' : 'bg-[#1d6fa5]'}`}>
-                                            {t.destino.includes('Jaén') ? 'MD' : 'C1'}
-                                        </span>
+                                        <span className="font-black text-[#2c2416] text-sm font-serif">{String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
                                         <span className="font-bold text-[#3c2f20]">{t.destino}</span>
                                     </div>
-                                    <span className="bg-[#e1f3e8] text-[#1e6b36] px-3 py-1 rounded-full font-bold text-xs">
+                                    <span className={`px-3 py-1 rounded-full font-bold text-xs ${t.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
                                         {t.estado}
                                     </span>
                                 </div>
@@ -190,6 +178,17 @@ export default function TrenesUtrera() {
             {/* ================= VISTA CÁDIZ ================= */}
             {pestanaActiva === 'cadiz' && proximoCadiz && (
                 <div className="space-y-5">
+                    {/* ALERTA ROJA SI ESTÁ SUPRIMIDO */}
+                    {proximoCadiz.estado === "Suprimido" && (
+                        <div className="bg-[#fae1db] border border-[#f5c6cb] p-3.5 rounded-2xl text-[#b93822] text-xs font-bold flex items-center gap-2 shadow-2xs">
+                            <span className="text-base">🚫</span>
+                            <div>
+                                <p>Suprimido el de las {String(proximoCadiz.h).padStart(2, '0')}:{String(proximoCadiz.m).padStart(2, '0')}</p>
+                                <p className="text-[10px] font-normal text-[#8a2514]">Abajo tienes el siguiente servicio disponible.</p>
+                            </div>
+                        </div>
+                    )}
+
                     {/* TARJETA PRÓXIMO TREN CÁDIZ */}
                     <div className="bg-[#fdfbf7] rounded-3xl p-6 shadow-2xs border border-[#e6decb] relative overflow-hidden">
                         <div className="flex justify-between items-start mb-2">
@@ -197,7 +196,7 @@ export default function TrenesUtrera() {
                                 <span className="bg-[#2c2416] text-white text-[11px] font-black px-2 py-0.5 rounded">MD</span>
                                 <h3 className="text-2xl font-black text-[#2c2416] tracking-tight">{proximoCadiz.destino}</h3>
                             </div>
-                            <span className="bg-[#e1f3e8] text-[#1e6b36] text-xs px-3 py-1 rounded-full font-bold">
+                            <span className={`text-xs px-3 py-1 rounded-full font-bold ${proximoCadiz.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
                                 {proximoCadiz.estado}
                             </span>
                         </div>
@@ -218,19 +217,9 @@ export default function TrenesUtrera() {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 my-3">
-                            <span className="bg-[#4a3b2c] text-white text-xs px-3 py-1.5 rounded-xl font-bold shadow-2xs">
-                                📌 {proximoCadiz.via}
-                            </span>
-                        </div>
-
-                        <p className="text-xs text-[#6c5d47] font-medium mb-4 bg-[#f5efe3] p-3 rounded-xl border border-[#e6decb]/60">
-                            Posición por GPS de Renfe
-                        </p>
-
                         <button 
                             onClick={() => compartirWhatsApp("hacia", proximoCadiz.destino, `${proximoCadiz.h}:${proximoCadiz.m}`, "Llega en breve")}
-                            className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2"
+                            className="w-full bg-[#dfb15b] hover:bg-[#d09e43] text-[#2c2416] font-bold text-xs py-3.5 px-4 rounded-2xl transition shadow-2xs flex items-center justify-center gap-2 mt-4"
                         >
                             <span>📤</span> Avisa a quien vaya contigo
                         </button>
@@ -244,10 +233,11 @@ export default function TrenesUtrera() {
                                 <div key={idx} className="py-3 px-3 flex items-center justify-between text-xs">
                                     <div className="flex items-center gap-3">
                                         <span className="font-black text-[#2c2416] text-sm font-serif">{String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
-                                        <span className="bg-[#2c2416] text-white px-2 py-0.5 rounded text-[10px] font-bold">MD</span>
                                         <span className="font-bold text-[#3c2f20]">{t.destino}</span>
                                     </div>
-                                    <span className="bg-[#e1f3e8] text-[#1e6b36] px-3 py-1 rounded-full font-bold">{t.estado}</span>
+                                    <span className={`px-3 py-1 rounded-full font-bold text-xs ${t.estado === 'Suprimido' ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
+                                        {t.estado}
+                                    </span>
                                 </div>
                             ))}
                         </div>

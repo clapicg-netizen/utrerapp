@@ -7,30 +7,11 @@ export default async function handler(req, res) {
     const datosEnDirecto = {
       estacion: "Utrera",
       actualizado: ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      avisosHoy: [
+      avisosGenerales: [
         {
           id: 1,
-          texto: "C-1: tren de las 09:13 de Lora del Río a Utrera, retraso moderado",
-          timestamp: "Desde hoy a las 09:27",
-          tipo: "retraso"
-        },
-        {
-          id: 2,
-          texto: "C-1: tren de las 08:02 de Lora del Río a Utrera",
-          timestamp: "Desde hoy a las 09:08",
-          tipo: "retraso"
-        },
-        {
-          id: 3,
-          texto: "C-1: tren de las 07:40 de Lora del Río a Utrera, 31 min de retraso",
-          timestamp: "Desde hoy a las 08:14",
-          tipo: "retraso"
-        },
-        {
-          id: 4,
           texto: "Con motivo de la huelga convocada hoy, 10 de noviembre por el sindicato de maquinistas semaf, el servicio podría verse afectado",
-          timestamp: "Desde ayer a las 23:01",
-          tipo: "huelga"
+          timestamp: "Desde ayer a las 23:01"
         }
       ],
       salidasSevilla: [
