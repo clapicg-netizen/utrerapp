@@ -6,7 +6,6 @@ export default async function handler(req, res) {
   try {
     const ahora = new Date();
     
-    // Datos estructurados en tiempo real para la estación de Utrera
     const datosEnDirecto = {
       estacion: "Utrera",
       actualizado: ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
@@ -50,6 +49,6 @@ export default async function handler(req, res) {
 
     return res.status(200).json(datosEnDirecto);
   } catch (error) {
-    return res.status(500).json({ error: "Error al sincronizar los datos en tiempo real con Renfe/Adif" });
+    return res.status(500).json({ error: "Error al sincronizar los datos con la red" });
   }
 }
