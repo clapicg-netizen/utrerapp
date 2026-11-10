@@ -92,7 +92,7 @@ export default function TrenesUtrera() {
                 </button>
             </div>
 
-            {/* AVISOS EN TIEMPO REAL (INCLUYENDO RETRADOS Y HUELGA) */}
+            {/* AVISOS EN TIEMPO REAL */}
             {datosTrenes && datosTrenes.avisosHoy && (
                 <div className="space-y-2 mb-4">
                     {datosTrenes.avisosHoy.map((aviso) => (
@@ -132,14 +132,14 @@ export default function TrenesUtrera() {
                         <div className="flex items-baseline justify-between my-3">
                             <div>
                                 <span className="text-5xl font-black text-[#2c2416] tracking-tighter font-serif">
-                                    {minSevilla}–{minSevilla + 5}
+                                    {minSevilla}
                                 </span>
                                 <span className="text-base font-bold text-[#6c5d47] ml-1">min</span>
                             </div>
                             <div className="text-right">
-                                <span className="text-[11px] text-[#8c7d67] block font-medium">Sale entre</span>
+                                <span className="text-[11px] text-[#8c7d67] block font-medium">Hora oficial</span>
                                 <span className="text-sm font-black text-[#2c2416]">
-                                    {String(proximoSevilla.h).padStart(2, '0')}:{String(proximoSevilla.m).padStart(2, '0')} y {String(proximoSevilla.h).padStart(2, '0')}:{String(proximoSevilla.m + 5).padStart(2, '0')}
+                                    {String(proximoSevilla.h).padStart(2, '0')}:{String(proximoSevilla.m).padStart(2, '0')}
                                 </span>
                             </div>
                         </div>
@@ -171,35 +171,17 @@ export default function TrenesUtrera() {
                                     <div className="flex items-center gap-3">
                                         <div>
                                             <span className="font-black text-[#2c2416] text-sm font-serif block">{String(t.h).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
-                                            <span className="text-[10px] text-[#9c8d77] font-mono">{String(t.h - 1).padStart(2, '0')}:{String(t.m).padStart(2, '0')}</span>
                                         </div>
                                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold text-white ${t.destino.includes('MD') || t.destino.includes('Jaén') ? 'bg-[#2c2416]' : 'bg-[#1d6fa5]'}`}>
                                             {t.destino.includes('Jaén') ? 'MD' : 'C1'}
                                         </span>
                                         <span className="font-bold text-[#3c2f20]">{t.destino}</span>
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full font-bold text-xs ${t.estado.includes('tarde') ? 'bg-[#fae1db] text-[#b93822]' : 'bg-[#e1f3e8] text-[#1e6b36]'}`}>
+                                    <span className="bg-[#e1f3e8] text-[#1e6b36] px-3 py-1 rounded-full font-bold text-xs">
                                         {t.estado}
                                     </span>
                                 </div>
                             ))}
-                        </div>
-                    </div>
-
-                    {/* MAPA ESQUEMÁTICO INFERIOR */}
-                    <div className="bg-[#fdfbf7] rounded-3xl p-5 shadow-2xs border border-[#e6decb] space-y-3">
-                        <h3 className="text-sm font-black text-[#3c2f20] font-serif">En el mapa</h3>
-                        <div className="bg-[#f5efe3] p-4 rounded-2xl border border-[#e6decb]/60 flex items-center gap-4">
-                            <div className="w-3.5 h-24 bg-[#1d6fa5] rounded-full relative flex flex-col justify-between items-center py-2">
-                                <span className="w-2 h-2 rounded-full bg-white"></span>
-                                <span className="w-3 h-3 rounded-full bg-[#d9a441] ring-2 ring-white"></span>
-                                <span className="w-2 h-2 rounded-full bg-white"></span>
-                            </div>
-                            <div className="text-xs space-y-1">
-                                <p className="font-black text-[#2c2416]">{proximoSevilla.h}:{proximoSevilla.m} a {proximoSevilla.destino}</p>
-                                <p className="text-[#8c7d67]">🟡 Tu próximo tren en Utrera</p>
-                                <p className="text-[#8c7d67]">📍 11 trenes más en la zona</p>
-                            </div>
                         </div>
                     </div>
                 </div>
