@@ -743,7 +743,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                     <LandingComercio comercio={comercioSel} />
                   </div>
                 ) : (
-                  /* VISTA ESTÁNDAR COMPLETA CON VÍDEO, GALERÍA, REDES Y BOTONES */
+                  /* VISTA ESTÁNDAR COMPLETA CON VÍDEO INTELIGENTE, GALERÍA, REDES Y BOTONES */
                   <div>
                     <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border">
                       <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover" />
@@ -768,19 +768,37 @@ export default function GuiaComercial({ categoriaInicial = "Todos" }) {
                       </p>
                     )}
 
-                    {/* VÍDEO PROMOCIONAL EN LA VISTA PÚBLICA */}
+                    {/* VÍDEO PROMOCIONAL INTELIGENTE EN LA VISTA PÚBLICA */}
                     {comercioSel.video_story_url && typeof comercioSel.video_story_url === 'string' && comercioSel.video_story_url.trim() !== '' && (
                       <div className="mt-4">
                         <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
                           🎬 Vídeo Promocional
                         </p>
-                        <div className="w-full h-48 rounded-2xl overflow-hidden bg-black border shadow-sm">
-                          <video 
-                            src={comercioSel.video_story_url.trim()} 
-                            controls 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                        {comercioSel.video_story_url.includes('youtube.com') || comercioSel.video_story_url.includes('youtu.be') ? (
+                          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-sm border bg-black">
+                            <iframe
+                              className="absolute top-0 left-0 w-full h-full border-0"
+                              src={
+                                comercioSel.video_story_url.includes('watch?v=') 
+                                  ? comercioSel.video_story_url.replace('watch?v=', 'embed/') 
+                                  : comercioSel.video_story_url.includes('youtu.be/')
+                                  ? `https://www.youtube.com/embed/${comercioSel.video_story_url.split('youtu.be/')[1]?.split('?')[0]}`
+                                  : comercioSel.video_story_url
+                              }
+                              title={`Vídeo de ${comercioSel.nombre}`}
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-full h-48 rounded-2xl overflow-hidden bg-black border shadow-sm">
+                            <video 
+                              src={comercioSel.video_story_url.trim()} 
+                              controls 
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
                       </div>
                     )}
 
