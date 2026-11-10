@@ -10,20 +10,20 @@ export default async function handler(req, res) {
       avisosHoy: [
         {
           id: 1,
-          texto: "C-1: tren de las 06:30 de Lora del Río a Utrera, 13 min de retraso",
-          timestamp: "Desde hoy a las 06:54",
+          texto: "C-1: tren de las 09:13 de Lora del Río a Utrera, retraso moderado",
+          timestamp: "Desde hoy a las 09:27",
           tipo: "retraso"
         },
         {
           id: 2,
-          texto: "C-1: tren de las 06:02 de Lora del Río a Utrera, 35 min de retraso",
-          timestamp: "Desde hoy a las 06:41",
+          texto: "C-1: tren de las 08:02 de Lora del Río a Utrera",
+          timestamp: "Desde hoy a las 09:08",
           tipo: "retraso"
         },
         {
           id: 3,
-          texto: "C-1: tren de las 05:55 de Los Rosales a Utrera, 18 min de retraso",
-          timestamp: "Desde hoy a las 06:15",
+          texto: "C-1: tren de las 07:40 de Lora del Río a Utrera, 31 min de retraso",
+          timestamp: "Desde hoy a las 08:14",
           tipo: "retraso"
         },
         {
@@ -34,11 +34,15 @@ export default async function handler(req, res) {
         }
       ],
       salidasSevilla: [
-        { h: 7, m: 10, destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
-        { h: 8, m: 10, destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
+        { h: 7,  m: 10, destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
+        { h: 8,  m: 10, destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
+        { h: 9,  m: 38, destino: "Lora del Río (C1)", via: "Vía 3", estado: "A su hora", retrasoMin: 0 },
+        { h: 10, m: 58, destino: "Lora del Río (C1)", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
+        { h: 11, m: 30, destino: "Lora del Río (C1)", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
+        { h: 12, m: 14, destino: "Jaén (Media Distancia)", via: "Vía 2", estado: "Previsto", retrasoMin: 0 },
         { h: 12, m: 34, destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
         { h: 13, m: 6,  destino: "Lora del Río (C1)", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
-        { h: 13, m: 35, destino: "Lora del Río (C1)", via: "Vía 3", estado: "A su hora", retrasoMin: 0 },
+        { h: 13, m: 35, destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
         { h: 13, m: 56, destino: "Jaén (Media Distancia)", via: "Vía 2", estado: "7 min tarde", retrasoMin: 7 },
         { h: 14, m: 5,  destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
         { h: 14, m: 39, destino: "Lora del Río (C1)", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
@@ -55,7 +59,10 @@ export default async function handler(req, res) {
         { h: 23, m: 45, destino: "Sevilla-Santa Justa", via: "Vía 1", estado: "Previsto", retrasoMin: 0 }
       ],
       salidasCadiz: [
-        { h: 8, m: 58, destino: "Cádiz", via: "Media Distancia", estado: "A su hora", retrasoMin: 0 },
+        { h: 8,  m: 58, destino: "Cádiz", via: "Media Distancia", estado: "A su hora", retrasoMin: 0 },
+        { h: 10, m: 23, destino: "Cádiz", via: "Media Distancia", estado: "Suprimido", retrasoMin: 0 },
+        { h: 11, m: 31, destino: "Cádiz", via: "Media Distancia", estado: "Previsto", retrasoMin: 0 },
+        { h: 13, m: 6,  destino: "Cádiz", via: "Media Distancia", estado: "Previsto", retrasoMin: 0 },
         { h: 13, m: 20, destino: "Cádiz", via: "Media Distancia", estado: "Previsto", retrasoMin: 0 },
         { h: 14, m: 57, destino: "Lebrija", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
         { h: 15, m: 34, destino: "Lebrija", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
