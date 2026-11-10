@@ -92,17 +92,31 @@ export default function TrenesUtrera() {
                 </button>
             </div>
 
-            {/* AVISOS GENERALES */}
-            {datosTrenes && datosTrenes.avisosGenerales && datosTrenes.avisosGenerales.map((aviso) => (
-                <div key={aviso.id} className="bg-[#efe8d8] border border-[#e2d7be] p-3 rounded-2xl shadow-2xs mb-4 text-xs">
-                    <span className="font-bold text-[#3c2f20]">⚠️ {aviso.texto}</span>
+            {/* AVISOS EN TIEMPO REAL */}
+            {datosTrenes && datosTrenes.avisosHoy && (
+                <div className="space-y-2 mb-4">
+                    {datosTrenes.avisosHoy.map((aviso) => (
+                        <div key={aviso.id} className="bg-[#efe8d8] border border-[#e2d7be] p-3.5 rounded-2xl shadow-2xs">
+                            <div className="flex items-start gap-2.5">
+                                <span className="text-amber-800 text-sm mt-0.5">⚠️</span>
+                                <div className="flex-1">
+                                    <p className="text-xs font-bold text-[#3c2f20]">{aviso.texto}</p>
+                                    <p className="text-[10px] text-[#8c7d67] mt-0.5">{aviso.timestamp}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-            ))}
+            )}
+
+            <div className="mb-4 text-[11px] text-[#7a6c58] font-medium">
+                <span className="font-bold text-[#4a3b2c] underline cursor-pointer">Novedades</span>: la última mejora, el 10 de noviembre
+            </div>
 
             {/* ================= VISTA SEVILLA ================= */}
             {pestanaActiva === 'sevilla' && proximoSevilla && (
                 <div className="space-y-5">
-                    {/* ALERTA ROJA SI ESTÁ SUPRIMIDO */}
+                    {/* ALERTA ROJA SI EL PRÓXIMO ESTÁ SUPRIMIDO */}
                     {proximoSevilla.estado === "Suprimido" && (
                         <div className="bg-[#fae1db] border border-[#f5c6cb] p-3.5 rounded-2xl text-[#b93822] text-xs font-bold flex items-center gap-2 shadow-2xs">
                             <span className="text-base">🚫</span>
@@ -178,7 +192,7 @@ export default function TrenesUtrera() {
             {/* ================= VISTA CÁDIZ ================= */}
             {pestanaActiva === 'cadiz' && proximoCadiz && (
                 <div className="space-y-5">
-                    {/* ALERTA ROJA SI ESTÁ SUPRIMIDO */}
+                    {/* ALERTA ROJA SI EL PRÓXIMO ESTÁ SUPRIMIDO */}
                     {proximoCadiz.estado === "Suprimido" && (
                         <div className="bg-[#fae1db] border border-[#f5c6cb] p-3.5 rounded-2xl text-[#b93822] text-xs font-bold flex items-center gap-2 shadow-2xs">
                             <span className="text-base">🚫</span>

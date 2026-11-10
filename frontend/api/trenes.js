@@ -7,11 +7,30 @@ export default async function handler(req, res) {
     const datosEnDirecto = {
       estacion: "Utrera",
       actualizado: ahora.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      avisosGenerales: [
+      avisosHoy: [
         {
           id: 1,
+          texto: "C-1: tren de las 10:58 de Utrera a Lora del Río",
+          timestamp: "Desde hoy a las 09:51",
+          tipo: "aviso"
+        },
+        {
+          id: 2,
+          texto: "C-1: tren de las 09:13 de Lora del Río a Utrera, 29 min de retraso",
+          timestamp: "Desde hoy a las 09:46",
+          tipo: "retraso"
+        },
+        {
+          id: 3,
+          texto: "C-1: tren de las 08:27 de Lora del Río a Utrera, 56 min de retraso",
+          timestamp: "Desde hoy a las 09:41",
+          tipo: "retraso"
+        },
+        {
+          id: 4,
           texto: "Con motivo de la huelga convocada hoy, 10 de noviembre por el sindicato de maquinistas semaf, el servicio podría verse afectado",
-          timestamp: "Desde ayer a las 23:01"
+          timestamp: "Desde ayer a las 23:01",
+          tipo: "huelga"
         }
       ],
       salidasSevilla: [
@@ -27,7 +46,7 @@ export default async function handler(req, res) {
         { h: 13, m: 56, destino: "Jaén (Media Distancia)", via: "Vía 2", estado: "7 min tarde", retrasoMin: 7 },
         { h: 14, m: 5,  destino: "Lora del Río (C1)", via: "Vía 1", estado: "A su hora", retrasoMin: 0 },
         { h: 14, m: 39, destino: "Lora del Río (C1)", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
-        { h: 14, m: 53, destino: "Sevilla-Santa Justa", via: "Vía 2", estado: "Previsto", retrasoMin: 0 },
+        { h: 14, m: 53, destino: "Sevilla-Santa Justa", via: "Suprimido", estado: "Suprimido", retrasoMin: 0 },
         { h: 15, m: 9,  destino: "Lora del Río (C1)", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
         { h: 15, m: 34, destino: "Sevilla-Santa Justa", via: "Vía 2", estado: "Previsto", retrasoMin: 0 },
         { h: 16, m: 7,  destino: "Lora del Río (C1)", via: "Vía 1", estado: "Previsto", retrasoMin: 0 },
