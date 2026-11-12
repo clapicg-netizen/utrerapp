@@ -111,7 +111,7 @@ export default function CercaniasSevilla() {
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 flex items-start space-x-3">
         <span className="text-lg">ℹ️</span>
         <div>
-          <strong className="font-semibold">Nota de Auditoría Estructural GTFS:</strong> Los horarios mostrados proceden directamente del feed oficial de Fomento/Renfe y se mantienen con sus identificadores y coordenadas originales. Estado: <span className="underline font-bold">PENDIENTE_CONTRASTE_COMERCIAL</span> frente a folletos impresos de Renfe.
+          <strong className="font-semibold">Nota de Auditoría Estructural GTFS:</strong> Los horarios mostrados proceden directamente del feed oficial de Fomento/Renfe y se mantienen con sus identificadores y coordenadas originales.
         </div>
       </div>
     </div>
