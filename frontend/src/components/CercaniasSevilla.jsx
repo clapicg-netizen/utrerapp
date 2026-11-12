@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import schedulesData from '../data/cercanias_sevilla_schedules.json';
-import routesData from '../data/cercanias_sevilla_routes.json';
-import { Train, Clock, ArrowUpRight, ArrowDownRight, AlertCircle, Share2, MapPin } from 'lucide-react';
+import { Clock, ArrowUpRight, ArrowDownRight, Share2 } from 'lucide-react';
 
 export default function CercaniasSevilla() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -11,43 +10,43 @@ export default function CercaniasSevilla() {
     return () => clearInterval(timer);
   }, []);
 
-  // Hora actual en formato HH:MM
   const horaActualStr = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
-  // 1. Procesar datos GTFS de Utrera (stop_id: "51200")
+  // 1. Filtrar todos los trayectos que pasan por Utrera (stop_id: "51200")
   const viajesUtrera = Array.isArray(schedulesData) ? schedulesData.filter(trip => 
     trip && Array.isArray(trip.stops) && trip.stops.some(stop => stop.stop_id === '51200')
   ) : [];
 
+  // 2. Procesar y clasificar correctamente según sentido operativo real
   const viajesProcesados = viajesUtrera.map(trip => {
     const utreraStop = trip.stops.find(s => s.stop_id === '51200');
     const horaUtrera = utreraStop ? utreraStop.departure_time.substring(0, 5) : '00:00';
+    
     const firstStop = trip.stops[0]?.stop_name || 'Origen';
     const lastStop = trip.stops[trip.stops.length - 1]?.stop_name || 'Destino';
     const utreraIndex = trip.stops.findIndex(s => s.stop_id === '51200');
 
-    // Si Utrera es el origen (índice 0) o sale hacia arriba -> Dirección Sevilla
-    // Si Utrera es el destino o una parada intermedia viniendo de Sevilla -> Dirección Sur / Lebrija
-    const esSalida = utreraIndex === 0;
-    const vaHaciaNorte = lastStop.includes('Sevilla') || lastStop.includes('Lora') || lastStop.includes('Rosales') || lastStop.includes('Cazalla');
-
-    const sentido = (esSalida && vaHaciaNorte) || (!esSalida && !vaHaciaNorte) ? 'sevilla' : 'sur';
+    // REGLA OPERATIVA REAL:
+    // - Si Utrera es la primera parada (índice 0), el tren SALE de Utrera hacia Sevilla/Norte.
+    // - Si Utrera NO es la primera parada, el tren VIENE del norte (Sevilla/Lora) y va hacia el Sur (Lebrija).
+    const esSalidaDesdeUtrera = utreraIndex === 0;
+    const sentido = esSalidaDesdeUtrera ? 'sevilla' : 'sur';
 
     return {
       ...trip,
       horaUtrera,
       firstStop,
       lastStop,
-      esSalida,
+      esSalidaDesdeUtrera,
       sentido
     };
   }).sort((a, b) => a.horaUtrera.localeCompare(b.horaUtrera));
 
-  // Separar por direcciones operativas reales
+  // Separar en las dos columnas reales
   const listaSevilla = viajesProcesados.filter(v => v.sentido === 'sevilla');
   const listaSur = viajesProcesados.filter(v => v.sentido === 'sur');
 
-  // Próximo tren operativo (>= hora actual, o el primero del día si ya han pasado todos)
+  // Próximo tren operativo (>= hora actual, o el primero si ya ha terminado el día)
   const proximoSevilla = listaSevilla.find(v => v.horaUtrera >= horaActualStr) || listaSevilla[0];
   const siguientesSevilla = listaSevilla.filter(v => v !== proximoSevilla);
 
@@ -86,13 +85,13 @@ export default function CercaniasSevilla() {
       {/* Grid de 2 Columnas Operativas */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-        {/* COLUMNA 1: DIRECCIÓN SEVILLA */}
+        {/* COLUMNA 1: DIRECCIÓN SEVILLA (Salidas desde Utrera) */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b-2 border-amber-600 pb-2">
             <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
               <ArrowUpRight className="text-amber-600" size={24} /> Dirección Sevilla / Norte
             </h2>
-            <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-lg">Línea C-1</span>
+            <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-lg">Salidas Utrera</span>
           </div>
 
           {proximoSevilla ? (
@@ -112,7 +111,7 @@ export default function CercaniasSevilla() {
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
-                <span>Origen de línea: <strong className="text-slate-800">{proximoSevilla.firstStop}</strong></span>
+                <span>Trayecto C-1</span>
                 <span className="font-mono bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600">ID: {proximoSevilla.trip_id}</span>
               </div>
 
@@ -127,7 +126,7 @@ export default function CercaniasSevilla() {
             <div className="bg-white p-6 rounded-3xl border text-sm text-slate-500 text-center">No hay trayectos disponibles.</div>
           )}
 
-          {/* Siguientes */}
+          {/* Siguientes Sevilla */}
           <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm space-y-3">
             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Siguientes salidas ({siguientesSevilla.length})</h3>
             {siguientesSevilla.length === 0 ? (
@@ -138,31 +137,31 @@ export default function CercaniasSevilla() {
                   <div className="flex items-center gap-4">
                     <span className="font-mono font-bold text-lg text-slate-900 w-14">{trip.horaUtrera}</span>
                     <div>
-                      <p className="text-xs font-bold text-slate-800">{trip.lastStop}</p>
-                      <p className="text-[10px] text-slate-400">Origen: {trip.firstStop}</p>
+                      <p className="text-xs font-bold text-slate-800">Destino: {trip.lastStop}</p>
+                      <p className="text-[10px] text-slate-400">Salida desde Utrera</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">C-1</span>
+                  <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-2.5 py-1 rounded-lg">C-1</span>
                 </div>
               ))
             )}
           </div>
         </div>
 
-        {/* COLUMNA 2: DIRECCIÓN SUR (LEBRIJA / CÁDIZ) */}
+        {/* COLUMNA 2: DIRECCIÓN SUR / LEBRIJA (Llegadas a Utrera / Paso hacia el sur) */}
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b-2 border-slate-700 pb-2">
             <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
               <ArrowDownRight className="text-slate-700" size={24} /> Dirección Sur / Lebrija
             </h2>
-            <span className="text-xs bg-slate-200 text-slate-800 font-bold px-2.5 py-1 rounded-lg">Línea C-1</span>
+            <span className="text-xs bg-slate-200 text-slate-800 font-bold px-2.5 py-1 rounded-lg">Llegadas a Utrera</span>
           </div>
 
           {proximoSur ? (
             <div className="bg-white border-2 border-slate-400/30 rounded-3xl p-6 shadow-lg relative overflow-hidden bg-gradient-to-br from-slate-50/50 to-white">
               <div className="flex justify-between items-start mb-4">
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full">
-                  Próximo Paso / Salida
+                  Próxima Llegada / Paso
                 </span>
                 <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Programado
@@ -171,16 +170,17 @@ export default function CercaniasSevilla() {
 
               <div className="my-4">
                 <div className="text-5xl font-mono font-black text-slate-900 tracking-tight">{proximoSur.horaUtrera}</div>
-                <p className="text-base font-bold text-slate-700 mt-2">Destino: <span className="text-slate-900">{proximoSur.lastStop}</span></p>
+                <p className="text-base font-bold text-slate-700 mt-2">Viene de: <span className="text-slate-900">{proximoSur.firstStop}</span></p>
+                <p className="text-xs text-slate-500 mt-1">Destino final del tren: <strong>{proximoSur.lastStop}</strong></p>
               </div>
 
               <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
-                <span>Origen de línea: <strong className="text-slate-800">{proximoSur.firstStop}</strong></span>
+                <span>Paso por Utrera</span>
                 <span className="font-mono bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600">ID: {proximoSur.trip_id}</span>
               </div>
 
               <button 
-                onClick={() => alert(`Tren hacia ${proximoSur.lastStop} con hora ${proximoSur.horaUtrera} en Utrera.`)}
+                onClick={() => alert(`Tren procedente de ${proximoSur.firstStop} llega a Utrera a las ${proximoSur.horaUtrera}.`)}
                 className="mt-5 w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-3 rounded-2xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Share2 size={16} /> Avisa a quien vaya contigo
@@ -190,9 +190,9 @@ export default function CercaniasSevilla() {
             <div className="bg-white p-6 rounded-3xl border text-sm text-slate-500 text-center">No hay trayectos disponibles.</div>
           )}
 
-          {/* Siguientes */}
+          {/* Siguientes Sur */}
           <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Siguientes salidas ({siguientesSur.length})</h3>
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Siguientes llegadas ({siguientesSur.length})</h3>
             {siguientesSur.length === 0 ? (
               <p className="text-xs text-slate-400 py-3 text-center">No hay más trenes posteriores hoy.</p>
             ) : (
@@ -201,11 +201,11 @@ export default function CercaniasSevilla() {
                   <div className="flex items-center gap-4">
                     <span className="font-mono font-bold text-lg text-slate-900 w-14">{trip.horaUtrera}</span>
                     <div>
-                      <p className="text-xs font-bold text-slate-800">{trip.lastStop}</p>
-                      <p className="text-[10px] text-slate-400">Origen: {trip.firstStop}</p>
+                      <p className="text-xs font-bold text-slate-800">Desde: {trip.firstStop}</p>
+                      <p className="text-[10px] text-slate-400">Destino: {trip.lastStop}</p>
                     </div>
                   </div>
-                  <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">C-1</span>
+                  <span className="text-[10px] font-bold bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg">C-1</span>
                 </div>
               ))
             )}
