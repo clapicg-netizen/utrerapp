@@ -5,36 +5,31 @@ export default function CercaniasSevilla() {
   const [activeTab, setActiveTab] = useState('ahora');
 
   // Filtramos los viajes reales desde nuestros datos GTFS que pasan por Utrera (stop_id: "51200")
-  const viajesConUtrera = schedulesData.filter(trip => 
-    trip.stops.some(stop => stop.stop_id === '51200')
-  );
+  const viajesConUtrera = Array.isArray(schedulesData) ? schedulesData.filter(trip => 
+    trip && Array.isArray(trip.stops) && trip.stops.some(stop => stop.stop_id === '51200')
+  ) : [];
 
-  // Separamos de forma real según la ruta o el destino lógico
-  // Lirios/Sevilla (C1 hacia Sevilla) y Lebrija/Cádiz (C1 hacia Lebrija o sentido sur)
+  // Separamos de forma segura los trenes
   const trenesHaciaSevilla = viajesConUtrera.filter(trip => {
-    const utreraIndex = trip.stops.findIndex(s => s.stop_id === '51200');
     const lastStop = trip.stops[trip.stops.length - 1];
-    // Si la última parada es Sevilla, Santa Justa, Lora del Río, etc.
-    return lastStop.stop_name.includes('Sevilla') || lastStop.stop_name.includes('Lora') || lastStop.stop_name.includes('Rosales') || utreraIndex < trip.stops.length / 2;
+    return lastStop && (lastStop.stop_name.includes('Sevilla') || lastStop.stop_name.includes('Lora') || lastStop.stop_name.includes('Rosales'));
   });
 
   const trenesHaciaSur = viajesConUtrera.filter(trip => !trenesHaciaSevilla.includes(trip));
 
-  // Cogemos el primero como "Próximo destacado" y el resto para la sección "Después"
-  const proximoSevilla = trenesHaciaSevilla[0];
-  posterioresSevilla = trenesHaciaSevilla.slice(1);
+  const proximoSevilla = trenesHaciaSevilla[0] || null;
+  const posterioresSevilla = trenesHaciaSevilla.slice(1);
 
-  const proximoSur = trenesHaciaSur[0];
+  const proximoSur = trenesHaciaSur[0] || null;
   const posterioresSur = trenesHaciaSur.slice(1);
 
-  // Extraer hora limpia de Utrera para un viaje
   const getUtreraTime = (trip) => {
     const stop = trip.stops.find(s => s.stop_id === '51200');
-    return stop ? stop.departure_time.substring(0, 5) : '--:--';
+    return stop && stop.departure_time ? stop.departure_time.substring(0, 5) : '--:--';
   };
 
-  const getFirstStopName = (trip) => trip.stops[0].stop_name;
-  const getLastStopName = (trip) => trip.stops[trip.stops.length - 1].stop_name;
+  const getFirstStopName = (trip) => trip.stops[0]?.stop_name || 'Origen';
+  const getLastStopName = (trip) => trip.stops[trip.stops.length - 1]?.stop_name || 'Destino';
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#2C221E] pb-24 font-sans">
@@ -75,7 +70,7 @@ export default function CercaniasSevilla() {
           </div>
         </div>
 
-        {/* Columnas Principales: Sevilla vs Sur (Lebrija / Cádiz) */}
+        {/* Columnas Principales */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* COLUMNA SEVILLA */}
@@ -115,7 +110,7 @@ export default function CercaniasSevilla() {
             )}
           </section>
 
-          {/* COLUMNA SUR / LEBRIJA */}
+          {/* COLUMNA SUR */}
           <section className="space-y-4">
             <h2 className="text-2xl font-serif font-bold border-b-2 border-[#2C221E] pb-1">A Lebrija / Cádiz</h2>
             
@@ -154,13 +149,12 @@ export default function CercaniasSevilla() {
 
         </div>
 
-        {/* SECCIÓN "DESPUÉS" (Horarios Posteriores Reales) */}
+        {/* SECCIÓN "DESPUÉS" */}
         <section className="mt-10 pt-6 border-t border-[#E6DFD5]">
           <h3 className="text-xl font-serif font-bold mb-4">Después (Próximos trayectos reales)</h3>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             
-            {/* Lista después Sevilla */}
             <div className="bg-white border border-[#E6DFD5] rounded-2xl p-4 space-y-3">
               {posterioresSevilla.length === 0 ? (
                 <p className="text-xs text-gray-400 p-2">No hay más registros posteriores hacia Sevilla en el feed.</p>
@@ -178,7 +172,6 @@ export default function CercaniasSevilla() {
               )}
             </div>
 
-            {/* Lista después Sur */}
             <div className="bg-white border border-[#E6DFD5] rounded-2xl p-4 space-y-3">
               {posterioresSur.length === 0 ? (
                 <p className="text-xs text-gray-400 p-2">No hay más registros posteriores hacia el sur en el feed.</p>
