@@ -1,72 +1,119 @@
-[
-  {
-    "trip_id": "3014X23504C1",
-    "route_id": "30T0001C1",
-    "service_id": "3014X",
-    "headsign": "",
-    "stops": [
-      { "stop_id": "50700", "stop_name": "Los Rosales", "arrival_time": "05:55:00", "departure_time": "05:55:00", "stop_sequence": 1 },
-      { "stop_id": "50701", "stop_name": "Cantillana", "arrival_time": "05:59:00", "departure_time": "05:59:00", "stop_sequence": 2 },
-      { "stop_id": "50702", "stop_name": "Brenes", "arrival_time": "06:04:00", "departure_time": "06:05:00", "stop_sequence": 3 },
-      { "stop_id": "50704", "stop_name": "El Cáñamo", "arrival_time": "06:11:00", "departure_time": "06:12:00", "stop_sequence": 4 },
-      { "stop_id": "50703", "stop_name": "La Rinconada", "arrival_time": "06:13:00", "departure_time": "06:14:00", "stop_sequence": 5 },
-      { "stop_id": "51003", "stop_name": "Sevilla-Santa Justa", "arrival_time": "06:26:00", "departure_time": "06:27:00", "stop_sequence": 6 },
-      { "stop_id": "51100", "stop_name": "San Bernardo", "arrival_time": "06:30:00", "departure_time": "06:31:00", "stop_sequence": 7 },
-      { "stop_id": "51110", "stop_name": "Virgen del Rocío", "arrival_time": "06:33:00", "departure_time": "06:33:00", "stop_sequence": 8 },
-      { "stop_id": "51113", "stop_name": "Jardines de Hércules", "arrival_time": "06:38:00", "departure_time": "06:38:00", "stop_sequence": 9 },
-      { "stop_id": "51111", "stop_name": "Bellavista", "arrival_time": "06:41:00", "departure_time": "06:41:00", "stop_sequence": 10 },
-      { "stop_id": "51103", "stop_name": "Dos Hermanas", "arrival_time": "06:46:00", "departure_time": "06:47:00", "stop_sequence": 11 },
-      { "stop_id": "51112", "stop_name": "Cantaelgallo", "arrival_time": "06:48:00", "departure_time": "06:48:00", "stop_sequence": 12 },
-      { "stop_id": "51200", "stop_name": "Utrera", "arrival_time": "06:59:00", "departure_time": "06:59:00", "stop_sequence": 13 }
-    ]
-  },
-  {
-    "trip_id": "3014X23505C1",
-    "route_id": "30T0002C1",
-    "service_id": "3014X",
-    "headsign": "",
-    "stops": [
-      { "stop_id": "51200", "stop_name": "Utrera", "arrival_time": "06:00:00", "departure_time": "06:00:00", "stop_sequence": 1 },
-      { "stop_id": "51112", "stop_name": "Cantaelgallo", "arrival_time": "06:10:00", "departure_time": "06:10:00", "stop_sequence": 2 },
-      { "stop_id": "51103", "stop_name": "Dos Hermanas", "arrival_time": "06:12:00", "departure_time": "06:13:00", "stop_sequence": 3 },
-      { "stop_id": "51111", "stop_name": "Bellavista", "arrival_time": "06:18:00", "departure_time": "06:18:00", "stop_sequence": 4 },
-      { "stop_id": "51113", "stop_name": "Jardines de Hércules", "arrival_time": "06:22:00", "departure_time": "06:22:00", "stop_sequence": 5 },
-      { "stop_id": "51110", "stop_name": "Virgen del Rocío", "arrival_time": "06:25:00", "departure_time": "06:25:00", "stop_sequence": 6 },
-      { "stop_id": "51100", "stop_name": "San Bernardo", "arrival_time": "06:29:00", "departure_time": "06:30:00", "stop_sequence": 7 },
-      { "stop_id": "51003", "stop_name": "Sevilla-Santa Justa", "arrival_time": "06:34:00", "departure_time": "06:35:00", "stop_sequence": 8 },
-      { "stop_id": "50703", "stop_name": "La Rinconada", "arrival_time": "06:47:00", "departure_time": "06:48:00", "stop_sequence": 9 },
-      { "stop_id": "50704", "stop_name": "El Cáñamo", "arrival_time": "06:49:00", "departure_time": "06:50:00", "stop_sequence": 10 },
-      { "stop_id": "50702", "stop_name": "Brenes", "arrival_time": "06:56:00", "departure_time": "06:57:00", "stop_sequence": 11 },
-      { "stop_id": "50701", "stop_name": "Cantillana", "arrival_time": "07:01:00", "departure_time": "07:01:00", "stop_sequence": 12 },
-      { "stop_id": "50700", "stop_name": "Los Rosales", "arrival_time": "07:09:00", "departure_time": "07:10:00", "stop_sequence": 13 },
-      { "stop_id": "50602", "stop_name": "Guadajoz", "arrival_time": "07:13:00", "departure_time": "07:13:00", "stop_sequence": 14 },
-      { "stop_id": "50600", "stop_name": "Lora del Río", "arrival_time": "07:27:00", "departure_time": "07:27:00", "stop_sequence": 15 }
-    ]
-  },
-  {
-    "trip_id": "3014X23513C1",
-    "route_id": "30T0002C1",
-    "service_id": "3014X",
-    "headsign": "",
-    "stops": [
-      { "stop_id": "51200", "stop_name": "Utrera", "arrival_time": "07:25:00", "departure_time": "07:25:00", "stop_sequence": 1 },
-      { "stop_id": "51112", "stop_name": "Cantaelgallo", "arrival_time": "07:35:00", "departure_time": "07:35:00", "stop_sequence": 2 },
-      { "stop_id": "51103", "stop_name": "Dos Hermanas", "arrival_time": "07:37:00", "departure_time": "07:38:00", "stop_sequence": 3 },
-      { "stop_id": "51111", "stop_name": "Bellavista", "arrival_time": "07:50:00", "departure_time": "07:50:00", "stop_sequence": 4 },
-      { "stop_id": "51113", "stop_name": "Jardines de Hércules", "arrival_time": "07:54:00", "departure_time": "07:54:00", "stop_sequence": 5 },
-      { "stop_id": "51110", "stop_name": "Virgen del Rocío", "arrival_time": "07:57:00", "departure_time": "07:57:00", "stop_sequence": 6 },
-      { "stop_id": "51100", "stop_name": "San Bernardo", "arrival_time": "08:01:00", "departure_time": "08:02:00", "stop_sequence": 7 },
-      { "stop_id": "51003", "stop_name": "Sevilla-Santa Justa", "arrival_time": "08:06:00", "departure_time": "08:07:00", "stop_sequence": 8 },
-      { "stop_id": "50703", "stop_name": "La Rinconada", "arrival_time": "08:19:00", "departure_time": "08:20:00", "stop_sequence": 9 },
-      { "stop_id": "50704", "stop_name": "El Cáñamo", "arrival_time": "08:21:00", "departure_time": "08:22:00", "stop_sequence": 10 },
-      { "stop_id": "50702", "stop_name": "Brenes", "arrival_time": "08:28:00", "departure_time": "08:29:00", "stop_sequence": 11 },
-      { "stop_id": "50701", "stop_name": "Cantillana", "arrival_time": "08:33:00", "departure_time": "08:33:00", "stop_sequence": 12 },
-      { "stop_id": "50700", "stop_name": "Los Rosales", "arrival_time": "08:41:00", "departure_time": "08:42:00", "stop_sequence": 13 },
-      { "stop_id": "50602", "stop_name": "Guadajoz", "arrival_time": "08:45:00", "departure_time": "08:45:00", "stop_sequence": 14 },
-      { "stop_id": "50600", "stop_name": "Lora del Río", "arrival_time": "08:59:00", "departure_time": "08:59:00", "stop_sequence": 15 }
-    ]
-  }
-]
-```[cite: 3]
+import React, { useState } from 'react';
+import routesData from '../data/cercanias_sevilla_routes.json';
+import schedulesData from '../data/cercanias_sevilla_schedules.json';
 
-Crea este archivo en tu entorno local y dime: **"Hecho el paso 2"**.
+export default function CercaniasSevilla() {
+  const [selectedRoute, setSelectedRoute] = useState('30T0001C1');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const c1Routes = routesData.filter(r => r.route_id.startsWith('30T'));
+  const filteredSchedules = schedulesData.filter(sch => sch.route_id === selectedRoute);
+
+  return (
+    <div className="p-4 max-w-4xl mx-auto pb-24 text-gray-800">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="bg-blue-500 text-xs px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">Renfe Cercanías</span>
+            <h1 className="text-2xl font-bold mt-2">Cercanías Sevilla & Utrera</h1>
+            <p className="text-blue-100 text-sm mt-1">Horarios oficiales GTFS (Núcleo Sevilla - C-1)</p>
+          </div>
+          <div className="hidden sm:block text-4xl">🚆</div>
+        </div>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Líneas del Núcleo</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {c1Routes.map(route => (
+            <button
+              key={route.route_id}
+              onClick={() => setSelectedRoute(route.route_id)}
+              className={`p-3 rounded-xl text-left transition-all border ${
+                selectedRoute === route.route_id
+                  ? 'border-blue-600 bg-blue-50 shadow-md ring-2 ring-blue-500/20'
+                  : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <span
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: "#78B4E1" }}
+                />
+                <span className="font-bold text-sm">Línea {route.route_short_name}</span>
+              </div>
+              <p className="text-xs text-gray-600 truncate mt-1">{route.route_long_name}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+          <div>
+            <h3 className="font-bold text-lg text-gray-900">Estación Principal: Utrera (ID: 51200)</h3>
+            <p className="text-xs text-gray-500">Coordenadas: 37.1848178, -5.7907537 (Acceso PMR habilitado)</p>
+          </div>
+          <div className="w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Filtrar por estación..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="text-xs font-semibold uppercase tracking-wider text-gray-400">Próximos Trayectos Disponibles (GTFS)</h4>
+          {filteredSchedules.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 text-sm">
+              No hay trayectos cargados para esta selección o línea en el set de datos estático actual.
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {filteredSchedules.map((trip, idx) => {
+                const utreraStop = trip.stops.find(s => s.stop_id === '51200');
+                const firstStop = trip.stops[0];
+                const lastStop = trip.stops[trip.stops.length - 1];
+
+                return (
+                  <div key={trip.trip_id || idx} className="bg-gray-50 hover:bg-blue-50/40 border border-gray-200 rounded-xl p-4 transition-all">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">
+                          Trip: {trip.trip_id}
+                        </span>
+                        <span className="text-xs text-gray-500">Servicio ID: {trip.service_id}</span>
+                      </div>
+                      <div className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                        {utreraStop ? `Salida en Utrera: ${utreraStop.departure_time}` : `Paso por Utrera disponible`}
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-gray-700 grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 pt-2 border-t border-gray-200">
+                      <div><strong className="text-gray-900">Origen:</strong> {firstStop.stop_name} ({firstStop.departure_time})</div>
+                      <div><strong className="text-gray-900">Destino:</strong> {lastStop.stop_name} ({lastStop.arrival_time})</div>
+                    </div>
+
+                    <div className="mt-3 text-xs text-gray-500">
+                      <span>Paradas totales: {trip.stops.length} estaciones en ruta.</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-xs text-amber-800 flex items-start space-x-3">
+        <span className="text-lg">ℹ️</span>
+        <div>
+          <strong className="font-semibold">Nota de Auditoría Estructural GTFS:</strong> Los horarios mostrados proceden directamente del feed oficial de Fomento/Renfe y se mantienen con sus identificadores y coordenadas originales. Estado: <span className="underline font-bold">PENDIENTE_CONTRASTE_COMERCIAL</span> frente a folletos impresos de Renfe.
+        </div>
+      </div>
+    </div>
+  );
+}
