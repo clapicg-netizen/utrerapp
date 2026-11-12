@@ -1,30 +1,113 @@
+[
+  {
+    "route_id": "30T0001C1",
+    "route_short_name": "C1",
+    "route_long_name": "Lora del Rio                            -Lebrija",
+    "route_color": "78B4E1",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0002C1",
+    "route_short_name": "C1",
+    "route_long_name": "Lebrija                                 -Lora del Rio",
+    "route_color": "78B4E1",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0003C2",
+    "route_short_name": "C2",
+    "route_long_name": "Santa Justa                             -Cartuja",
+    "route_color": "067B34",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0004C2",
+    "route_short_name": "C2",
+    "route_long_name": "Cartuja                                 -Santa Justa",
+    "route_color": "067B34",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0005C3",
+    "route_short_name": "C3",
+    "route_long_name": "Santa Justa                             -Cazalla-Constantina",
+    "route_color": "E4242D",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0006C3",
+    "route_short_name": "C3",
+    "route_long_name": "Cazalla-Constantina                     -Santa Justa",
+    "route_color": "E4242D",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0007C4",
+    "route_short_name": "C4",
+    "route_long_name": "Santa Justa                             -Santa Justa",
+    "route_color": "8E2182",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0009C5",
+    "route_short_name": "C5",
+    "route_long_name": "Jardines de Hercules                    -Benacazon",
+    "route_color": "073588",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0010C5",
+    "route_short_name": "C5",
+    "route_long_name": "Benacazon                               -Jardines de Hercules",
+    "route_color": "073588",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0029C5",
+    "route_short_name": "C5",
+    "route_long_name": "Santa Justa                             -Benacazon",
+    "route_color": "073588",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0030C5",
+    "route_short_name": "C5",
+    "route_long_name": "Benacazon                               -Santa Justa",
+    "route_color": "073588",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0034C3",
+    "route_short_name": "C3",
+    "route_long_name": "-Santa Justa",
+    "route_color": "E4242D",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0035C3",
+    "route_short_name": "C3",
+    "route_long_name": "Cazalla-Constantina                     -Los Rosales",
+    "route_color": "E4242D",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0036C3",
+    "route_short_name": "C3",
+    "route_long_name": "Los Rosales                             -Cazalla-Constantina",
+    "route_color": "E4242D",
+    "route_text_color": "FFFFFF"
+  },
+  {
+    "route_id": "30T0039C3",
+    "route_short_name": "C3",
+    "route_long_name": "Santa Justa                             -",
+    "route_color": "E4242D",
+    "route_text_color": "FFFFFF"
+  }
+]
+```[cite: 2]
 
-{
-  "network": "Cercanías Sevilla",
-  "nucleus": "30T",
-  "routes": [
-    {
-      "id": "C1",
-      "name": "C-1",
-      "origin": "Utrera",
-      "destination": "Lora del Río",
-      "stations": [
-        "Utrera",
-        "Cantaelgallo",
-        "Dos Hermanas",
-        "Bellavista",
-        "Jardines de Hércules",
-        "Virgen del Rocío",
-        "San Bernardo",
-        "Sevilla-Santa Justa",
-        "La Rinconada",
-        "El Cáñamo",
-        "Brenes",
-        "Cantillana",
-        "Los Rosales",
-        "Guadajoz",
-        "Lora del Río"
-      ]
-    }
-  ]
-}
+---
+
+### ¿Cómo vamos?
+Crea este primer archivo en tu editor en la ruta indicada y dime: **"Hecho el paso 1"**. En cuanto me lo digas, pasamos inmediatamente al segundo archivo (el de los horarios).
