@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 import Home from './pages/Home';
@@ -19,7 +18,6 @@ import Noticias from './pages/Noticias';
 import CajaHerramientas from './pages/CajaHerramientas';
 import Gasolineras from './pages/Gasolineras';
 
-import TrenesUtrera from './components/TrenesUtrera';
 import CercaniasSevilla from './components/CercaniasSevilla';
 
 import {
@@ -51,11 +49,7 @@ export default function App() {
 
     const vistaParam = params.get('vista');
 
-    if (vistaParam === 'trenes') {
-      setPaginaActual('trenes');
-    }
-
-    if (vistaParam === 'cercanias') {
+    if (vistaParam === 'trenes' || vistaParam === 'cercanias') {
       setPaginaActual('cercanias');
     }
   }, []);
@@ -137,28 +131,6 @@ export default function App() {
       case 'admin':
         return <Admin setPaginaActual={setPaginaActual} />;
 
-      case 'trenes':
-        return (
-          <div className="max-w-md mx-auto p-4 pb-24 lg:max-w-2xl">
-            <div className="flex items-center justify-between mb-2 pt-2">
-              <button
-                onClick={() => setPaginaActual('home')}
-                className="text-xs bg-slate-200 hover:bg-slate-300 px-3 py-1.5 rounded-lg font-medium text-slate-700 transition"
-              >
-                ← Volver
-              </button>
-
-              <h2 className="font-bold text-slate-800 text-sm">
-                Estado del Tren
-              </h2>
-
-              <div className="w-12"></div>
-            </div>
-
-            <TrenesUtrera />
-          </div>
-        );
-
       case 'cercanias':
         return (
           <div className="w-full">
@@ -236,18 +208,6 @@ export default function App() {
             >
               <Store size={18} />
               <span>Guía Comercial</span>
-            </button>
-
-            <button
-              onClick={() => setPaginaActual('trenes')}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${
-                paginaActual === 'trenes'
-                  ? 'bg-blue-50 text-blue-700 font-semibold shadow-sm'
-                  : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <Train size={18} />
-              <span>Trenes Utrera</span>
             </button>
 
             <button
@@ -363,18 +323,6 @@ export default function App() {
         >
           <Wrench size={20} />
           <span className="text-[10px]">Herramientas</span>
-        </button>
-
-        <button
-          onClick={() => setPaginaActual('trenes')}
-          className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-            paginaActual === 'trenes'
-              ? 'text-blue-600 font-bold'
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <Train size={20} />
-          <span className="text-[10px]">Trenes</span>
         </button>
 
         <button
