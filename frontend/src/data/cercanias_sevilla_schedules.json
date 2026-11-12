@@ -1,0 +1,16 @@
+
+{
+  "network": "Cercanías Sevilla",
+  "line": "C-1",
+  "station": {
+    "name": "Utrera",
+    "code": "51200"
+  },
+  "last_updated": null,
+  "source": "Renfe",
+  "schedules": {
+    "laborables": [],
+    "sabados": [],
+    "domingos_festivos": []
+  }
+}

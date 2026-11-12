@@ -1,0 +1,30 @@
+
+{
+  "network": "Cercanías Sevilla",
+  "nucleus": "30T",
+  "routes": [
+    {
+      "id": "C1",
+      "name": "C-1",
+      "origin": "Utrera",
+      "destination": "Lora del Río",
+      "stations": [
+        "Utrera",
+        "Cantaelgallo",
+        "Dos Hermanas",
+        "Bellavista",
+        "Jardines de Hércules",
+        "Virgen del Rocío",
+        "San Bernardo",
+        "Sevilla-Santa Justa",
+        "La Rinconada",
+        "El Cáñamo",
+        "Brenes",
+        "Cantillana",
+        "Los Rosales",
+        "Guadajoz",
+        "Lora del Río"
+      ]
+    }
+  ]
+}
