@@ -1,208 +1,219 @@
 import React, { useState, useEffect } from 'react';
 import schedulesData from '../data/cercanias_sevilla_schedules.json';
+import routesData from '../data/cercanias_sevilla_routes.json';
+import { Train, Clock, ArrowUpRight, ArrowDownRight, AlertCircle, Share2, MapPin } from 'lucide-react';
 
 export default function CercaniasSevilla() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    const timer = setInterval(() => setCurrentTime(new Date()), 10000);
     return () => clearInterval(timer);
   }, []);
 
-  const horaActualStr = currentTime.toTimeString().substring(0, 5); // "HH:MM"
+  // Hora actual en formato HH:MM
+  const horaActualStr = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
-  // Procesar trayectos GTFS desde Utrera (stop_id: "51200")
+  // 1. Procesar datos GTFS de Utrera (stop_id: "51200")
   const viajesUtrera = Array.isArray(schedulesData) ? schedulesData.filter(trip => 
     trip && Array.isArray(trip.stops) && trip.stops.some(stop => stop.stop_id === '51200')
   ) : [];
 
   const viajesProcesados = viajesUtrera.map(trip => {
     const utreraStop = trip.stops.find(s => s.stop_id === '51200');
-    const salidaUtrera = utreraStop ? utreraStop.departure_time.substring(0, 5) : '00:00';
-    const firstStop = trip.stops[0]?.stop_name || '';
-    const lastStop = trip.stops[trip.stops.length - 1]?.stop_name || '';
-
-    // Lógica limpia:
-    // Si Utrera es el origen (o el principio del trayecto) y va hacia Sevilla/Lora -> Columna Sevilla
-    // Si el tren viene de Sevilla/Lora y llega a Utrera o continúa hacia el sur (Lebrija/Cádiz) -> Columna Sur/Lebrija
+    const horaUtrera = utreraStop ? utreraStop.departure_time.substring(0, 5) : '00:00';
+    const firstStop = trip.stops[0]?.stop_name || 'Origen';
+    const lastStop = trip.stops[trip.stops.length - 1]?.stop_name || 'Destino';
     const utreraIndex = trip.stops.findIndex(s => s.stop_id === '51200');
-    const esSalidaDesdeUtrera = utreraIndex === 0;
 
-    let sentido = 'sevilla';
-    if (esSalidaDesdeUtrera) {
-      sentido = lastStop.includes('Lora') || lastStop.includes('Sevilla') || lastStop.includes('Rosales') ? 'sevilla' : 'sur';
-    } else {
-      sentido = lastStop.includes('Utrera') || lastStop.includes('Lebrija') || lastStop.includes('Cádiz') ? 'sur' : 'sevilla';
-    }
+    // Si Utrera es el origen (índice 0) o sale hacia arriba -> Dirección Sevilla
+    // Si Utrera es el destino o una parada intermedia viniendo de Sevilla -> Dirección Sur / Lebrija
+    const esSalida = utreraIndex === 0;
+    const vaHaciaNorte = lastStop.includes('Sevilla') || lastStop.includes('Lora') || lastStop.includes('Rosales') || lastStop.includes('Cazalla');
+
+    const sentido = (esSalida && vaHaciaNorte) || (!esSalida && !vaHaciaNorte) ? 'sevilla' : 'sur';
 
     return {
       ...trip,
-      salidaUtrera,
+      horaUtrera,
       firstStop,
       lastStop,
-      esSalidaDesdeUtrera,
+      esSalida,
       sentido
     };
-  }).sort((a, b) => a.salidaUtrera.localeCompare(b.salidaUtrera));
+  }).sort((a, b) => a.horaUtrera.localeCompare(b.horaUtrera));
 
-  const haciaSevilla = viajesProcesados.filter(v => v.sentido === 'sevilla');
-  const haciaSur = viajesProcesados.filter(v => v.sentido === 'sur');
+  // Separar por direcciones operativas reales
+  const listaSevilla = viajesProcesados.filter(v => v.sentido === 'sevilla');
+  const listaSur = viajesProcesados.filter(v => v.sentido === 'sur');
 
-  const proximoSevilla = haciaSevilla.find(v => v.salidaUtrera >= horaActualStr) || haciaSevilla[0];
-  const posterioresSevilla = haciaSevilla.filter(v => v !== proximoSevilla);
+  // Próximo tren operativo (>= hora actual, o el primero del día si ya han pasado todos)
+  const proximoSevilla = listaSevilla.find(v => v.horaUtrera >= horaActualStr) || listaSevilla[0];
+  const siguientesSevilla = listaSevilla.filter(v => v !== proximoSevilla);
 
-  const proximoSur = haciaSur.find(v => v.salidaUtrera >= horaActualStr) || haciaSur[0];
-  const posterioresSur = haciaSur.filter(v => v !== proximoSur);
+  const proximoSur = listaSur.find(v => v.horaUtrera >= horaActualStr) || listaSur[0];
+  const siguientesSur = listaSur.filter(v => v !== proximoSur);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#2C221E] pb-24 font-sans">
+    <div className="max-w-6xl mx-auto px-4 py-6 pb-28 text-slate-800 font-sans">
       
-      {/* Cabecera corporativa UtrerApp */}
-      <header className="bg-[#5C3A21] text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-center shadow-md">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-serif font-bold tracking-wide">El tren <span className="font-light italic text-[#E3C396]">en Utrera</span></h1>
+      {/* Cabecera Corporativa UtrerApp */}
+      <div className="bg-gradient-to-r from-amber-600 via-amber-700 to-slate-900 text-white p-6 rounded-3xl shadow-xl mb-8 relative overflow-hidden">
+        <div className="absolute right-4 top-2 text-8xl opacity-10">🚆</div>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-white/20 text-white text-xs px-3 py-1 rounded-full uppercase tracking-wider font-bold backdrop-blur-sm">
+                UtrerApp • Núcleo C-1 Sevilla
+              </span>
+              <span className="text-xs text-amber-200">Estación de Utrera (ID: 51200)</span>
+            </div>
+            <h1 className="text-3xl font-black tracking-tight">Próximos Trenes en Utrera</h1>
+            <p className="text-amber-100 text-sm mt-1">
+              Control horario autónomo y sincronizado con base GTFS oficial.
+            </p>
+          </div>
+          <div className="bg-black/30 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
+            <Clock className="text-amber-400 animate-pulse" size={24} />
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-amber-200 font-bold">Hora actual</p>
+              <p className="text-2xl font-mono font-black text-white">{horaActualStr}</p>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2 mt-3 sm:mt-0 text-xs text-amber-200">
-          <span>🕒 Hora actual: <strong className="text-white font-mono">{horaActualStr}</strong></span>
-          <span className="bg-[#4A2E1A] px-3 py-1 rounded-full font-bold text-white">GTFS Live</span>
-        </div>
-      </header>
+      </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        
-        {/* Aviso institucional */}
-        <div className="bg-[#FFF8E7] border-l-4 border-amber-500 p-4 rounded-xl shadow-sm flex items-start gap-3">
-          <span className="text-xl">⚠️</span>
-          <div className="text-sm">
-            <span className="font-bold text-amber-900">Avisos de Renfe para Utrera:</span> <span className="text-amber-800">Servicio de Cercanías operativo sincronizado con base de datos local.</span>
+      {/* Grid de 2 Columnas Operativas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        {/* COLUMNA 1: DIRECCIÓN SEVILLA */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b-2 border-amber-600 pb-2">
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <ArrowUpRight className="text-amber-600" size={24} /> Dirección Sevilla / Norte
+            </h2>
+            <span className="text-xs bg-amber-100 text-amber-900 font-bold px-2.5 py-1 rounded-lg">Línea C-1</span>
+          </div>
+
+          {proximoSevilla ? (
+            <div className="bg-white border-2 border-amber-500/40 rounded-3xl p-6 shadow-lg relative overflow-hidden bg-gradient-to-br from-amber-50/30 to-white">
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-xs font-bold text-amber-800 uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full">
+                  Próxima Salida
+                </span>
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Programado
+                </span>
+              </div>
+
+              <div className="my-4">
+                <div className="text-5xl font-mono font-black text-slate-900 tracking-tight">{proximoSevilla.horaUtrera}</div>
+                <p className="text-base font-bold text-slate-700 mt-2">Destino: <span className="text-amber-900">{proximoSevilla.lastStop}</span></p>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
+                <span>Origen de línea: <strong className="text-slate-800">{proximoSevilla.firstStop}</strong></span>
+                <span className="font-mono bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600">ID: {proximoSevilla.trip_id}</span>
+              </div>
+
+              <button 
+                onClick={() => alert(`Tren hacia ${proximoSevilla.lastStop} con salida a las ${proximoSevilla.horaUtrera} desde Utrera.`)}
+                className="mt-5 w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3 rounded-2xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Share2 size={16} /> Avisa a quien vaya contigo
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white p-6 rounded-3xl border text-sm text-slate-500 text-center">No hay trayectos disponibles.</div>
+          )}
+
+          {/* Siguientes */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm space-y-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Siguientes salidas ({siguientesSevilla.length})</h3>
+            {siguientesSevilla.length === 0 ? (
+              <p className="text-xs text-slate-400 py-3 text-center">No hay más trenes posteriores hoy.</p>
+            ) : (
+              siguientesSevilla.map((trip, idx) => (
+                <div key={idx} className="flex items-center justify-between py-3 px-4 hover:bg-slate-50 rounded-2xl transition border-b border-slate-100 last:border-none">
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono font-bold text-lg text-slate-900 w-14">{trip.horaUtrera}</span>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">{trip.lastStop}</p>
+                      <p className="text-[10px] text-slate-400">Origen: {trip.firstStop}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">C-1</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Dos Columnas Principales */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          
-          {/* COLUMNA SEVILLA */}
-          <section className="space-y-4">
-            <h2 className="text-2xl font-serif font-bold border-b-2 border-[#2C221E] pb-1">A Sevilla</h2>
-            
-            {proximoSevilla ? (
-              <div className="bg-white border border-[#E6DFD5] rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-[#2B6CB0] text-white text-xs font-bold px-2 py-0.5 rounded">C1</span>
-                    <span className="font-serif font-bold text-xl">{proximoSevilla.lastStop}</span>
-                  </div>
-                  <span className="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full">A su hora</span>
-                </div>
+        {/* COLUMNA 2: DIRECCIÓN SUR (LEBRIJA / CÁDIZ) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b-2 border-slate-700 pb-2">
+            <h2 className="text-xl font-black text-slate-900 flex items-center gap-2">
+              <ArrowDownRight className="text-slate-700" size={24} /> Dirección Sur / Lebrija
+            </h2>
+            <span className="text-xs bg-slate-200 text-slate-800 font-bold px-2.5 py-1 rounded-lg">Línea C-1</span>
+          </div>
 
-                <div className="my-4">
-                  <p className="text-xs text-gray-500 mb-1">Salida de Utrera</p>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-serif font-extrabold text-[#2C221E]">{proximoSevilla.salidaUtrera}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                  <div className="bg-[#2C221E] text-white text-xs px-3 py-1 rounded-lg font-bold">
-                    🚆 Vía Principal
-                  </div>
-                  <span className="text-xs text-gray-600">Origen: <strong className="text-gray-900">{proximoSevilla.firstStop}</strong></span>
-                </div>
-
-                <button className="mt-4 w-full bg-[#E3C396]/30 hover:bg-[#E3C396]/50 text-[#5C3A21] font-semibold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-                  📤 Avisa a quien vaya contigo
-                </button>
+          {proximoSur ? (
+            <div className="bg-white border-2 border-slate-400/30 rounded-3xl p-6 shadow-lg relative overflow-hidden bg-gradient-to-br from-slate-50/50 to-white">
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full">
+                  Próximo Paso / Salida
+                </span>
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Programado
+                </span>
               </div>
-            ) : (
-              <div className="bg-white p-6 rounded-2xl border text-sm text-gray-500">No hay trenes programados.</div>
-            )}
-          </section>
 
-          {/* COLUMNA LEBRIJA Y CÁDIZ */}
-          <section className="space-y-4">
-            <h2 className="text-2xl font-serif font-bold border-b-2 border-[#2C221E] pb-1">A Lebrija y Cádiz</h2>
-            
-            {proximoSur ? (
-              <div className="bg-white border border-[#E6DFD5] rounded-2xl p-6 shadow-sm relative overflow-hidden">
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="bg-[#2B6CB0] text-white text-xs font-bold px-2 py-0.5 rounded">C1</span>
-                    <span className="font-serif font-bold text-xl">{proximoSur.lastStop}</span>
-                  </div>
-                  <span className="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-full">A su hora</span>
-                </div>
-
-                <div className="my-4">
-                  <p className="text-xs text-gray-500 mb-1">Llegada / Paso por Utrera</p>
-                  <div className="flex items-baseline gap-3">
-                    <span className="text-3xl font-serif font-extrabold text-[#2C221E]">{proximoSur.salidaUtrera}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                  <div className="bg-[#2C221E] text-white text-xs px-3 py-1 rounded-lg font-bold">
-                    🚆 Vía Principal
-                  </div>
-                  <span className="text-xs text-gray-600">Origen: <strong className="text-gray-900">{proximoSur.firstStop}</strong></span>
-                </div>
-
-                <button className="mt-4 w-full bg-[#E3C396]/30 hover:bg-[#E3C396]/50 text-[#5C3A21] font-semibold text-xs py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-                  📤 Avisa a quien vaya contigo
-                </button>
+              <div className="my-4">
+                <div className="text-5xl font-mono font-black text-slate-900 tracking-tight">{proximoSur.horaUtrera}</div>
+                <p className="text-base font-bold text-slate-700 mt-2">Destino: <span className="text-slate-900">{proximoSur.lastStop}</span></p>
               </div>
-            ) : (
-              <div className="bg-white p-6 rounded-2xl border text-sm text-gray-500">No hay trenes programados.</div>
-            )}
-          </section>
 
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 text-xs text-slate-500">
+                <span>Origen de línea: <strong className="text-slate-800">{proximoSur.firstStop}</strong></span>
+                <span className="font-mono bg-slate-100 px-2.5 py-1 rounded-lg text-slate-600">ID: {proximoSur.trip_id}</span>
+              </div>
+
+              <button 
+                onClick={() => alert(`Tren hacia ${proximoSur.lastStop} con hora ${proximoSur.horaUtrera} en Utrera.`)}
+                className="mt-5 w-full bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs py-3 rounded-2xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Share2 size={16} /> Avisa a quien vaya contigo
+              </button>
+            </div>
+          ) : (
+            <div className="bg-white p-6 rounded-3xl border text-sm text-slate-500 text-center">No hay trayectos disponibles.</div>
+          )}
+
+          {/* Siguientes */}
+          <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm space-y-3">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Siguientes salidas ({siguientesSur.length})</h3>
+            {siguientesSur.length === 0 ? (
+              <p className="text-xs text-slate-400 py-3 text-center">No hay más trenes posteriores hoy.</p>
+            ) : (
+              siguientesSur.map((trip, idx) => (
+                <div key={idx} className="flex items-center justify-between py-3 px-4 hover:bg-slate-50 rounded-2xl transition border-b border-slate-100 last:border-none">
+                  <div className="flex items-center gap-4">
+                    <span className="font-mono font-bold text-lg text-slate-900 w-14">{trip.horaUtrera}</span>
+                    <div>
+                      <p className="text-xs font-bold text-slate-800">{trip.lastStop}</p>
+                      <p className="text-[10px] text-slate-400">Origen: {trip.firstStop}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-lg">C-1</span>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        {/* SECCIÓN "DESPUÉS" */}
-        <section className="mt-10 pt-6 border-t border-[#E6DFD5]">
-          <h3 className="text-xl font-serif font-bold mb-4">Después</h3>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            
-            {/* Lista después Sevilla */}
-            <div className="bg-white border border-[#E6DFD5] rounded-2xl p-4 space-y-3">
-              {posterioresSevilla.length === 0 ? (
-                <p className="text-xs text-gray-400 p-2">No hay más trayectos posteriores.</p>
-              ) : (
-                posterioresSevilla.map((trip, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-none text-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="font-serif font-bold text-base w-14">{trip.salidaUtrera}</span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">C1</span>
-                      <span className="font-medium text-gray-800">{trip.lastStop}</span>
-                    </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-800">Previsto</span>
-                  </div>
-                ))
-              )}
-            </div>
+      </div>
 
-            {/* Lista después Sur */}
-            <div className="bg-white border border-[#E6DFD5] rounded-2xl p-4 space-y-3">
-              {posterioresSur.length === 0 ? (
-                <p className="text-xs text-gray-400 p-2">No hay más trayectos posteriores.</p>
-              ) : (
-                posterioresSur.map((trip, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-none text-sm">
-                    <div className="flex items-center gap-3">
-                      <span className="font-serif font-bold text-base w-14">{trip.salidaUtrera}</span>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">C1</span>
-                      <span className="font-medium text-gray-800">{trip.lastStop}</span>
-                    </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-green-100 text-green-800">Previsto</span>
-                  </div>
-                ))
-              )}
-            </div>
-
-          </div>
-        </section>
-
-      </main>
     </div>
   );
 }
