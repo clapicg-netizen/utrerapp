@@ -5,34 +5,11 @@ export default function Transporte({ setPaginaActual }) {
   const [subSeccion, setSubSeccion] = useState("renfe");
   const [sentido, setSentido] = useState("sevilla");
 
-  const horariosSevilla = [
-    { hora: "06:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
-    { hora: "06:45", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
-    { hora: "07:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
-    { hora: "07:40", tipo: "Cercanías C1", estado: "Frecuente", destino: "Sevilla - Santa Justa" },
-    { hora: "08:10", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
-    { hora: "08:45", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
-    { hora: "09:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
-    { hora: "10:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Sevilla - Santa Justa" },
-  ];
-
-  const horariosUtrera = [
-    { hora: "07:00", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-    { hora: "08:00", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-    { hora: "13:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-    { hora: "14:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-    { hora: "15:05", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-    { hora: "17:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-    { hora: "19:15", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-    { hora: "21:30", tipo: "Cercanías C1", estado: "Puntual", destino: "Utrera" },
-  ];
-
   const busesUrbana = [
     { id: 1, line: "L1", name: "Línea Urbana - Estación / Centro / Barriadas", frequency: "Cada 30 min en horas punta", next: ["08:00", "08:30", "09:00"] },
     { id: 2, line: "L2", name: "Línea Periférica - Polígonos y Zonas Deportivas", frequency: "Cada 45 min", next: ["08:15", "09:00", "09:45"] },
   ];
 
-  const listaTrenes = sentido === "sevilla" ? horariosSevilla : horariosUtrera;
 
   return (
     <div className="max-w-md mx-auto p-4 pb-28 space-y-5 animate-fadeIn font-sans">
@@ -100,25 +77,24 @@ export default function Transporte({ setPaginaActual }) {
             </button>
           </div>
 
-          <div className="space-y-2.5">
-            {listaTrenes.map((tren, idx) => (
-              <div key={idx} className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-slate-900 text-white font-black text-xs px-2.5 py-2 rounded-xl">
-                    {tren.hora}
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-black text-slate-900">{tren.tipo}</h3>
-                    <p className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
-                      <MapPin size={10} className="text-blue-600" /> {tren.destino}
-                    </p>
-                  </div>
-                </div>
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">
-                  {tren.estado}
-                </span>
-              </div>
-            ))}
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+            <h3 className="font-black text-amber-900">
+              Horarios pendientes de verificación
+            </h3>
+            <p className="text-sm text-amber-900">
+              Para evitar mostrar horarios o estados incorrectos,
+              las salidas de Cercanías no se publican hasta disponer
+              de información oficial verificada.
+            </p>
+            <a
+              href="https://www.renfe.com/es/es/cercanias/cercanias-sevilla"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-rose-900 text-white px-4 py-3 rounded-xl text-xs font-bold"
+            >
+              Consultar horarios oficiales de Renfe
+              <ExternalLink size={14} />
+            </a>
           </div>
 
           {/* BOTÓN CONSO TE INFORMA (ENLAZADO A CONSO IA) */}
@@ -131,7 +107,7 @@ export default function Transporte({ setPaginaActual }) {
                 <span className="bg-amber-400 text-slate-950 p-1.5 rounded-xl text-sm shadow">🤖</span>
                 <div className="text-left">
                   <p className="text-sm font-black text-white">Conso te informa</p>
-                  <p className="text-[10px] text-rose-200 font-medium">Asistencia IA y horarios detallados en directo</p>
+                  <p className="text-[10px] text-rose-200 font-medium">Asistencia e información sobre transporte</p>
                 </div>
               </span>
               <Sparkles size={16} className="text-amber-400 group-hover:scale-110 transition-transform" />
