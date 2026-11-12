@@ -11,14 +11,15 @@ export default function CercaniasSevilla() {
     return () => clearInterval(timer);
   }, []);
 
+  // Hora actual exacta en formato "HH:MM"
   const horaActualStr = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
-  // 1. Cargar y filtrar estrictamente desde el JSON GTFS real para Utrera (stop_id: "51200")
+  // 1. Cargar y filtrar trayectos de Utrera (stop_id: "51200")
   const viajesUtrera = Array.isArray(schedulesData) ? schedulesData.filter(trip => 
     trip && Array.isArray(trip.stops) && trip.stops.some(stop => stop.stop_id === '51200')
   ) : [];
 
-  // 2. Procesamiento puro de datos reales
+  // 2. Procesar y clasificar limpiamente
   const viajesProcesados = viajesUtrera.map(trip => {
     const utreraStop = trip.stops.find(s => s.stop_id === '51200');
     const horaUtrera = utreraStop ? utreraStop.departure_time.substring(0, 5) : '00:00';
@@ -27,8 +28,8 @@ export default function CercaniasSevilla() {
     const lastStop = trip.stops[trip.stops.length - 1]?.stop_name || 'Destino';
     const utreraIndex = trip.stops.findIndex(s => s.stop_id === '51200');
     
-    // Si Utrera es el inicio (índice 0), el tren sale hacia Sevilla/Norte. 
-    // Si Utrera es una parada posterior, viene de Sevilla/Lora y va hacia el Sur.
+    // Si Utrera es el inicio (índice 0), sale hacia Sevilla/Norte.
+    // Si Utrera es una parada posterior, viene del norte y va hacia el sur.
     const esSalidaDesdeUtrera = utreraIndex === 0;
 
     return {
@@ -41,16 +42,18 @@ export default function CercaniasSevilla() {
     };
   }).sort((a, b) => a.horaUtrera.localeCompare(b.horaUtrera));
 
-  // Separar estrictamente según el sentido real del JSON
+  // Separar sentidos
   const listaSevilla = viajesProcesados.filter(v => v.sentido === 'sevilla');
   const listaSur = viajesProcesados.filter(v => v.sentido === 'sur');
 
-  // Seleccionar el próximo tren en tiempo real (>= hora actual, o el primero si ya ha pasado el día)
+  // SELECCIÓN MATEMÁTICA ESTRICTA BASADA EN LA HORA ACTUAL (11:12)
+  // Próximo Sevilla: El primero que sea >= horaActualStr. Si no hay, el primero del día.
   const proximoSevilla = listaSevilla.find(v => v.horaUtrera >= horaActualStr) || listaSevilla[0];
-  const siguientesSevilla = listaSevilla.filter(v => v !== proximoSevilla);
+  const siguientesSevilla = listaSevilla.filter(v => v !== proximoSevilla && v.horaUtrera >= horaActualStr);
 
+  // Próximo Sur: El primero que sea >= horaActualStr. Si no hay, el primero del día.
   const proximoSur = listaSur.find(v => v.horaUtrera >= horaActualStr) || listaSur[0];
-  const siguientesSur = listaSur.filter(v => v !== proximoSur);
+  const siguientesSur = listaSur.filter(v => v !== proximoSur && v.horaUtrera >= horaActualStr);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 pb-28 text-slate-800 font-sans">
@@ -68,13 +71,13 @@ export default function CercaniasSevilla() {
             </div>
             <h1 className="text-3xl font-black tracking-tight">Próximos Trenes en Utrera</h1>
             <p className="text-amber-100 text-sm mt-1">
-              Datos extraídos directamente de los archivos GTFS locales.
+              Filtro horario estricto en tiempo real sobre base GTFS.
             </p>
           </div>
           <div className="bg-black/30 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex items-center gap-3">
             <Clock className="text-amber-400 animate-pulse" size={24} />
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-amber-200 font-bold">Hora actual</p>
+              <p className="text-[10px] uppercase tracking-wider text-amber-200 font-bold">Hora actual sistema</p>
               <p className="text-2xl font-mono font-black text-white">{horaActualStr}</p>
             </div>
           </div>
@@ -92,12 +95,12 @@ export default function CercaniasSevilla() {
         </div>
         {showAvisos && (
           <div className="mt-3 pt-3 border-t border-amber-200/60 text-xs text-amber-900 space-y-1">
-            <p>· Sincronización activa con los ficheros JSON del repositorio.</p>
+            <p>· Filtrado activo: mostrando únicamente los trenes posteriores a las {horaActualStr}.</p>
           </div>
         )}
       </div>
 
-      {/* Grid de 2 Columnas: Datos 100% de los JSON */}
+      {/* Grid de 2 Columnas Principales */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
 
         {/* COLUMNA 1: DIRECCIÓN SEVILLA */}
@@ -113,7 +116,7 @@ export default function CercaniasSevilla() {
             <div className="bg-white border-2 border-amber-500/40 rounded-3xl p-6 shadow-xl relative overflow-hidden bg-gradient-to-br from-amber-50/20 to-white">
               <div className="flex justify-between items-start mb-3">
                 <span className="text-xs font-bold text-amber-800 uppercase tracking-wider bg-amber-100 px-3 py-1 rounded-full">
-                  Próxima Salida Real
+                  Próxima Salida Inmediata
                 </span>
                 <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">En servicio</span>
               </div>
@@ -154,7 +157,7 @@ export default function CercaniasSevilla() {
             <div className="bg-white border-2 border-slate-300 rounded-3xl p-6 shadow-xl relative overflow-hidden bg-gradient-to-br from-slate-50/50 to-white">
               <div className="flex justify-between items-start mb-3">
                 <span className="text-xs font-bold text-slate-700 uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full">
-                  Próximo Paso Real
+                  Próximo Paso Inmediato
                 </span>
                 <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">En servicio</span>
               </div>
@@ -185,16 +188,16 @@ export default function CercaniasSevilla() {
 
       </div>
 
-      {/* SECCIÓN "DESPUÉS" (Listas completas de datos reales del JSON) */}
+      {/* SECCIÓN "DESPUÉS" (Estrictamente posteriores a la hora actual) */}
       <section className="pt-6 border-t border-slate-200">
-        <h3 className="text-2xl font-serif font-black mb-4 text-slate-900">Después (Horarios GTFS)</h3>
+        <h3 className="text-2xl font-serif font-black mb-4 text-slate-900">Después (A partir de las {horaActualStr})</h3>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Siguientes hacia Sevilla ({siguientesSevilla.length})</h4>
             {siguientesSevilla.length === 0 ? (
-              <p className="text-xs text-slate-400 py-3 text-center">No hay más trayectos.</p>
+              <p className="text-xs text-slate-400 py-3 text-center">No hay más trayectos hoy a partir de esta hora.</p>
             ) : (
               siguientesSevilla.map((trip, idx) => (
                 <div key={idx} className="flex items-center justify-between py-3 px-3 hover:bg-slate-50 rounded-2xl transition border-b border-slate-100 last:border-none text-sm">
@@ -214,7 +217,7 @@ export default function CercaniasSevilla() {
           <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Siguientes hacia el Sur ({siguientesSur.length})</h4>
             {siguientesSur.length === 0 ? (
-              <p className="text-xs text-slate-400 py-3 text-center">No hay más trayectos.</p>
+              <p className="text-xs text-slate-400 py-3 text-center">No hay más trayectos hoy a partir de esta hora.</p>
             ) : (
               siguientesSur.map((trip, idx) => (
                 <div key={idx} className="flex items-center justify-between py-3 px-3 hover:bg-slate-50 rounded-2xl transition border-b border-slate-100 last:border-none text-sm">
