@@ -109,4 +109,4 @@ export default function handler(req, res) {
       error: "Error interno al sincronizar el estado de la estación."
     });
   }
-}
+} 
