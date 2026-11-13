@@ -468,70 +468,51 @@ CONSO_SYSTEM = (
 )
 
 
-# ---------- Renfe Cercanías C-1 timetable (Utrera northbound) ----------
-# Public schedule of línea C-1 Utrera → Sevilla Santa Justa → Lora del Río.
-# Times are in Europe/Madrid local time. Kept in-server for zero-dependency,
-# deterministic answers (no external calls at request time).
-TIMETABLE_C1_WEEKDAY = [
-    "05:34", "06:04", "06:34", "07:04", "07:34", "07:52", "08:04", "08:22",
-    "08:34", "08:52", "09:04", "09:22", "09:34", "09:52", "10:04", "10:34",
-    "11:04", "11:34", "12:04", "12:34", "13:04", "13:34", "14:04", "14:34",
-    "15:04", "15:34", "16:04", "16:22", "16:34", "16:52", "17:04", "17:22",
-    "17:34", "17:52", "18:04", "18:22", "18:34", "18:52", "19:04", "19:22",
-    "19:34", "19:52", "20:04", "20:34", "21:04", "21:34", "22:04", "22:34",
-]
-TIMETABLE_C1_WEEKEND = [
-    "06:06", "07:06", "08:06", "09:06", "10:06", "11:06", "12:06", "13:06",
-    "14:06", "15:06", "16:06", "17:06", "18:06", "19:06", "20:06", "21:06",
-    "22:06",
-]
+# ---------- Renfe Cercanías: información ferroviaria verificada ----------
 
 MADRID_TZ = ZoneInfo("Europe/Madrid")
+
+OFFICIAL_RENFE_URL = "https://www.renfe.com/es/es/cercanias/cercanias-sevilla"
+
+# No publicar horarios locales sin una fuente oficial cuya vigencia
+# y procedencia estén verificadas.
 TRAIN_INTENT_RE = re.compile(
-    r"\b(tren|trenes|cercan[íi]as|renfe|c-?1|santa\s*justa|sevilla|lora)\b",
+    r"\\b(trenes?|cercan[íi]as|renfe|c-?1|santa\\s*justa|"
+    r"lora(?:\\s+del\\s+r[ií]o)?)\\b",
     re.IGNORECASE,
 )
 
 
-def _table_for(now_madrid: datetime) -> List[str]:
-    # 0=Mon .. 6=Sun. Weekend = Sat/Sun.
-    return TIMETABLE_C1_WEEKEND if now_madrid.weekday() >= 5 else TIMETABLE_C1_WEEKDAY
-
-
-def next_c1_departures(n: int = 3) -> dict:
+def _renfe_unavailable(dest_label: str = "Sevilla") -> dict:
     now = datetime.now(MADRID_TZ)
-    hhmm_now = now.strftime("%H:%M")
-    table = _table_for(now)
-    upcoming = [t for t in table if t > hhmm_now]
     return {
+        "available": False,
+        "verified": False,
+        "destino": dest_label,
         "server_time": now.strftime("%Y-%m-%d %H:%M"),
-        "day_type": "laborable" if now.weekday() < 5 else "fin de semana",
-        "next": upcoming[:n],
-        "first_tomorrow": table[0] if not upcoming else None,
+        "next": [],
+        "text": (
+            f"No tengo horarios ferroviarios verificados para viajar a {dest_label}. "
+            "Para consultar las salidas actualizadas, utiliza la información oficial "
+            "de Renfe."
+        ),
+        "official_url": OFFICIAL_RENFE_URL,
     }
 
 
+def next_c1_departures(n: int = 3) -> dict:
+    # Compatibilidad temporal con las llamadas existentes.
+    # No se devuelven horarios inventados ni tablas antiguas.
+    return _renfe_unavailable()
+
+
 def format_next_departures_text(dest_label: str) -> str:
-    data = next_c1_departures(3)
-    times = data["next"]
-    if not times:
-        return (
-            f"Ya no salen más trenes hoy hacia {dest_label}. "
-            f"El primero de mañana sale a las {data['first_tomorrow']}."
-        )
-    if len(times) == 1:
-        return f"Próximo tren a {dest_label}: {times[0]}."
-    if len(times) == 2:
-        return f"Próximos trenes a {dest_label}: {times[0]} y {times[1]}."
-    return (
-        f"Próximos trenes a {dest_label}: "
-        f"{times[0]}, {times[1]} y {times[2]}."
-    )
+    data = _renfe_unavailable(dest_label)
+    return f"{data['text']} {data['official_url']}"
 
 
 def resolve_train_destination(message: str) -> str:
-    m = message.lower()
-    if "lora" in m:
+    if "lora" in message.lower():
         return "Lora del Río"
     return "Sevilla"
 
@@ -539,30 +520,25 @@ def resolve_train_destination(message: str) -> str:
 @api.get("/renfe/next")
 async def renfe_next(destino: str = "sevilla", n: int = 3):
     dest_label = "Lora del Río" if destino.lower().startswith("lora") else "Sevilla"
-    data = next_c1_departures(n)
-    return {
-        "destino": dest_label,
-        "server_time": data["server_time"],
-        "day_type": data["day_type"],
-        "next": data["next"],
-        "text": format_next_departures_text(dest_label),
-    }
+    return _renfe_unavailable(dest_label)
 
 
 @api.get("/renfe-c1")
 async def renfe_c1_full():
-    """Cuadrante horario completo de la Línea C-1 Utrera → Sevilla / Lora del Río."""
-    now = datetime.now(MADRID_TZ)
+    data = _renfe_unavailable()
     return {
         "line": "C-1",
         "route": "Utrera ↔ Sevilla Santa Justa ↔ Lora del Río",
-        "server_time": now.strftime("%Y-%m-%d %H:%M"),
-        "day_type": "laborable" if now.weekday() < 5 else "fin de semana",
+        "available": False,
+        "verified": False,
+        "server_time": data["server_time"],
+        "message": data["text"],
         "timetable": {
-            "weekday": TIMETABLE_C1_WEEKDAY,
-            "weekend_holiday": TIMETABLE_C1_WEEKEND,
+            "weekday": [],
+            "weekend_holiday": [],
         },
-        "next_from_utrera": next_c1_departures(3)["next"],
+        "next_from_utrera": [],
+        "official_url": OFFICIAL_RENFE_URL,
     }
 
 
