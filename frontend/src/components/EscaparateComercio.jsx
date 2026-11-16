@@ -1,8 +1,14 @@
 import React from 'react';
-import { ArrowDown, ArrowUpRight, Clock, Facebook, Globe, MapPin, MessageCircle, Phone, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Clock, Facebook, Globe, MapPin, MessageCircle, Phone, ShieldCheck, ShoppingBag, Utensils } from 'lucide-react';
 import './EscaparateComercio.css';
 
 export const DIGITAL_GM_ID = '13';
+
+export const ESCAPARATES = [
+  { id: DIGITAL_GM_ID, slug: 'digital-gm', name: 'DIGITAL GM' },
+  { id: '10', slug: 'la-chana', name: 'La Chana', restaurante: true },
+  { id: '14', slug: 'bar-alonsi', name: 'Bar Alonsi', restaurante: true },
+];
 
 const digitalGm = {
   category: 'Electrodomésticos, climatización y descanso',
@@ -39,7 +45,11 @@ function phoneNumber(value) {
 }
 
 export default function EscaparateComercio({ comercio }) {
-  const profile = String(comercio.id) === DIGITAL_GM_ID ? digitalGm : {};
+  const config = ESCAPARATES.find(({ id }) => id === String(comercio.id));
+  const profile = config?.slug === 'digital-gm' ? digitalGm : {};
+  const category = profile.category || (config?.restaurante && comercio.subcategoria?.trim());
+  const menu = config?.restaurante ? webLink(comercio.carta_pdf_url) : null;
+  const menuImage = menu && /\.(png|jpe?g|webp|avif)$/i.test(new URL(menu).pathname);
   const image = webLink(comercio.portada_url);
   const photos = [...new Set((Array.isArray(comercio.galeria_urls) ? comercio.galeria_urls : []).map(webLink).filter(Boolean))];
   const shop = webLink(comercio.tienda_url);
@@ -51,6 +61,7 @@ export default function EscaparateComercio({ comercio }) {
   const map = address && 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(comercio.nombre + ' ' + address);
   const suffix = String(comercio.id);
   const catalogId = 'catalogo-escaparate-' + suffix;
+  const menuId = 'carta-escaparate-' + suffix;
   const detailsId = 'visita-escaparate-' + suffix;
 
   function jumpTo(id) {
@@ -64,7 +75,7 @@ export default function EscaparateComercio({ comercio }) {
       <header className="commerce-showcase-hero">
         {image && <img src={image} alt={'Fachada de ' + comercio.nombre} />}
         <div className="commerce-showcase-hero-copy">
-          {profile.category && <p>{profile.category}</p>}
+          {category && <p>{category}</p>}
           <h1>{comercio.nombre}</h1>
         </div>
       </header>
@@ -72,7 +83,10 @@ export default function EscaparateComercio({ comercio }) {
         <div className="commerce-showcase-intro">
           <p>{profile.intro || comercio.descripcion}</p>
           <div className="commerce-showcase-actions" aria-label="Acciones del comercio">
-            {photos.length > 0 && <button className="commerce-showcase-primary" type="button" onClick={() => jumpTo(catalogId)}>
+            {menu && <button className="commerce-showcase-primary" type="button" onClick={() => jumpTo(menuId)}>
+              <Utensils size={16} aria-hidden="true" /> Ver carta <ArrowDown size={17} aria-hidden="true" />
+            </button>}
+            {!menu && photos.length > 0 && <button className="commerce-showcase-primary" type="button" onClick={() => jumpTo(catalogId)}>
               Ver catálogo <ArrowDown size={17} aria-hidden="true" />
             </button>}
             {whatsapp && <a href={'https://wa.me/' + whatsapp} target="_blank" rel="noreferrer"><MessageCircle size={17} aria-hidden="true" /> WhatsApp</a>}
@@ -86,8 +100,15 @@ export default function EscaparateComercio({ comercio }) {
         {profile.highlights && <ul className="commerce-showcase-highlights">
           {profile.highlights.map(({ icon: Icon, title }) => <li key={title}><Icon size={19} aria-hidden="true" /> {title}</li>)}
         </ul>}
+        {menu && <section className="commerce-showcase-menu" aria-labelledby={menuId}>
+          <h2 id={menuId} tabIndex={-1}>Carta</h2>
+          <a className="commerce-showcase-menu-link" href={menu} target="_blank" rel="noreferrer">
+            {menuImage && <img src={menu} alt={'Carta de ' + comercio.nombre} loading="lazy" />}
+            <span>Abrir carta en otra pestaña <ArrowUpRight size={16} aria-hidden="true" /></span>
+          </a>
+        </section>}
         {photos.length > 0 && <section className="commerce-showcase-catalog" aria-labelledby={catalogId}>
-          <h2 id={catalogId} tabIndex={-1}>Catálogo destacado</h2>
+          <h2 id={catalogId} tabIndex={-1}>{config?.restaurante ? 'Fotos del local y sus platos' : 'Catálogo destacado'}</h2>
           <ul>
             {photos.map((url, index) => <li key={url}>
               <a href={url} target="_blank" rel="noreferrer">

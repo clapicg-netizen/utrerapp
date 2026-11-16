@@ -43,3 +43,7 @@
   .commerce-showcase-actions .commerce-showcase-primary { flex-basis: 100%; }
   .commerce-showcase-catalog ul { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
+
+.commerce-showcase-menu-link { display: grid; justify-items: start; gap: .55rem; color: var(--shop-blue); }
+.commerce-showcase-menu-link img { display: block; width: min(100%, 40rem); max-height: 35rem; object-fit: contain; object-position: center; border: 1px solid var(--shop-border); border-radius: .65rem; background: #fff; }
+.commerce-showcase-menu-link span { display: inline-flex; align-items: center; gap: .38rem; font-size: .88rem; font-weight: 700; text-decoration: underline; }

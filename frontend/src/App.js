@@ -3,6 +3,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Home from './pages/Home';
 import DesktopHome from './pages/DesktopHome';
 import GuiaComercial from './pages/GuiaComercial';
+import { ESCAPARATES } from './components/EscaparateComercio';
+import EscaparateDirecto from './pages/EscaparateDirecto';
 import Farmacias from './pages/Farmacias';
 import Salud from './pages/Salud';
 import Sanidad from './pages/Sanidad';
@@ -71,10 +73,12 @@ export default function App() {
       setPaginaActual('cercanias');
     } else if (vistaParam === 'gasolineras') {
       setPaginaActual('gasolineras');
-    } else if (vistaParam === 'digital-gm') {
-      setPaginaActual('digital-gm', 'DIGITAL GM');
+    } else if (ESCAPARATES.some(({ slug }) => slug === vistaParam)) {
+      setPaginaActual('escaparate', vistaParam);
     }
   }, [setPaginaActual]);
+
+  const escaparate = paginaActual === 'escaparate' ? ESCAPARATES.find(({ slug }) => slug === busquedaGuia) : null;
 
   const renderizarContenidoPrincipal = () => {
     if (comercioIdUrl && paginaActual === 'panel-comercio') {
@@ -95,17 +99,20 @@ export default function App() {
           />
         );
 
+      case 'escaparate':
+        return escaparate && (
+          <EscaparateDirecto escaparate={escaparate} volver={() => setPaginaActual('market')} />
+        );
+
       case 'market':
       case 'hosteleria':
-      case 'digital-gm':
         return (
           <GuiaComercial
             key={paginaActual}
-            abrirDigitalGm={paginaActual === 'digital-gm'}
             busquedaInicial={busquedaGuia}
             setPaginaActual={setPaginaActual}
             categoriaInicial={
-              paginaActual === 'hosteleria' ? 'hosteleria' : paginaActual === 'digital-gm' ? 'Todos' : null
+              paginaActual === 'hosteleria' ? 'hosteleria' : null
             }
           />
         );
