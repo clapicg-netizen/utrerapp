@@ -1,152 +1,118 @@
-// frontend/src/components/GasolinerasWidget.jsx
-import React, { useState, useEffect } from 'react';
-import { MapPin, ExternalLink, Fuel, RefreshCw, AlertCircle } from 'lucide-react';
-import { getUtreraFuelPrices } from '../lib/fuelService';
+import React, { useEffect, useState } from 'react';
+import { Clock, ExternalLink, MapPin, RefreshCw } from 'lucide-react';
+import { fuelTypes, getUtreraFuelPrices } from '../lib/fuelService';
+import './GasolinerasWidget.css';
 
-export default function GasolinerasWidget() {
-  const [estaciones, setEstaciones] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const euros = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const price = value => euros.format(value) + ' €/l';
 
-  async function loadPrices() {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await getUtreraFuelPrices();
-      if (data && Array.isArray(data)) {
-        setEstaciones(data);
-      }
-    } catch (err) {
-      console.error("Error al cargar gasolineras:", err);
-      setError("No se pudieron cargar los precios oficiales en este momento.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadPrices();
-  }, []);
-
-  const formatPrice = (price) => {
-    if (price == null) return "No disponible";
-    const num = typeof price === 'number' ? price : parseFloat(String(price).replace(',', '.'));
-    return Number.isFinite(num) ? `${num.toFixed(3)} €/L` : "No disponible";
-  };
-
-  if (loading) {
-    return (
-      <div className="bg-white rounded-3xl shadow-sm p-8 text-center text-slate-500 my-4 border border-slate-100">
-        <div className="animate-spin text-2xl mb-2">⛽</div>
-        <p className="text-xs font-semibold">Consultando precios oficiales en tiempo real...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-rose-50 rounded-3xl shadow-sm p-6 text-center text-rose-600 my-4 border border-rose-100 text-xs font-medium space-y-3">
-        <p>{error}</p>
-        <button
-          onClick={loadPrices}
-          className="inline-flex items-center gap-1.5 bg-white border border-rose-200 text-rose-700 font-bold px-3 py-1.5 rounded-xl hover:bg-rose-100 transition-colors"
-        >
-          <RefreshCw size={12} /> Reintentar
-        </button>
-      </div>
-    );
-  }
-
-  if (!estaciones || estaciones.length === 0) {
-    return (
-      <div className="bg-amber-50 rounded-3xl shadow-sm p-6 text-center text-amber-700 my-4 border border-amber-100 text-xs flex items-center justify-center gap-2">
-        <AlertCircle size={16} /> No se han encontrado estaciones de servicio activas en Utrera en este momento.
-      </div>
-    );
-  }
-
-  const precioMinimoG95 = estaciones.find(e => e.price95 != null)?.price95;
+function Station({ station, fuel, minimum }) {
+  const amount = station.prices[fuel];
+  const location = station.lat != null && station.lon != null
+    ? station.lat + ',' + station.lon
+    : [station.name, station.address, station.locality, 'Sevilla'].filter(Boolean).join(', ');
+  const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(location);
 
   return (
-    <div className="space-y-3">
-      {/* Tarjeta superior con el precio mínimo destacado */}
-      {precioMinimoG95 != null && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-4 shadow-sm flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider block">Mejor precio Gasolina 95</span>
-            <span className="text-2xl font-black text-emerald-600">{formatPrice(precioMinimoG95)}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-xs text-slate-500 font-medium block">Estaciones en Utrera</span>
-            <span className="text-sm font-bold text-slate-700">{estaciones.length} operativas</span>
-          </div>
+    <li className="fuel-station">
+      <div className="fuel-station-main">
+        <div>
+          <h3>{station.name}</h3>
+          <p className="fuel-address"><MapPin size={14} aria-hidden="true" />
+            <span>{[station.address, station.locality].filter(Boolean).join(' · ')}</span>
+          </p>
+          <a href={maps} target="_blank" rel="noreferrer">Cómo llegar <ExternalLink size={12} aria-hidden="true" /></a>
         </div>
-      )}
+        <div className="fuel-station-price">
+          <strong>{price(amount)}</strong>
+          <small>{amount === minimum ? 'Precio más bajo' : '+' + price(amount - minimum)}</small>
+        </div>
+      </div>
+      <details className="fuel-details">
+        <summary>Horario y otros precios</summary>
+        <p><Clock size={14} aria-hidden="true" /> {station.hours || 'Horario sin publicar'}</p>
+        <dl>
+          {fuelTypes.filter(({ id }) => id !== fuel && station.prices[id] != null).map(({ id, label }) => (
+            <div key={id}><dt>{label}</dt><dd>{price(station.prices[id])}</dd></div>
+          ))}
+        </dl>
+      </details>
+    </li>
+  );
+}
 
-      {/* Listado ordenado de gasolineras */}
-      {estaciones.map((est, index) => {
-        const isCheapest = precioMinimoG95 != null && est.price95 === precioMinimoG95;
-        const mapsUrl = est.lat && est.lon 
-          ? `https://www.google.com/maps/search/?api=1&query=${est.lat},${est.lon}`
-          : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${est.name}, ${est.address}, Utrera, Sevilla`)}`;
+export default function GasolinerasWidget() {
+  const [fuel, setFuel] = useState('gasolina95');
+  const [request, setRequest] = useState(0);
+  const [data, setData] = useState(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState(false);
 
-        return (
-          <div 
-            key={est.id || index} 
-            className={`bg-white rounded-3xl p-5 shadow-sm border transition-all ${
-              isCheapest ? "border-emerald-200 ring-1 ring-emerald-100" : "border-slate-100"
-            }`}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  {isCheapest && (
-                    <span className="text-[9px] bg-emerald-100 text-emerald-700 font-black px-2 py-0.5 rounded-full uppercase">
-                      Más barata
-                    </span>
-                  )}
-                  <h4 className="font-extrabold text-base text-slate-900">{est.name}</h4>
-                </div>
-                <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                  <MapPin size={12} /> {est.address}
-                </p>
-              </div>
-              <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                Abierta
-              </span>
-            </div>
+  useEffect(() => {
+    const controller = new AbortController();
+    let canceled = false;
+    const timeout = setTimeout(() => controller.abort(), 19000);
+    setBusy(true);
+    getUtreraFuelPrices(controller.signal).then(result => {
+      if (canceled) return;
+      setData(result);
+      setError(false);
+    }).catch(() => {
+      if (!canceled) {
+        setData(null);
+        setError(true);
+      }
+    }).finally(() => {
+      clearTimeout(timeout);
+      if (!canceled) setBusy(false);
+    });
+    return () => {
+      canceled = true;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [request]);
 
-            <div className="grid grid-cols-2 gap-2 my-4 pt-3 border-t border-slate-100">
-              <div className="bg-slate-50 p-2.5 rounded-2xl text-center">
-                <span className="text-[10px] text-slate-400 font-bold block uppercase">Gasolina 95 E5</span>
-                <span className="text-base font-black text-blue-600 mt-0.5 block">
-                  {formatPrice(est.price95)}
-                </span>
-              </div>
+  const stations = data?.stations ?? [];
+  const visibleFuels = fuelTypes.filter(({ id }) =>
+    id === fuel || id === 'gasolina95' || id === 'diesel' || stations.some(station => station.prices[id] != null));
+  const ranked = stations.filter(station => station.prices[fuel] != null)
+    .sort((a, b) => a.prices[fuel] - b.prices[fuel] || a.name.localeCompare(b.name, 'es'));
+  const minimum = ranked[0]?.prices[fuel];
+  const label = fuelTypes.find(item => item.id === fuel).label;
+  const count = ranked.length;
 
-              <div className="bg-slate-50 p-2.5 rounded-2xl text-center">
-                <span className="text-[10px] text-slate-400 font-bold block uppercase">Diésel A</span>
-                <span className="text-base font-black text-slate-800 mt-0.5 block">
-                  {formatPrice(est.priceDiesel)}
-                </span>
-              </div>
-            </div>
-
-            <a 
-              href={mapsUrl} 
-              target="_blank" 
-              rel="noreferrer"
-              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-2xl flex items-center justify-center gap-1.5 transition-colors"
-            >
-              <ExternalLink size={14} /> Cómo llegar en Google Maps
-            </a>
+  return (
+    <section className="fuel-comparator" aria-label="Comparar precios de carburantes">
+      <div className="fuel-toolbar">
+        <div className="fuel-tabs" role="group" aria-label="Carburante">
+          {visibleFuels.map(({ id, shortLabel }) => (
+            <button key={id} type="button" aria-pressed={fuel === id} onClick={() => setFuel(id)}>{shortLabel}</button>
+          ))}
+        </div>
+        <button className="fuel-refresh" type="button" aria-label="Actualizar precios" title="Actualizar precios"
+          disabled={busy} onClick={() => setRequest(value => value + 1)}>
+          <RefreshCw size={18} aria-hidden="true" />
+        </button>
+      </div>
+      <div className="fuel-summary" role="status">
+        {busy ? <p>Consultando los precios oficiales…</p>
+          : error ? <p>No se han podido consultar los precios. Pulsa el botón de actualizar para reintentar.</p>
+          : !count ? <p>Sin precios publicados para {label} en Utrera.</p>
+          : <><p>{count === 1 ? '1 estación' : count + ' estaciones'} · De menor a mayor precio</p>
+            {data.publishedAt && <small>Fecha de la consulta oficial: {data.publishedAt}</small>}</>}
+      </div>
+      {count > 0 && (
+        <>
+          <div className="fuel-best">
+            <div><p>Precio más bajo</p><strong>{price(minimum)}</strong></div>
+            <div><p>{label}</p><strong>{ranked.filter(station => station.prices[fuel] === minimum).map(station => station.name).join(' · ')}</strong></div>
           </div>
-        );
-      })}
-
-      <p className="text-[10px] text-slate-400 text-center pt-2">
-        Fuente oficial: Ministerio para la Transición Ecológica
-      </p>
-    </div>
+          <ul className="fuel-stations">
+            {ranked.map(station => <Station key={station.id} station={station} fuel={fuel} minimum={minimum} />)}
+          </ul>
+        </>
+      )}
+    </section>
   );
 }

@@ -51,6 +51,8 @@ export default function App() {
 
     if (vistaParam === 'trenes' || vistaParam === 'cercanias') {
       setPaginaActual('cercanias');
+    } else if (vistaParam === 'gasolineras') {
+      setPaginaActual('gasolineras');
     }
   }, []);
 

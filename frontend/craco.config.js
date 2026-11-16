@@ -226,19 +226,25 @@ const configureDevServer = webpackConfig.devServer;
 webpackConfig.devServer = (devServerConfig) =>
   makeDevServerV5Compatible(configureDevServer(devServerConfig));
 
-const configureTrainDevServer = webpackConfig.devServer;
+const configureLocalApiDevServer = webpackConfig.devServer;
 webpackConfig.devServer = (devServerConfig) => {
-  const config = configureTrainDevServer(devServerConfig);
+  const config = configureLocalApiDevServer(devServerConfig);
   const setup = config.setupMiddlewares;
   config.setupMiddlewares = (middlewares, devServer) => {
-    devServer.app.get('/api/trenes', async (req, res, next) => {
-      try {
-        const { default: handler } = await import('./api/trenes.js');
-        await handler(req, res);
-      } catch (error) {
-        next(error);
-      }
-    });
+    const endpoints = {
+      '/api/trenes': () => import('./api/trenes.js'),
+      '/api/gasolineras': () => import('./api/gasolineras.js'),
+    };
+    for (const [route, load] of Object.entries(endpoints)) {
+      devServer.app.get(route, async (req, res, next) => {
+        try {
+          const { default: handler } = await load();
+          await handler(req, res);
+        } catch (error) {
+          next(error);
+        }
+      });
+    }
     return setup ? setup(middlewares, devServer) : middlewares;
   };
   return config;
