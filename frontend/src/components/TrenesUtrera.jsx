@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Bell, ExternalLink, RefreshCw, TrainFront } from 'lucide-react';
+import { ArrowDown, ArrowDownLeft, ArrowUpRight, Bell, ExternalLink, RefreshCw, TrainFront } from 'lucide-react';
 import './TrenesUtrera.css';
 
 const clock = new Intl.DateTimeFormat('es-ES', {
@@ -15,7 +15,12 @@ const tabs = [
   { value: 'arrival', label: 'Llegadas', icon: ArrowDownLeft },
 ];
 
-function TrainRow({ train, type }) {
+const corridors = [
+  { id: 'sevilla', label: 'Hacia Sevilla' },
+  { id: 'cadiz', label: 'Hacia Lebrija y Cádiz' },
+];
+
+function TrainStatus({ train }) {
   const status = {
     programado: 'Programado',
     previsto: 'Previsión Renfe',
@@ -24,6 +29,31 @@ function TrainRow({ train, type }) {
     'sin-parada': 'Sin parada',
   }[train.status];
 
+  return <span className={'rail-status rail-status--' + train.status}>{status}</span>;
+}
+
+function NextTrain({ label, train, emptyText }) {
+  return (
+    <article className="rail-next-card">
+      <h3><ArrowUpRight size={16} aria-hidden="true" /> {label}</h3>
+      {train ? (
+        <>
+          <p className="rail-next-destination">{train.destination || 'Destino sin información'}</p>
+          <p className="rail-next-line">{train.line}{train.trainNumber && ' · ' + train.trainNumber}</p>
+          <div className="rail-next-timing">
+            <span className="rail-next-hour">{time(train.expected ?? train.scheduled)}</span>
+            <TrainStatus train={train} />
+          </div>
+          {train.expected != null && time(train.expected) !== time(train.scheduled) && (
+            <p className="rail-next-line">Programado a las {time(train.scheduled)}</p>
+          )}
+        </>
+      ) : <p className="rail-next-empty">{emptyText}</p>}
+    </article>
+  );
+}
+
+function TrainRow({ train, type }) {
   return (
     <li className="rail-row">
       <div className="rail-hour">
@@ -36,7 +66,7 @@ function TrainRow({ train, type }) {
         <strong>{(type === 'departure' ? train.destination : train.origin) || 'Sin información'}</strong>
         <small>{train.line}{train.trainNumber && ' · ' + train.trainNumber}</small>
       </div>
-      <span className={'rail-status rail-status--' + train.status}>{status}</span>
+      <TrainStatus train={train} />
     </li>
   );
 }
@@ -93,11 +123,13 @@ export default function TrenesUtrera() {
   const live = Object.values(board?.coverage ?? {}).some(source => source.schedule && recent(source.realtimeAt));
   const alertsLive = recent(board?.alertsAt);
   const available = Object.values(board?.coverage ?? {}).some(source => source.schedule);
-  const trains = (board?.events[type] ?? []).map(train => {
+  const visibleTrains = events => (events ?? []).map(train => {
     if (recent(board.coverage[train.service]?.realtimeAt)) return train;
     return { ...train, expected: null, status: 'programado' };
   }).filter(train => (train.expected ?? train.scheduled) >= now - 60)
     .sort((a, b) => (a.expected ?? a.scheduled) - (b.expected ?? b.scheduled));
+  const departures = visibleTrains(board?.events.departure);
+  const trains = type === 'departure' ? departures : visibleTrains(board?.events.arrival);
   const notices = alertsLive ? board.notices : [];
   const [limit, setLimit] = useState(8);
 
@@ -113,6 +145,27 @@ export default function TrenesUtrera() {
           </span>
         </div>
       </header>
+
+      {notices.length > 0 && (
+        <a className="rail-alert-strip" href="#rail-notices-title">
+          <Bell size={17} aria-hidden="true" />
+          <strong>{notices.length === 1 ? '1 aviso de Renfe' : notices.length + ' avisos de Renfe'}</strong>
+          <span>Ver avisos <ArrowDown size={14} aria-hidden="true" /></span>
+        </a>
+      )}
+      <section className="rail-next" aria-labelledby="rail-next-title">
+        <h2 id="rail-next-title">Próximos trenes</h2>
+        <div className="rail-next-grid">
+          {corridors.map(({ id, label }) => (
+            <NextTrain key={id} label={label} train={departures.find(train => train.corridor === id
+              && train.status !== 'cancelado' && train.status !== 'sin-parada'
+              && (train.expected ?? train.scheduled) >= now)}
+              emptyText={!board && busy ? 'Consultando salidas…' : available
+                ? 'Sin salida publicada en las próximas horas.'
+                : 'Horarios no disponibles.'} />
+          ))}
+        </div>
+      </section>
 
       <section className="rail-panel" aria-label="Circulaciones en Utrera">
         <div className="rail-toolbar">
@@ -161,7 +214,7 @@ export default function TrenesUtrera() {
       </section>
 
       <section className="rail-panel rail-notices" aria-labelledby="rail-notices-title">
-        <h2 id="rail-notices-title"><Bell size={18} aria-hidden="true" /> Avisos de Cercanías</h2>
+        <h2 id="rail-notices-title" tabIndex={-1}><Bell size={18} aria-hidden="true" /> Avisos de Cercanías</h2>
         {!alertsLive ? <p>{!board && busy ? 'Consultando avisos…' : 'Avisos en tiempo real no disponibles.'}</p>
           : notices.length === 0 ? <p>{board.coverage.cercanias?.schedule
             ? 'Renfe no publica avisos activos para Utrera o sus líneas de Cercanías.'

@@ -2,6 +2,10 @@ import { parse } from 'csv-parse/sync';
 import { DecodeUTF8, Unzip, UnzipInflate, strFromU8, unzipSync } from 'fflate';
 
 export const UTRERA = '51200';
+const CORRIDOR_STOPS = new Map([
+  ['51003', 'sevilla'], ['51100', 'sevilla'], ['51103', 'sevilla'],
+  ['51203', 'cadiz'], ['51300', 'cadiz'], ['51405', 'cadiz'],
+]);
 const SOURCES = {
   cercanias: {
     schedule: 'https://ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip',
@@ -199,6 +203,11 @@ export function makeBoard(sources, alerts, now = Math.floor(Date.now() / 1000)) 
       const destination = schedule.stops.get(stops.at(-1).stop_id)?.stop_name;
       for (const [index, stop] of stops.entries()) {
         if (!schedule.stationStops.has(stop.stop_id)) continue;
+        // Use the next passenger stop on either corridor, even if the train
+        // continues beyond Sevilla or Cádiz.
+        const onward = stops.slice(index + 1).find(next => next.drop_off_type !== '1'
+          && CORRIDOR_STOPS.has(next.stop_id));
+        const corridor = CORRIDOR_STOPS.get(onward?.stop_id) ?? null;
         for (const date of days) {
           if (!runsOn(schedule, trip, date)) continue;
           for (const type of ['arrival', 'departure']) {
@@ -213,7 +222,7 @@ export function makeBoard(sources, alerts, now = Math.floor(Date.now() / 1000)) 
             events[type].push({
               id: [service, date.id, trip.trip_id, stop.stop_sequence, type].join(':'),
               service, line: trip.route?.route_short_name || (service === 'cercanias' ? 'Cercanías' : 'Renfe'),
-              origin, destination, scheduled, trainNumber: trip.trip_short_name || null, ...state,
+              origin, destination, scheduled, corridor, trainNumber: trip.trip_short_name || null, ...state,
             });
           }
         }
