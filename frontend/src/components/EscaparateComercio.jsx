@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, ArrowUpRight, Clock, Facebook, Globe, MapPin, MessageCircle, Phone, ShieldCheck, ShoppingBag, Utensils } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Clock, Facebook, Globe, Instagram, MapPin, MessageCircle, Phone, ShieldCheck, ShoppingBag, Utensils } from 'lucide-react';
 import './EscaparateComercio.css';
 
 export const DIGITAL_GM_ID = '13';
@@ -8,6 +8,7 @@ export const ESCAPARATES = [
   { id: DIGITAL_GM_ID, slug: 'digital-gm', name: 'DIGITAL GM' },
   { id: '10', slug: 'la-chana', name: 'La Chana', restaurante: true },
   { id: '14', slug: 'bar-alonsi', name: 'Bar Alonsi', restaurante: true },
+  { id: '15', slug: 'jm-formacion', name: 'JM Formación', galleryLabel: 'Galería' },
 ];
 
 const digitalGm = {
@@ -74,6 +75,7 @@ export default function EscaparateComercio({ comercio }) {
   const shop = webLink(comercio.tienda_url);
   const site = webLink(comercio.web_url);
   const facebook = webLink(profile.facebook || comercio.facebook_url);
+  const instagram = webLink(comercio.instagram_url || comercio.instagram_username);
   const video = videoDetails(comercio.video_story_url);
   const phone = phoneNumber(comercio.telefono);
   const whatsapp = phoneNumber(comercio.whatsapp);
@@ -107,13 +109,14 @@ export default function EscaparateComercio({ comercio }) {
               <Utensils size={16} aria-hidden="true" /> Ver carta <ArrowDown size={17} aria-hidden="true" />
             </button>}
             {!menu && photos.length > 0 && <button className="commerce-showcase-primary" type="button" onClick={() => jumpTo(catalogId)}>
-              Ver catálogo <ArrowDown size={17} aria-hidden="true" />
+              {config?.galleryLabel ? 'Ver fotos' : 'Ver catálogo'} <ArrowDown size={17} aria-hidden="true" />
             </button>}
             {whatsapp && <a href={'https://wa.me/' + whatsapp} target="_blank" rel="noreferrer"><MessageCircle size={17} aria-hidden="true" /> WhatsApp</a>}
             {phone && <a href={'tel:+' + phone}><Phone size={16} aria-hidden="true" /> Llamar</a>}
             {map && <button type="button" onClick={() => jumpTo(detailsId)}><MapPin size={17} aria-hidden="true" /> Ubicación</button>}
             {shop && <a href={shop} target="_blank" rel="noreferrer"><ShoppingBag size={17} aria-hidden="true" /> Tienda online <ArrowUpRight size={13} aria-hidden="true" /></a>}
             {facebook && <a href={facebook} target="_blank" rel="noreferrer"><Facebook size={17} aria-hidden="true" /> Facebook <ArrowUpRight size={13} aria-hidden="true" /></a>}
+            {instagram && <a href={instagram} target="_blank" rel="noreferrer"><Instagram size={17} aria-hidden="true" /> Instagram <ArrowUpRight size={13} aria-hidden="true" /></a>}
             {site && site !== shop && <a href={site} target="_blank" rel="noreferrer"><Globe size={17} aria-hidden="true" /> Web oficial <ArrowUpRight size={13} aria-hidden="true" /></a>}
           </div>
         </div>
@@ -128,7 +131,7 @@ export default function EscaparateComercio({ comercio }) {
           </a>
         </section>}
         {photos.length > 0 && <section className="commerce-showcase-catalog" aria-labelledby={catalogId}>
-          <h2 id={catalogId} tabIndex={-1}>{restaurant ? 'Fotos del local y sus platos' : 'Catálogo destacado'}</h2>
+          <h2 id={catalogId} tabIndex={-1}>{config?.galleryLabel || (restaurant ? 'Fotos del local y sus platos' : 'Catálogo destacado')}</h2>
           <ul>
             {photos.map((url, index) => <li key={url}>
               <a href={url} target="_blank" rel="noreferrer">
