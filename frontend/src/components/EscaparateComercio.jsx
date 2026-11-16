@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowDown, ArrowUpRight, Clock, Globe, MapPin, MessageCircle, Phone, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, Clock, Facebook, Globe, MapPin, MessageCircle, Phone, ShieldCheck, ShoppingBag } from 'lucide-react';
 import './EscaparateComercio.css';
 
 export const DIGITAL_GM_ID = '13';
@@ -18,6 +18,7 @@ const digitalGm = {
     { icon: ShieldCheck, title: 'Ayuda con la gestión de la garantía' },
   ],
   source: 'https://www.digitalgm.es/tiendas',
+  facebook: 'https://www.facebook.com/digitalgm.es',
 };
 
 function webLink(value) {
@@ -43,6 +44,7 @@ export default function EscaparateComercio({ comercio }) {
   const photos = [...new Set((Array.isArray(comercio.galeria_urls) ? comercio.galeria_urls : []).map(webLink).filter(Boolean))];
   const shop = webLink(comercio.tienda_url);
   const site = webLink(comercio.web_url);
+  const facebook = webLink(profile.facebook || comercio.facebook_url);
   const phone = phoneNumber(comercio.telefono);
   const whatsapp = phoneNumber(comercio.whatsapp);
   const address = profile.address || comercio.direccion?.trim();
@@ -77,6 +79,7 @@ export default function EscaparateComercio({ comercio }) {
             {phone && <a href={'tel:+' + phone}><Phone size={16} aria-hidden="true" /> Llamar</a>}
             {map && <button type="button" onClick={() => jumpTo(detailsId)}><MapPin size={17} aria-hidden="true" /> Ubicación</button>}
             {shop && <a href={shop} target="_blank" rel="noreferrer"><ShoppingBag size={17} aria-hidden="true" /> Tienda online <ArrowUpRight size={13} aria-hidden="true" /></a>}
+            {facebook && <a href={facebook} target="_blank" rel="noreferrer"><Facebook size={17} aria-hidden="true" /> Facebook <ArrowUpRight size={13} aria-hidden="true" /></a>}
             {site && site !== shop && <a href={site} target="_blank" rel="noreferrer"><Globe size={17} aria-hidden="true" /> Web oficial <ArrowUpRight size={13} aria-hidden="true" /></a>}
           </div>
         </div>
