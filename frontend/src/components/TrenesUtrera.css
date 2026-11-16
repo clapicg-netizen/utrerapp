@@ -1,0 +1,68 @@
+.rail-board {
+  --rail-ink: #132a33;
+  --rail-line: #dce6e6;
+  width: 100%;
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 2rem;
+  color: var(--rail-ink);
+  font-family: "Geist", "Inter", system-ui, sans-serif;
+}
+.rail-hero {
+  padding: clamp(1.35rem, 5vw, 2.5rem);
+  border-radius: 1.25rem;
+  color: #fff;
+  background:
+    repeating-linear-gradient(125deg, transparent 0 25px, #8cd6c51c 26px 27px, transparent 28px 38px) right center / 42% 100% no-repeat,
+    linear-gradient(115deg, #10252d 40%, #174b47);
+}
+.rail-brand, .rail-hero-meta, .rail-live, .rail-toolbar, .rail-tabs button, .rail-notices h2, .rail-footer a {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.rail-brand { color: #bfe7d9; font-size: .82rem; font-weight: 650; }
+.rail-hero h1 { margin: .65rem 0 .7rem; font-size: clamp(2rem, 7vw, 3.6rem); font-weight: 780; line-height: 1.05; letter-spacing: -.055em; }
+.rail-hero-meta { flex-wrap: wrap; justify-content: space-between; gap: .6rem 1rem; color: #e0f1ee; font-size: .85rem; }
+.rail-hero-meta p::first-letter { text-transform: uppercase; }
+.rail-live { font-size: .75rem; }
+.rail-live i { width: .5rem; height: .5rem; border-radius: 100%; background: #77e3b2; box-shadow: 0 0 0 3px #77e3b23d; }
+.rail-live--offline i { background: #bfcfca; box-shadow: none; }
+.rail-panel { margin-top: .9rem; border: 1px solid var(--rail-line); border-radius: 1rem; background: #fff; overflow: hidden; }
+.rail-toolbar { padding: .75rem; justify-content: space-between; }
+.rail-tabs { display: flex; gap: .2rem; padding: .2rem; background: #edf4f3; border-radius: .7rem; }
+.rail-tabs button, .rail-refresh { padding: .52rem .7rem; border-radius: .55rem; font-weight: 670; font-size: .82rem; }
+.rail-tabs button[aria-pressed=true] { background: #164f49; color: #fff; }
+.rail-refresh { border: 1px solid var(--rail-line); }
+.rail-refresh:disabled { opacity: .6; }
+.rail-board :is(button, a, summary):focus-visible { outline: 2px solid #16776a; outline-offset: 3px; }
+.rail-sources { font-size: .75rem; color: #496168; padding: 0 1rem .85rem; }
+.rail-columns, .rail-row { display: grid; grid-template-columns: 3.6rem minmax(0, 1fr) auto; align-items: center; gap: .65rem; padding: .65rem 1rem; }
+.rail-columns { background: #edf4f3; color: #38555a; font-size: .7rem; font-weight: 750; text-transform: uppercase; letter-spacing: .06em; }
+.rail-row { min-height: 3.9rem; border-bottom: 1px solid var(--rail-line); }
+.rail-hour { font-weight: 740; font-size: 1.15rem; font-variant-numeric: tabular-nums; letter-spacing: -.035em; }
+.rail-row small { display: block; color: #4a636a; font-size: .68rem; font-weight: 520; letter-spacing: 0; }
+.rail-place { overflow-wrap: anywhere; font-size: .88rem; line-height: 1.25; }
+.rail-place small { margin-top: .2rem; }
+.rail-status { justify-self: end; border-radius: .4rem; background: #edf4f3; color: #31545b; padding: .23rem .35rem; font-size: .66rem; font-weight: 680; }
+.rail-status--previsto { background: #dff4ea; color: #164f49; }
+.rail-status--retraso { background: #fff2d3; color: #734404; }
+.rail-status--cancelado, .rail-status--sin-parada { background: #fae4e4; color: #802c34; }
+.rail-empty, .rail-notices { padding: 1rem; }
+.rail-empty, .rail-notices p, .rail-footer { color: #496168; font-size: .84rem; }
+.rail-notices h2 { font-weight: 750; margin-bottom: .45rem; }
+.rail-notices details { border-top: 1px solid var(--rail-line); padding: .7rem 0; }
+.rail-notices summary { cursor: pointer; font-size: .88rem; font-weight: 660; }
+.rail-notices details p { white-space: pre-line; overflow-wrap: anywhere; margin-top: .5rem; }
+.rail-more { width: 100%; padding: .85rem; color: #164f49; font-size: .82rem; font-weight: 700; }
+.rail-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .6rem; margin-top: .85rem; font-size: .73rem; }
+.rail-footer a:hover { text-decoration: underline; }
+@media (min-width: 36rem) {
+  .rail-columns, .rail-row { grid-template-columns: 6rem minmax(0, 1fr) 8rem; padding-inline: 1.3rem; }
+  .rail-columns span:last-child { text-align: right; }
+  .rail-status { font-size: .75rem; padding-inline: .5rem; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rail-spinning { animation: rail-spin 1.6s linear infinite; }
+  @keyframes rail-spin { to { transform: rotate(360deg); } }
+}

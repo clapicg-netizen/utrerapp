@@ -219,7 +219,7 @@ export default function App() {
               }`}
             >
               <Train size={18} />
-              <span>Cercanías Sevilla</span>
+              <span>Trenes de Utrera</span>
             </button>
 
             <button
@@ -334,7 +334,7 @@ export default function App() {
           }`}
         >
           <Train size={20} />
-          <span className="text-[10px]">Cercanías</span>
+          <span className="text-[10px]">Trenes</span>
         </button>
 
         <button

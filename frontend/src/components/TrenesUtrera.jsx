@@ -1,42 +1,183 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { ArrowDownLeft, ArrowUpRight, Bell, ExternalLink, RefreshCw, TrainFront } from 'lucide-react';
+import './TrenesUtrera.css';
+
+const clock = new Intl.DateTimeFormat('es-ES', {
+  timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+});
+const date = new Intl.DateTimeFormat('es-ES', {
+  timeZone: 'Europe/Madrid', weekday: 'long', day: 'numeric', month: 'long',
+});
+const time = seconds => clock.format(seconds * 1000);
+const services = { cercanias: 'Cercanías', largaDistancia: 'Media y Larga Distancia' };
+const tabs = [
+  { value: 'departure', label: 'Salidas', icon: ArrowUpRight },
+  { value: 'arrival', label: 'Llegadas', icon: ArrowDownLeft },
+];
+
+function TrainRow({ train, type }) {
+  const status = {
+    programado: 'Programado',
+    previsto: 'Previsión Renfe',
+    retraso: '+' + Math.floor(train.delay / 60) + ' min',
+    cancelado: 'Cancelado',
+    'sin-parada': 'Sin parada',
+  }[train.status];
+
+  return (
+    <li className="rail-row">
+      <div className="rail-hour">
+        {time(train.expected ?? train.scheduled)}
+        {train.expected != null && time(train.expected) !== time(train.scheduled) && (
+          <small>Prog. {time(train.scheduled)}</small>
+        )}
+      </div>
+      <div className="rail-place">
+        <strong>{(type === 'departure' ? train.destination : train.origin) || 'Sin información'}</strong>
+        <small>{train.line}{train.trainNumber && ' · ' + train.trainNumber}</small>
+      </div>
+      <span className={'rail-status rail-status--' + train.status}>{status}</span>
+    </li>
+  );
+}
 
 export default function TrenesUtrera() {
+  const [type, setType] = useState('departure');
+  const [board, setBoard] = useState(null);
+  const [busy, setBusy] = useState(true);
+  const [error, setError] = useState(false);
+  const [request, setRequest] = useState(0);
+  const [now, setNow] = useState(() => Date.now() / 1000);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now() / 1000), 15000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let timer;
+    async function update() {
+      setBusy(true);
+      try {
+        const url = (process.env.REACT_APP_TRENES_API_URL || '/api/trenes');
+        const response = await fetch(url, {
+          signal: typeof AbortSignal.any === 'function' && typeof AbortSignal.timeout === 'function' ? AbortSignal.any([controller.signal, AbortSignal.timeout(65000)]) : controller.signal,
+          cache: 'no-store',
+        });
+        if (!response.ok) throw new Error('Error al consultar Renfe');
+        const data = await response.json();
+        if (!data.events || !data.coverage) throw new Error('Respuesta inválida');
+        if (!controller.signal.aborted) {
+          setBoard(data);
+          setNow(Date.now() / 1000);
+          setError(false);
+        }
+      } catch {
+        if (!controller.signal.aborted) setError(true);
+      } finally {
+        if (!controller.signal.aborted) {
+          setBusy(false);
+          timer = setTimeout(update, 30000);
+        }
+      }
+    }
+    update();
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+  }, [request]);
+
+  const recent = timestamp => timestamp != null && now - timestamp <= 180;
+  const live = Object.values(board?.coverage ?? {}).some(source => source.schedule && recent(source.realtimeAt));
+  const alertsLive = recent(board?.alertsAt);
+  const available = Object.values(board?.coverage ?? {}).some(source => source.schedule);
+  const trains = (board?.events[type] ?? []).map(train => {
+    if (recent(board.coverage[train.service]?.realtimeAt)) return train;
+    return { ...train, expected: null, status: 'programado' };
+  }).filter(train => (train.expected ?? train.scheduled) >= now - 60)
+    .sort((a, b) => (a.expected ?? a.scheduled) - (b.expected ?? b.scheduled));
+  const notices = alertsLive ? board.notices : [];
+  const [limit, setLimit] = useState(8);
+
   return (
-    <div className="max-w-4xl mx-auto p-4 space-y-6 font-sans">
-      <div className="bg-indigo-900 text-white p-6 rounded-2xl shadow-lg">
-        <h1 className="text-2xl font-bold">Estación de Utrera</h1>
-        <p className="text-sm opacity-80 mt-2">
-          Cercanías Sevilla · Línea C1
-        </p>
-      </div>
+    <div className="rail-board">
+      <header className="rail-hero">
+        <div className="rail-brand"><TrainFront size={19} aria-hidden="true" /> Panel ferroviario</div>
+        <h1>Estación de Utrera</h1>
+        <div className="rail-hero-meta">
+          <p>{date.format(now * 1000)}</p>
+          <span className={live ? 'rail-live' : 'rail-live rail-live--offline'}>
+            <i aria-hidden="true" />{live ? 'Con datos en tiempo real' : 'Horarios de Renfe'}
+          </span>
+        </div>
+      </header>
 
-      <div className="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-xl">
-        <h2 className="font-bold text-amber-900">
-          Información ferroviaria pendiente de verificación
-        </h2>
-        <p className="text-sm text-amber-900 mt-2">
-          No mostramos horarios, retrasos, cancelaciones ni incidencias
-          hasta disponer de datos oficiales interpretados y verificados.
-        </p>
-      </div>
+      <section className="rail-panel" aria-label="Circulaciones en Utrera">
+        <div className="rail-toolbar">
+          <div className="rail-tabs" role="group" aria-label="Movimiento">
+            {tabs.map(({ value, label, icon: Icon }) => (
+              <button type="button" key={value} aria-pressed={type === value}
+                onClick={() => { setType(value); setLimit(8); }}>
+                <Icon size={17} aria-hidden="true" /> {label}
+              </button>
+            ))}
+          </div>
+          <button className="rail-refresh" type="button" aria-label="Actualizar datos" title="Actualizar datos"
+            disabled={busy} onClick={() => setRequest(n => n + 1)}>
+            <RefreshCw size={17} aria-hidden="true" className={busy ? 'rail-spinning' : ''} />
+          </button>
+        </div>
+        <div className="rail-sources" role="status">
+          {!board && busy && 'Consultando los horarios de Renfe…'}
+          {error && (board ? 'Falló la última consulta a Renfe.' : 'No se ha podido consultar Renfe.')}
+          {board && Object.entries(services).map(([key, label]) => {
+            const source = board.coverage[key];
+            return <p key={key}>{label} · {!source?.schedule ? 'horarios no disponibles'
+              : recent(source.realtimeAt) ? 'actualización ' + time(source.realtimeAt)
+              : 'solo horario programado'}</p>;
+          })}
+        </div>
+        <div className="rail-columns" aria-hidden="true">
+          <span>Hora</span><span>{type === 'departure' ? 'Destino' : 'Origen'}</span><span>Estado</span>
+        </div>
+        {trains.length ? (
+          <>
+            <ul className="rail-list">
+              {trains.slice(0, limit).map(train => <TrainRow key={train.id} train={train} type={type} />)}
+            </ul>
+            {trains.length > limit && (
+              <button type="button" className="rail-more" onClick={() => setLimit(n => n + 8)}>
+                Ver más {type === 'departure' ? 'salidas' : 'llegadas'}
+              </button>
+            )}
+          </>
+        ) : (
+          <p className="rail-empty">{!board && busy ? 'Cargando el panel…'
+            : available ? 'Sin circulaciones publicadas para las próximas horas.'
+            : 'Horarios no disponibles en este momento.'}</p>
+        )}
+      </section>
 
-      <div className="bg-white rounded-2xl p-6 shadow-md space-y-3">
-        <h2 className="text-lg font-bold text-gray-800">
-          Consulta oficial de Renfe
-        </h2>
-        <p className="text-sm text-gray-600">
-          Consulta los horarios y avisos actualizados directamente
-          en los canales oficiales de Cercanías Sevilla.
-        </p>
-        <a
-          href="https://www.renfe.com/es/es/cercanias/cercanias-sevilla"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block bg-indigo-900 text-white px-5 py-3 rounded-xl font-semibold text-sm"
-        >
-          Consultar Renfe →
-        </a>
-      </div>
+      <section className="rail-panel rail-notices" aria-labelledby="rail-notices-title">
+        <h2 id="rail-notices-title"><Bell size={18} aria-hidden="true" /> Avisos de Cercanías</h2>
+        {!alertsLive ? <p>{!board && busy ? 'Consultando avisos…' : 'Avisos en tiempo real no disponibles.'}</p>
+          : notices.length === 0 ? <p>{board.coverage.cercanias?.schedule
+            ? 'Renfe no publica avisos activos para Utrera o sus líneas de Cercanías.'
+            : 'Renfe no publica avisos activos específicos de la estación.'}</p>
+          : notices.map(({ id, title, description }) => (
+            <details key={id}>
+              <summary>{title || description.split(/\r?\n/)[0]}</summary>
+              {description && <p>{description}</p>}
+            </details>
+          ))}
+      </section>
+
+      <footer className="rail-footer">
+        <a href="https://data.renfe.com/" target="_blank" rel="noreferrer">Datos de Renfe · CC BY 4.0 <ExternalLink size={13} /></a>
+        <a href="https://www.adif.es/w/51200-utrera" target="_blank" rel="noreferrer">Estación en Adif <ExternalLink size={13} /></a>
+      </footer>
     </div>
   );
 }

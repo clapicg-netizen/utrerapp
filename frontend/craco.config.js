@@ -226,4 +226,22 @@ const configureDevServer = webpackConfig.devServer;
 webpackConfig.devServer = (devServerConfig) =>
   makeDevServerV5Compatible(configureDevServer(devServerConfig));
 
+const configureTrainDevServer = webpackConfig.devServer;
+webpackConfig.devServer = (devServerConfig) => {
+  const config = configureTrainDevServer(devServerConfig);
+  const setup = config.setupMiddlewares;
+  config.setupMiddlewares = (middlewares, devServer) => {
+    devServer.app.get('/api/trenes', async (req, res, next) => {
+      try {
+        const { default: handler } = await import('./api/trenes.js');
+        await handler(req, res);
+      } catch (error) {
+        next(error);
+      }
+    });
+    return setup ? setup(middlewares, devServer) : middlewares;
+  };
+  return config;
+};
+
 module.exports = webpackConfig;

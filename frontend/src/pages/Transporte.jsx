@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Train, Clock, ArrowRight, ExternalLink, Compass, Bus, Navigation, MapPin, Sparkles, MessageSquare } from "lucide-react";
+import { Train, Clock, ExternalLink, Compass, Bus, Navigation, Sparkles } from "lucide-react";
+
+import TrenesUtrera from "../components/TrenesUtrera";
 
 export default function Transporte({ setPaginaActual }) {
   const [subSeccion, setSubSeccion] = useState("renfe");
-  const [sentido, setSentido] = useState("sevilla");
 
   const busesUrbana = [
     { id: 1, line: "L1", name: "Línea Urbana - Estación / Centro / Barriadas", frequency: "Cada 30 min en horas punta", next: ["08:00", "08:30", "09:00"] },
@@ -35,7 +36,7 @@ export default function Transporte({ setPaginaActual }) {
             subSeccion === "renfe" ? "bg-rose-900 text-white shadow" : "text-slate-600 hover:bg-slate-100"
           }`}
         >
-          <Train size={14} /> Cercanías
+          <Train size={14} /> Trenes
         </button>
         <button
           onClick={() => setSubSeccion("bus")}
@@ -58,44 +59,7 @@ export default function Transporte({ setPaginaActual }) {
       {/* CONTENIDO 1: CERCANÍAS RENFE */}
       {subSeccion === "renfe" && (
         <div className="space-y-4">
-          <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 flex gap-1">
-            <button
-              onClick={() => setSentido("sevilla")}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                sentido === "sevilla" ? "bg-blue-600 text-white shadow" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              <span>Utrera ➔ Sevilla</span> <ArrowRight size={12} />
-            </button>
-            <button
-              onClick={() => setSentido("utrera")}
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                sentido === "utrera" ? "bg-blue-600 text-white shadow" : "text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              <span>Sevilla ➔ Utrera</span> <ArrowRight size={12} />
-            </button>
-          </div>
-
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
-            <h3 className="font-black text-amber-900">
-              Horarios pendientes de verificación
-            </h3>
-            <p className="text-sm text-amber-900">
-              Para evitar mostrar horarios o estados incorrectos,
-              las salidas de Cercanías no se publican hasta disponer
-              de información oficial verificada.
-            </p>
-            <a
-              href="https://www.renfe.com/es/es/cercanias/cercanias-sevilla"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-rose-900 text-white px-4 py-3 rounded-xl text-xs font-bold"
-            >
-              Consultar horarios oficiales de Renfe
-              <ExternalLink size={14} />
-            </a>
-          </div>
+          <TrenesUtrera />
 
           {/* BOTÓN CONSO TE INFORMA (ENLAZADO A CONSO IA) */}
           {setPaginaActual && (

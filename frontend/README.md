@@ -1,3 +1,11 @@
+## Panel ferroviario de Utrera
+
+Entra desde **Trenes** o abre `/?vista=trenes`. Con Node 22 o posterior, ejecuta `npm ci --legacy-peer-deps` y `npm start` desde `frontend/`. El servidor de desarrollo incluye `GET /api/trenes`. La primera consulta puede tardar mientras se descargan los dos archivos nacionales de horarios.
+
+En producción, el frontend usa la función `api/trenes.js` mediante `/api/trenes`. Si el frontend se sirve como alojamiento estático, configura `REACT_APP_TRENES_API_URL` antes de compilar con la URL del endpoint Node. La función necesita acceso HTTPS saliente a `ssl.renfe.com` y `gtfsrt.renfe.com`.
+
+El panel cruza los horarios GTFS con el calendario de circulación y los mensajes GTFS Realtime de [Renfe Data](https://data.renfe.com/) (CC BY 4.0). Muestra hasta seis horas de llegadas y salidas en hora peninsular. Solo usa previsiones explícitas para la llegada o salida en Utrera (51200) y descarta actualizaciones de más de tres minutos. Los avisos públicos integrados corresponden a Cercanías.
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
