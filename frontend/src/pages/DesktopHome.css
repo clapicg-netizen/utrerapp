@@ -1,0 +1,51 @@
+.desktop-home {
+  --home-ink: #302129;
+  --home-red: #8a253a;
+  --home-rose: #faecee;
+  --home-muted: #65575b;
+  --home-border: #e8dde0;
+  min-height: 100vh;
+  background: #fcf8f6;
+  color: var(--home-ink);
+  font-family: "Instrument Sans", "Geist", system-ui, sans-serif;
+}
+.desktop-home-shell { width: min(100% - 4.5rem, 77rem); margin-inline: auto; }
+.desktop-home-header { border-bottom: 1px solid var(--home-border); background: #fffdfc; }
+.desktop-home-header-inner { min-height: 4.65rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.desktop-home-brand { display: flex; align-items: center; gap: .62rem; font-size: 1.24rem; font-weight: 780; letter-spacing: -.037em; }
+.desktop-home-brand span { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .5rem; background: var(--home-red); color: #fff; font-weight: 780; }
+.desktop-home-header nav { display: flex; align-items: center; gap: clamp(.6rem, 1.8vw, 1.7rem); }
+.desktop-home-header nav button { font-size: .86rem; font-weight: 650; padding: .52rem .15rem; }
+.desktop-home-header nav button:hover { color: var(--home-red); text-decoration: underline; text-underline-offset: .28rem; }
+.desktop-home-conso { display: inline-flex; align-items: center; gap: .45rem; padding: .59rem .72rem; border: 1px solid #ebcbd2; border-radius: .55rem; color: var(--home-red); font-size: .82rem; font-weight: 720; }
+.desktop-home-conso:hover, .desktop-home-services button:hover { background: var(--home-rose); }
+.desktop-home :is(button, a):focus-visible { outline: 3px solid #b74058; outline-offset: 3px; }
+.desktop-home-body { padding-top: 1.65rem; }
+.desktop-home-hero { display: grid; grid-template-columns: 1.1fr 1fr; min-height: clamp(22rem, 32vw, 28rem); overflow: hidden; border-radius: 1.14rem; background: #59172b; color: #fff; }
+.desktop-home-hero-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(1.8rem, 4.2vw, 3.8rem); background: linear-gradient(147deg, #451121, #7e2037); }
+.desktop-home-location { display: flex; align-items: center; gap: .38rem; color: #ffced6; font-weight: 670; font-size: .87rem; }
+.desktop-home-hero h1 { font-family: "Instrument Serif", Georgia, serif; font-size: clamp(3.8rem, 6.8vw, 6.7rem); line-height: .9; font-weight: 500; letter-spacing: -.045em; margin: .75rem 0 1rem; }
+.desktop-home-hero-copy > p:last-of-type { max-width: 27rem; color: #ffe7ec; font-size: clamp(.92rem, 1.35vw, 1.1rem); line-height: 1.5; }
+.desktop-home-hero-copy button { display: flex; align-items: center; gap: .65rem; margin-top: 1.45rem; padding: .7rem .85rem; background: #fff1ec; color: #65182e; border-radius: .5rem; font-size: .87rem; font-weight: 750; }
+.desktop-home-hero-copy button:hover { background: #fff; }
+.desktop-home-hero-photo { min-width: 0; position: relative; margin: 0; }
+.desktop-home-hero-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 33%; }
+.desktop-home-hero-photo figcaption { position: absolute; right: .8rem; bottom: .8rem; padding: .35rem .6rem; border-radius: .35rem; background: #32111de8; color: #fff; font-size: .73rem; }
+.desktop-home-section { margin-top: 1.6rem; }
+.desktop-home-section h2 { font-size: clamp(1.16rem, 2vw, 1.5rem); font-weight: 770; letter-spacing: -.035em; margin-bottom: .65rem; }
+.desktop-home-featured { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; }
+.desktop-home-featured button { position: relative; display: grid; gap: .31rem; padding: .9rem 1rem 1.08rem; border: 1px solid var(--home-border); border-radius: .82rem; background: #fff; text-align: left; }
+.desktop-home-featured button:hover, .desktop-home-discover:hover { border-color: #be697a; }
+.desktop-home-feature-icon { display: grid; place-items: center; width: 2.55rem; height: 2.55rem; border-radius: .56rem; color: var(--home-red); background: var(--home-rose); margin-bottom: .13rem; }
+.desktop-home-feature-arrow { position: absolute; top: .87rem; right: .88rem; color: var(--home-red); }
+.desktop-home-featured strong { font-size: 1.05rem; font-weight: 770; }
+.desktop-home-featured strong + span { color: var(--home-muted); font-size: .83rem; }
+.desktop-home-more { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1rem; align-items: start; }
+.desktop-home-services { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .32rem .55rem; }
+.desktop-home-services button { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .48rem; min-height: 2.73rem; padding: .45rem .55rem; border: 1px solid var(--home-border); border-radius: .45rem; background: #fff; text-align: left; font-size: .83rem; font-weight: 630; }
+.desktop-home-services svg { color: var(--home-red); }
+.desktop-home-discover { display: block; width: 100%; border: 1px solid var(--home-border); border-radius: .7rem; overflow: hidden; background: #fff; text-align: left; }
+.desktop-home-discover img { display: block; width: 100%; height: 10.2rem; object-fit: cover; object-position: 50% 45%; }
+.desktop-home-discover span { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .55rem; padding: .7rem .8rem; color: var(--home-red); font-size: .87rem; font-weight: 750; }
+.desktop-home-footer { display: flex; justify-content: space-between; margin-block: 1.5rem 0; padding: .85rem 0; border-top: 1px solid var(--home-border); color: var(--home-muted); font-size: .75rem; }
+.desktop-home-footer button:hover { text-decoration: underline; }

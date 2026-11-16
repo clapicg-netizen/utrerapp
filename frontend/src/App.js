@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 import Home from './pages/Home';
+import DesktopHome from './pages/DesktopHome';
 import GuiaComercial from './pages/GuiaComercial';
 import Farmacias from './pages/Farmacias';
 import Salud from './pages/Salud';
@@ -35,6 +36,18 @@ import { supabase } from './lib/supabaseClient';
 export default function App() {
   const [paginaActual, setPaginaActual] = useState('home');
   const [comercioIdUrl, setComercioIdUrl] = useState(null);
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
+
+  useEffect(() => {
+    const viewport = window.matchMedia('(min-width: 1024px)');
+    const update = event => setIsDesktop(event.matches);
+    if (viewport.addEventListener) {
+      viewport.addEventListener('change', update);
+      return () => viewport.removeEventListener('change', update);
+    }
+    viewport.addListener(update);
+    return () => viewport.removeListener(update);
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -158,6 +171,10 @@ export default function App() {
         );
     }
   };
+
+  if (paginaActual === 'home' && isDesktop) {
+    return <DesktopHome onNavigate={setPaginaActual} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 relative flex flex-col lg:flex-row">
