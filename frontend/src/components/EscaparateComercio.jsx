@@ -44,6 +44,24 @@ function phoneNumber(value) {
   return digits.length >= 10 && digits.length <= 15 ? digits : null;
 }
 
+function videoDetails(value) {
+  const href = webLink(value);
+  if (!href) return null;
+  const url = new URL(href);
+  const hostname = url.hostname.toLowerCase();
+  let id;
+  if (hostname === 'youtu.be') {
+    id = url.pathname.slice(1).split('/')[0];
+  } else if (['youtube.com', 'www.youtube.com', 'm.youtube.com', 'www.youtube-nocookie.com'].includes(hostname)) {
+    id = url.searchParams.get('v') || url.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/)?.[1];
+  }
+  return {
+    href,
+    embed: /^[A-Za-z0-9_-]{11}$/.test(id || '') ? 'https://www.youtube-nocookie.com/embed/' + id : null,
+    native: /\.(mp4|webm|ogv)$/i.test(url.pathname),
+  };
+}
+
 export default function EscaparateComercio({ comercio }) {
   const config = ESCAPARATES.find(({ id }) => id === String(comercio.id));
   const profile = config?.slug === 'digital-gm' ? digitalGm : {};
@@ -55,6 +73,7 @@ export default function EscaparateComercio({ comercio }) {
   const shop = webLink(comercio.tienda_url);
   const site = webLink(comercio.web_url);
   const facebook = webLink(profile.facebook || comercio.facebook_url);
+  const video = videoDetails(comercio.video_story_url);
   const phone = phoneNumber(comercio.telefono);
   const whatsapp = phoneNumber(comercio.whatsapp);
   const address = profile.address || comercio.direccion?.trim();
@@ -117,6 +136,18 @@ export default function EscaparateComercio({ comercio }) {
               </a>
             </li>)}
           </ul>
+        </section>}
+        {video && <section className="commerce-showcase-video" aria-labelledby={'video-escaparate-' + suffix}>
+          <h2 id={'video-escaparate-' + suffix}>Vídeo de {comercio.nombre}</h2>
+          {video.embed ? (
+            <iframe src={video.embed} title={'Vídeo de ' + comercio.nombre} loading="lazy" allowFullScreen
+              referrerPolicy="strict-origin-when-cross-origin" allow="encrypted-media; picture-in-picture; fullscreen" />
+          ) : video.native ? (
+            <video src={video.href} controls playsInline preload="none" aria-label={'Vídeo de ' + comercio.nombre} />
+          ) : null}
+          <a href={video.href} target="_blank" rel="noreferrer">
+            {video.embed ? 'Ver en YouTube' : 'Abrir vídeo en otra pestaña'} <ArrowUpRight size={14} aria-hidden="true" />
+          </a>
         </section>}
         <section className="commerce-showcase-visit" aria-labelledby={detailsId}>
           <h2 id={detailsId} tabIndex={-1}>Visita la tienda</h2>

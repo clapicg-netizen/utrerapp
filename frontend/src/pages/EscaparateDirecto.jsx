@@ -3,7 +3,7 @@ import { ArrowLeft } from 'lucide-react';
 import EscaparateComercio from '../components/EscaparateComercio';
 import { supabase } from '../lib/supabaseClient';
 
-const CAMPOS_PUBLICOS = 'id,nombre,subcategoria,descripcion,portada_url,galeria_urls,carta_pdf_url,web_url,tienda_url,facebook_url,telefono,whatsapp,direccion,horario_texto';
+const CAMPOS_PUBLICOS = 'id,nombre,subcategoria,descripcion,portada_url,galeria_urls,carta_pdf_url,video_story_url,web_url,tienda_url,facebook_url,telefono,whatsapp,direccion,horario_texto';
 
 export default function EscaparateDirecto({ escaparate, volver }) {
   const [comercio, setComercio] = useState(null);
