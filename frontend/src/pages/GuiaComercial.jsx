@@ -1,13 +1,12 @@
 // src/pages/GuiaComercial.jsx
 import React, { useState, useEffect } from "react";
-import { Phone, Navigation, Globe, Search, MapPin, ExternalLink, Image, FileText, Video, Zap, Sparkles, ShoppingBag, Utensils, Clock, CreditCard, Bike, Plus, Minus, ShoppingCart, ShieldCheck, Home, Bed, Bath } from "lucide-react";
-import { obtenerComercios, actualizarComercio, crearComercio, subirArchivoComercio } from "../lib/comerciosService";
+import { Phone, Search, MapPin, Image, Sparkles } from "lucide-react";
+import { obtenerComercios } from "../lib/comerciosService";
 import { supabase } from "../lib/supabaseClient";
 import FichaInmobiliaria from "./FichaInmobiliaria";
 import FichaComida from "./FichaComida";
+import EscaparateComercio, { ESCAPARATES } from "../components/EscaparateComercio";
 import LandingComercio from "../components/LandingComercio";
-
-const PIN_ADMIN_MAESTRO = "9999";
 
 export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInicial = "" }) {
   const [comercios, setComercios] = useState([]);
@@ -15,15 +14,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
   const [comercioSel, setComercioSel] = useState(null);
   const [busqueda, setBusqueda] = useState(busquedaInicial);
   const [cargando, setCargando] = useState(true);
-
-  // Estados para el panel de administración/edición del comercio
-  const [modoAdmin, setModoAdmin] = useState(false);
-  const [pinInput, setPinInput] = useState("");
-  const [autenticadoAdmin, setAutenticadoAdmin] = useState(false);
-  const [esAdminMaestro, setEsAdminMaestro] = useState(false);
-  const [mensajeAdmin, setMensajeAdmin] = useState({ tipo: "", texto: "" });
-  const [guardando, setGuardando] = useState(false);
-  const [subiendo, setSubiendo] = useState(false);
 
   // Estados para Patrocinadores de la Guía
   const [sponsors, setSponsors] = useState([
@@ -36,33 +26,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
   ]);
   const [currentIndexSponsor, setCurrentIndexSponsor] = useState(0);
 
-  // Formulario de edición/creación completo con Redes Sociales, Galería y Datos Especiales (JSON)
-  const [formData, setFormData] = useState({
-    nombre: "",
-    categoria: "Hostelería",
-    subcategoria: "",
-    tipo_ficha: "normal",
-    direccion: "",
-    descripcion: "",
-    horario_texto: "",
-    telefono: "",
-    whatsapp: "",
-    portada_url: "",
-    logo_url: "",
-    carta_pdf_url: "",
-    galeria_urls: [],
-    instagram_url: "",
-    tiktok_url: "",
-    facebook_url: "",
-    web_url: "",
-    tienda_url: "",
-    oferta_flash: "",
-    video_story_url: "",
-    pin_acceso: "1234",
-    destacado: false,
-    datos_especiales_json: ""
-  });
-
   const [fotoAmpliada, setFotoAmpliada] = useState(null);
   const [indiceCarrusel, setIndiceCarrusel] = useState(0);
 
@@ -72,22 +35,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
     cargarComercios();
     cargarSponsors();
   }, []);
-
-  // Detector de enlaces mágicos por URL (?editar=id&pin=clave)
-  useEffect(() => {
-    if (comercios.length === 0) return;
-    const params = new URLSearchParams(window.location.search);
-    const editarParam = params.get('editar');
-    const pinParam = params.get('pin');
-
-    if (editarParam && pinParam) {
-      const comercioEncontrado = comercios.find(c => c.id.toString() === editarParam.toString());
-      if (comercioEncontrado && (pinParam === PIN_ADMIN_MAESTRO || pinParam === comercioEncontrado.pin_acceso)) {
-        prepararEdicionComercio(comercioEncontrado);
-        setAutenticadoAdmin(true);
-      }
-    }
-  }, [comercios]);
 
   const cargarComercios = async () => {
     setCargando(true);
@@ -159,115 +106,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
     return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5";
   };
 
-  const handleFileUpload = async (e, campo, esGaleria = false) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setSubiendo(true);
-    const res = await subirArchivoComercio(file);
-    setSubiendo(false);
-
-    if (res.success) {
-      if (esGaleria) {
-        setFormData(prev => ({
-          ...prev,
-          galeria_urls: [...(prev.galeria_urls || []), res.url]
-        }));
-      } else {
-        setFormData(prev => ({ ...prev, [campo]: res.url }));
-      }
-      setMensajeAdmin({ tipo: 'exito', texto: '¡Archivo subido con éxito!' });
-    } else {
-      setMensajeAdmin({ tipo: 'error', texto: res.message });
-    }
-  };
-
-  const eliminarDeGaleria = (index) => {
-    setFormData(prev => ({
-      ...prev,
-      galeria_urls: prev.galeria_urls.filter((_, i) => i !== index)
-    }));
-  };
-
-  const prepararEdicionComercio = (c) => {
-    setComercioSel(c);
-    setFormData({
-      nombre: c.nombre || "",
-      categoria: c.categoria || "Hostelería",
-      subcategoria: c.subcategoria || "",
-      tipo_ficha: c.tipo_ficha || "normal",
-      direccion: c.direccion || "",
-      descripcion: c.descripcion || "",
-      horario_texto: c.horario_texto || "",
-      telefono: c.telefono || "",
-      whatsapp: c.whatsapp || "",
-      portada_url: c.portada_url || "",
-      logo_url: c.logo_url || "",
-      carta_pdf_url: c.carta_pdf_url || "",
-      galeria_urls: Array.isArray(c.galeria_urls) ? c.galeria_urls : [],
-      instagram_url: c.instagram_url || c.instagram_username || "",
-      tiktok_url: c.tiktok_url || "",
-      facebook_url: c.facebook_url || "",
-      web_url: c.web_url || "",
-      tienda_url: c.tienda_url || "",
-      oferta_flash: c.oferta_flash || "",
-      video_story_url: c.video_story_url || "",
-      pin_acceso: c.pin_acceso || "1234",
-      destacado: c.destacado || false,
-      datos_especiales_json: c.datos_especiales ? JSON.stringify(c.datos_especiales, null, 2) : ""
-    });
-    setModoAdmin(true);
-    setAutenticadoAdmin(false);
-    setPinInput("");
-  };
-
-  const handleLoginAdmin = (e) => {
-    e.preventDefault();
-    if (pinInput === PIN_ADMIN_MAESTRO || pinInput === (comercioSel?.pin_acceso || "1234")) {
-      setAutenticadoAdmin(true);
-      setEsAdminMaestro(pinInput === PIN_ADMIN_MAESTRO);
-      setMensajeAdmin({ tipo: "", texto: "" });
-    } else {
-      setMensajeAdmin({ tipo: "error", texto: "PIN incorrecto" });
-    }
-  };
-
-  const guardarCambiosComercio = async (e) => {
-    e.preventDefault();
-    setGuardando(true);
-
-    let parsedDatosEspeciais = null;
-    if (formData.datos_especiales_json && formData.datos_especiales_json.trim() !== '') {
-      try {
-        parsedDatosEspeciais = JSON.parse(formData.datos_especiales_json);
-      } catch (err) {
-        setGuardando(false);
-        setMensajeAdmin({ tipo: 'error', texto: 'Error en el formato JSON de los datos especiales. Revísalo.' });
-        return;
-      }
-    }
-
-    const datosAEnviar = {
-      ...formData,
-      datos_especiales: parsedDatosEspeciais
-    };
-    delete datosAEnviar.datos_especiales_json;
-
-    const res = await actualizarComercio(comercioSel.id, PIN_ADMIN_MAESTRO, datosAEnviar);
-    setGuardando(false);
-
-    if (res.success) {
-      setMensajeAdmin({ tipo: "exito", texto: "¡Cambios guardados correctamente!" });
-      await cargarComercios();
-      setTimeout(() => {
-        setModoAdmin(false);
-        setComercioSel(null);
-      }, 1000);
-    } else {
-      setMensajeAdmin({ tipo: "error", texto: res.message });
-    }
-  };
-
+  const escaparateSeleccionado = ESCAPARATES.some(({ id }) => id === String(comercioSel?.id));
   const currentSponsor = sponsors[currentIndexSponsor] || sponsors[0];
 
   return (
@@ -372,7 +211,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
               {comerciosFiltrados.map((comercio) => (
                 <div
                   key={comercio.id}
-                  onClick={() => { setComercioSel(comercio); setModoAdmin(false); }}
+                  onClick={() => setComercioSel(comercio)}
                   className="bg-white rounded-3xl p-4 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer relative overflow-hidden"
                 >
                   <div className="flex gap-4 items-start">
@@ -411,7 +250,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
                       onClick={(e) => {
                         e.stopPropagation();
                         setComercioSel(comercio);
-                        setModoAdmin(false);
                       }}
                       className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition-colors text-center cursor-pointer"
                     >
@@ -426,313 +264,24 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
 
       </div>
 
-      {/* MODAL FICHA DESPLEGABLE O PANEL DE EDICIÓN */}
+      {/* FICHA DEL COMERCIO */}
       {comercioSel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-5 pb-32">
+          <div className={`bg-white rounded-t-3xl sm:rounded-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative ${escaparateSeleccionado ? "max-w-3xl" : "max-w-md p-5 pb-32"}`}>
             
             <button
-              onClick={() => { setComercioSel(null); setModoAdmin(false); }}
+              onClick={() => setComercioSel(null)}
+              aria-label="Cerrar ficha"
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold z-10 cursor-pointer"
             >
               ✕
             </button>
 
-            {/* SI ESTÁ EN MODO EDICIÓN */}
-            {modoAdmin ? (
-              <div>
-                {!autenticadoAdmin ? (
-                  <form onSubmit={handleLoginAdmin} className="space-y-4 pt-4">
-                    <div className="text-center">
-                      <span className="text-3xl">🔐</span>
-                      <h3 className="text-lg font-black text-slate-900 mt-2">Acceso de Gestión</h3>
-                      <p className="text-xs text-slate-500">Introduce el PIN para editar {comercioSel.nombre}</p>
-                    </div>
-
-                    {mensajeAdmin.texto && (
-                      <div className="p-3 rounded-xl text-xs font-bold bg-red-50 text-red-600 text-center">
-                        {mensajeAdmin.texto}
-                      </div>
-                    )}
-
-                    <input
-                      type="password"
-                      placeholder="PIN (ej. 1234 o 9999)"
-                      value={pinInput}
-                      onChange={(e) => setPinInput(e.target.value)}
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-center font-bold"
-                      autoFocus
-                    />
-
-                    <button
-                      type="submit"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-3 rounded-xl shadow cursor-pointer"
-                    >
-                      Ver Panel de Edición
-                    </button>
-                  </form>
-                ) : (
-                  <form onSubmit={guardarCambiosComercio} className="space-y-4 pt-2">
-                    <div className="border-b pb-2 flex justify-between items-center">
-                      <h3 className="text-base font-black text-slate-900">✏️ Editando: {formData.nombre}</h3>
-                      <button
-                        type="button"
-                        onClick={() => setModoAdmin(false)}
-                        className="text-xs bg-slate-100 px-2.5 py-1 rounded-lg font-bold text-slate-600 cursor-pointer"
-                      >
-                        Ver Ficha
-                      </button>
-                    </div>
-
-                    {mensajeAdmin.texto && (
-                      <div className={`p-3 rounded-xl text-xs font-bold text-center ${mensajeAdmin.tipo === 'error' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
-                        {mensajeAdmin.texto}
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Tipo de Estructura de Ficha:</label>
-                      <select
-                        value={formData.tipo_ficha}
-                        onChange={(e) => setFormData({...formData, tipo_ficha: e.target.value})}
-                        className="w-full p-2.5 bg-blue-50 border border-blue-200 rounded-xl text-xs font-bold text-blue-950"
-                      >
-                        <option value="normal">📄 Ficha Normal / Estándar</option>
-                        <option value="especial1">🏠 Ficha Especial 1 - Inmobiliarias (Catálogo de Inmuebles)</option>
-                        <option value="especial2">🍔 Ficha Especial 2 - Comida a domicilio / Pedidos</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Nombre del Comercio:</label>
-                      <input
-                        type="text"
-                        value={formData.nombre}
-                        onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                        className="w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-bold"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Categoría:</label>
-                        <select
-                          value={formData.categoria}
-                          onChange={(e) => setFormData({...formData, categoria: e.target.value})}
-                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
-                        >
-                          <option value="Hostelería">Hostelería</option>
-                          <option value="Comercio">Comercio</option>
-                          <option value="Servicios">Servicios</option>
-                          <option value="Salud y Belleza">Salud y Belleza</option>
-                          <option value="Inmobiliarias">Inmobiliarias</option>
-                          <option value="Formación">Formación</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">Subcategoría (Escribe "Landing" para portada moderna):</label>
-                        <input
-                          type="text"
-                          value={formData.subcategoria}
-                          onChange={(e) => setFormData({...formData, subcategoria: e.target.value})}
-                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs font-bold text-amber-600"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Dirección:</label>
-                      <input
-                        type="text"
-                        value={formData.direccion}
-                        onChange={(e) => setFormData({...formData, direccion: e.target.value})}
-                        className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
-                      />
-                    </div>
-
-                    {formData.tipo_ficha === 'especial1' && (
-                      <div className="bg-amber-50 p-3 rounded-2xl border border-amber-200 space-y-2">
-                        <label className="block text-xs font-black uppercase text-amber-900">🏠 Datos Inmobiliaria (JSON):</label>
-                        <textarea
-                          rows="6"
-                          value={formData.datos_especiales_json}
-                          onChange={(e) => setFormData({...formData, datos_especiales_json: e.target.value})}
-                          className="w-full p-2 bg-white border border-amber-300 rounded-xl text-xs font-mono"
-                        />
-                      </div>
-                    )}
-
-                    {/* SITIO WEB Y TIENDA ONLINE */}
-                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
-                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Sitio Web y Tienda Online</p>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Página Web:</label>
-                        <input
-                          type="text"
-                          value={formData.web_url}
-                          onChange={(e) => setFormData({...formData, web_url: e.target.value})}
-                          placeholder="https://www.tu-web.es"
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Tienda Online:</label>
-                        <input
-                          type="text"
-                          value={formData.tienda_url}
-                          onChange={(e) => setFormData({...formData, tienda_url: e.target.value})}
-                          placeholder="https://tu-tienda.palbin.com"
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    {/* PORTADA PRINCIPAL */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">📸 Foto de Portada:</label>
-                      <input
-                        type="text"
-                        value={formData.portada_url}
-                        onChange={(e) => setFormData({...formData, portada_url: e.target.value})}
-                        placeholder="URL de la imagen..."
-                        className="w-full p-2 bg-slate-50 border rounded-xl text-xs mb-1"
-                      />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileUpload(e, 'portada_url')}
-                        disabled={subiendo}
-                        className="w-full text-xs text-slate-500"
-                      />
-                    </div>
-
-                    {/* GALERÍA DE FOTOS */}
-                    <div className="bg-slate-50 p-3 rounded-2xl border">
-                      <label className="block text-xs font-bold text-slate-800 mb-2">🖼️ Galería de Fotos (Múltiples):</label>
-                      <div className="grid grid-cols-3 gap-2 mb-2">
-                        {formData.galeria_urls.map((url, idx) => (
-                          <div key={idx} className="relative h-16 bg-slate-200 rounded-xl overflow-hidden border">
-                            <img src={url} alt={`Gal ${idx}`} className="w-full h-full object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => eliminarDeGaleria(idx)}
-                              className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[9px] font-bold flex items-center justify-center cursor-pointer"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleFileUpload(e, null, true)}
-                        disabled={subiendo}
-                        className="w-full text-xs text-slate-500"
-                      />
-                    </div>
-
-                    {/* VÍDEO PROMOCIONAL */}
-                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
-                      <p className="text-xs font-bold text-slate-800 uppercase">🎬 Vídeo Promocional</p>
-                      <input
-                        type="text"
-                        value={formData.video_story_url}
-                        onChange={(e) => setFormData({...formData, video_story_url: e.target.value})}
-                        placeholder="URL del vídeo..."
-                        className="w-full p-2 bg-white border rounded-xl text-xs"
-                      />
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) => handleFileUpload(e, 'video_story_url')}
-                        disabled={subiendo}
-                        className="w-full text-xs text-slate-500"
-                      />
-                    </div>
-
-                    {/* REDES SOCIALES */}
-                    <div className="bg-slate-50 p-3 rounded-2xl border space-y-2">
-                      <p className="text-xs font-bold text-slate-800 uppercase">🌐 Redes Sociales</p>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Instagram:</label>
-                        <input
-                          type="text"
-                          value={formData.instagram_url}
-                          onChange={(e) => setFormData({...formData, instagram_url: e.target.value})}
-                          placeholder="https://instagram.com/..."
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">TikTok:</label>
-                        <input
-                          type="text"
-                          value={formData.tiktok_url}
-                          onChange={(e) => setFormData({...formData, tiktok_url: e.target.value})}
-                          placeholder="https://tiktok.com/@..."
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600">Facebook:</label>
-                        <input
-                          type="text"
-                          value={formData.facebook_url}
-                          onChange={(e) => setFormData({...formData, facebook_url: e.target.value})}
-                          placeholder="https://facebook.com/..."
-                          className="w-full p-2 bg-white border rounded-xl text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">WhatsApp:</label>
-                        <input
-                          type="text"
-                          value={formData.whatsapp}
-                          onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">PIN Acceso:</label>
-                        <input
-                          type="text"
-                          value={formData.pin_acceso}
-                          onChange={(e) => setFormData({...formData, pin_acceso: e.target.value})}
-                          className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Descripción:</label>
-                      <textarea
-                        rows="2"
-                        value={formData.descripcion}
-                        onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-                        className="w-full p-2 bg-slate-50 border rounded-xl text-xs"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={guardando}
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl shadow cursor-pointer"
-                    >
-                      {guardando ? "Guardando..." : "💾 Guardar Cambios"}
-                    </button>
-                  </form>
-                )}
-              </div>
-            ) : (
-              /* VISTA NORMAL O ESPECIAL DE LA FICHA DEL COMERCIO */
               <div>
                 {/* SI ES FICHA ESPECIAL 1 (INMOBILIARIA) */}
-                {comercioSel.tipo_ficha === 'especial1' ? (
+                {escaparateSeleccionado ? (
+                  <EscaparateComercio comercio={comercioSel} />
+                ) : comercioSel.tipo_ficha === 'especial1' ? (
                   <FichaInmobiliaria negocioId={comercioSel.id} />
                 ) : comercioSel.tipo_ficha === 'especial2' ? (
                   /* SI ES FICHA ESPECIAL 2 (COMIDA) */
@@ -908,7 +457,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
                   </div>
                 )}
               </div>
-            )}
 
           </div>
         </div>
