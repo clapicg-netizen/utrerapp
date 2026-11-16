@@ -13,6 +13,7 @@ import MenuAgenda from './pages/MenuAgenda';
 import Conso from './pages/Conso';
 import PanelComercio from './pages/PanelComercio';
 import Admin from './pages/Admin';
+import AdminComercios from './pages/AdminComercios';
 import Tablon from './pages/Tablon';
 import Teatro from './pages/Teatro';
 import Noticias from './pages/Noticias';
@@ -71,6 +72,8 @@ export default function App() {
       setPaginaActual('cercanias');
     } else if (vistaParam === 'gasolineras') {
       setPaginaActual('gasolineras');
+    } else if (vistaParam === 'admin-comercios') {
+      setPaginaActual('admin-comercios');
     }
   }, [setPaginaActual]);
 
@@ -100,7 +103,7 @@ export default function App() {
             busquedaInicial={busquedaGuia}
             setPaginaActual={setPaginaActual}
             categoriaInicial={
-              paginaActual === 'hosteleria' ? 'hosteleria' : null
+              paginaActual === 'hosteleria' ? 'Hostelería' : 'Todos'
             }
           />
         );
@@ -148,6 +151,9 @@ export default function App() {
 
       case 'tablon':
         return <Tablon setPaginaActual={setPaginaActual} />;
+
+      case 'admin-comercios':
+        return <AdminComercios onBack={() => setPaginaActual('home')} />;
 
       case 'admin':
         return <Admin setPaginaActual={setPaginaActual} />;

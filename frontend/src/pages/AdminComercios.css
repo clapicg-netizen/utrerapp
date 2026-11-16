@@ -1,0 +1,40 @@
+.admin-commerce { max-width: 72rem; margin: auto; padding: clamp(1rem, 3vw, 2rem); color: #29232a; }
+.admin-commerce button { border-radius: .55rem; border: 1px solid #e9dce0; background: #fff; padding: .48rem .65rem; font-size: .84rem; font-weight: 650; }
+.admin-commerce button:disabled { opacity: .58; }
+.admin-commerce button:focus-visible, .admin-commerce :is(input,textarea,select):focus-visible { outline: 2px solid #8a253a; outline-offset: 2px; }
+.admin-commerce button svg, .admin-commerce-preview a svg { vertical-align: middle; display: inline; }
+.admin-commerce-header { display: flex; gap: .6rem; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 1rem; margin: .65rem 0; background: #76273d; color: white; border-radius: .85rem; }
+.admin-commerce-header button { color: #662139; }
+.admin-commerce-header > div, .admin-commerce-editor-heading { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.admin-commerce h1 { font-size: clamp(1.2rem, 3vw, 1.75rem); font-weight: 780; }
+.admin-commerce h2 { font-size: 1.12rem; font-weight: 760; }
+.admin-commerce-login, .admin-commerce-list, .admin-commerce-work { padding: .95rem; background: #fff; border: 1px solid #e9dce0; border-radius: .8rem; }
+.admin-commerce-login { max-width: 31rem; display: grid; gap: .65rem; }
+.admin-commerce-layout { display: grid; gap: .7rem; align-items: start; }
+.admin-commerce label { display: block; font-size: .83rem; font-weight: 670; }
+.admin-commerce :is(input:not([type=file]),select,textarea) { display: block; width: 100%; margin-top: .23rem; padding: .49rem; border: 1px solid #d9ced3; border-radius: .45rem; color: #29232a; background: #fff; }
+.admin-commerce .admin-commerce-primary { background: #76273d; color: #fff; border-color: #76273d; }
+.admin-commerce-list label, .admin-commerce-list ul, .admin-commerce-form > button { margin-top: .6rem; }
+.admin-commerce-list ul { display: grid; gap: .3rem; }
+.admin-commerce-list li button { display: grid; width: 100%; text-align: left; }
+.admin-commerce-list li button span { color: #635963; font-size: .76rem; }
+.admin-commerce-list li button[aria-pressed=true] { border-color: #b95a73; background: #faf0f3; }
+.admin-commerce-editor-heading { justify-content: space-between; margin-bottom: .7rem; }
+.admin-commerce-form fieldset { display: grid; gap: .65rem; }
+.admin-commerce .admin-commerce-file { margin-top: .26rem; font-size: .75rem; color: #74243a; }
+.admin-commerce-file svg { display: inline; vertical-align: middle; }
+.admin-commerce-file input { display: block; width: 100%; }
+.admin-commerce-feedback { padding: .6rem .75rem; margin: .5rem 0; border-radius: .45rem; background: #f5edf0; font-size: .86rem; }
+.admin-commerce-error { color: #86213c; }
+.admin-commerce-preview { display: grid; gap: .48rem; }
+.admin-commerce-preview h3 { font-size: 1.4rem; font-weight: 760; }
+.admin-commerce-preview p { white-space: pre-line; overflow-wrap: anywhere; }
+.admin-commerce-preview a { color: #74243a; text-decoration: underline; }
+.admin-commerce-preview > img { width: 100%; max-height: 15rem; object-fit: cover; border-radius: .65rem; }
+.admin-commerce-preview > div { display: flex; flex-wrap: wrap; gap: .35rem; }
+.admin-commerce-preview div img { width: 6rem; height: 5rem; object-fit: cover; border-radius: .35rem; }
+@media (min-width: 48rem) {
+  .admin-commerce-layout { grid-template-columns: minmax(13rem, 1fr) minmax(0, 3fr); }
+  .admin-commerce-form fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-commerce-wide { grid-column: 1 / -1; }
+}
