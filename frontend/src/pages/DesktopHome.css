@@ -1,51 +1,64 @@
 .desktop-home {
-  --home-ink: #302129;
-  --home-red: #8a253a;
-  --home-rose: #faecee;
-  --home-muted: #65575b;
-  --home-border: #e8dde0;
+  --home-ink: #2e211d;
+  --home-wine: #80283b;
+  --home-gold: #e9b759;
+  --home-muted: #675750;
+  --home-border: #e6dacf;
   min-height: 100vh;
-  background: #fcf8f6;
+  background: #faf5eb;
   color: var(--home-ink);
   font-family: "Instrument Sans", "Geist", system-ui, sans-serif;
 }
-.desktop-home-shell { width: min(100% - 4.5rem, 77rem); margin-inline: auto; }
-.desktop-home-header { border-bottom: 1px solid var(--home-border); background: #fffdfc; }
-.desktop-home-header-inner { min-height: 4.65rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.desktop-home-brand { display: flex; align-items: center; gap: .62rem; font-size: 1.24rem; font-weight: 780; letter-spacing: -.037em; }
-.desktop-home-brand span { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: .5rem; background: var(--home-red); color: #fff; font-weight: 780; }
-.desktop-home-header nav { display: flex; align-items: center; gap: clamp(.6rem, 1.8vw, 1.7rem); }
-.desktop-home-header nav button { font-size: .86rem; font-weight: 650; padding: .52rem .15rem; }
-.desktop-home-header nav button:hover { color: var(--home-red); text-decoration: underline; text-underline-offset: .28rem; }
-.desktop-home-conso { display: inline-flex; align-items: center; gap: .45rem; padding: .59rem .72rem; border: 1px solid #ebcbd2; border-radius: .55rem; color: var(--home-red); font-size: .82rem; font-weight: 720; }
-.desktop-home-conso:hover, .desktop-home-services button:hover { background: var(--home-rose); }
-.desktop-home :is(button, a):focus-visible { outline: 3px solid #b74058; outline-offset: 3px; }
-.desktop-home-body { padding-top: 1.65rem; }
-.desktop-home-hero { display: grid; grid-template-columns: 1.1fr 1fr; min-height: clamp(22rem, 32vw, 28rem); overflow: hidden; border-radius: 1.14rem; background: #59172b; color: #fff; }
-.desktop-home-hero-copy { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: clamp(1.8rem, 4.2vw, 3.8rem); background: linear-gradient(147deg, #451121, #7e2037); }
-.desktop-home-location { display: flex; align-items: center; gap: .38rem; color: #ffced6; font-weight: 670; font-size: .87rem; }
-.desktop-home-hero h1 { font-family: "Instrument Serif", Georgia, serif; font-size: clamp(3.8rem, 6.8vw, 6.7rem); line-height: .9; font-weight: 500; letter-spacing: -.045em; margin: .75rem 0 1rem; }
-.desktop-home-hero-copy > p:last-of-type { max-width: 27rem; color: #ffe7ec; font-size: clamp(.92rem, 1.35vw, 1.1rem); line-height: 1.5; }
-.desktop-home-hero-copy button { display: flex; align-items: center; gap: .65rem; margin-top: 1.45rem; padding: .7rem .85rem; background: #fff1ec; color: #65182e; border-radius: .5rem; font-size: .87rem; font-weight: 750; }
-.desktop-home-hero-copy button:hover { background: #fff; }
-.desktop-home-hero-photo { min-width: 0; position: relative; margin: 0; }
-.desktop-home-hero-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 33%; }
-.desktop-home-hero-photo figcaption { position: absolute; right: .8rem; bottom: .8rem; padding: .35rem .6rem; border-radius: .35rem; background: #32111de8; color: #fff; font-size: .73rem; }
-.desktop-home-section { margin-top: 1.6rem; }
-.desktop-home-section h2 { font-size: clamp(1.16rem, 2vw, 1.5rem); font-weight: 770; letter-spacing: -.035em; margin-bottom: .65rem; }
-.desktop-home-featured { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; }
-.desktop-home-featured button { position: relative; display: grid; gap: .31rem; padding: .9rem 1rem 1.08rem; border: 1px solid var(--home-border); border-radius: .82rem; background: #fff; text-align: left; }
-.desktop-home-featured button:hover, .desktop-home-discover:hover { border-color: #be697a; }
-.desktop-home-feature-icon { display: grid; place-items: center; width: 2.55rem; height: 2.55rem; border-radius: .56rem; color: var(--home-red); background: var(--home-rose); margin-bottom: .13rem; }
-.desktop-home-feature-arrow { position: absolute; top: .87rem; right: .88rem; color: var(--home-red); }
-.desktop-home-featured strong { font-size: 1.05rem; font-weight: 770; }
-.desktop-home-featured strong + span { color: var(--home-muted); font-size: .83rem; }
-.desktop-home-more { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1rem; align-items: start; }
-.desktop-home-services { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .32rem .55rem; }
-.desktop-home-services button { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .48rem; min-height: 2.73rem; padding: .45rem .55rem; border: 1px solid var(--home-border); border-radius: .45rem; background: #fff; text-align: left; font-size: .83rem; font-weight: 630; }
-.desktop-home-services svg { color: var(--home-red); }
-.desktop-home-discover { display: block; width: 100%; border: 1px solid var(--home-border); border-radius: .7rem; overflow: hidden; background: #fff; text-align: left; }
-.desktop-home-discover img { display: block; width: 100%; height: 10.2rem; object-fit: cover; object-position: 50% 45%; }
-.desktop-home-discover span { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .55rem; padding: .7rem .8rem; color: var(--home-red); font-size: .87rem; font-weight: 750; }
-.desktop-home-footer { display: flex; justify-content: space-between; margin-block: 1.5rem 0; padding: .85rem 0; border-top: 1px solid var(--home-border); color: var(--home-muted); font-size: .75rem; }
+.desktop-home-shell { width: min(100% - 5rem, 73rem); margin-inline: auto; }
+.desktop-home :is(button, a, input):focus-visible { outline: 3px solid #a34854; outline-offset: 3px; }
+.desktop-home-hero { isolation: isolate; overflow: hidden; position: relative; min-height: 28rem; color: #fff8e8; background: #271b18; }
+.desktop-home-panorama, .desktop-home-hero::after { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+.desktop-home-panorama { object-fit: cover; object-position: center 68%; }
+.desktop-home-hero::after { content: ""; background: linear-gradient(90deg, #211213f5 0%, #241719d4 28%, #2417194d 57%, transparent 78%), linear-gradient(180deg, #19111288, transparent 40%, #1c111452); }
+.desktop-home-header { border-bottom: 1px solid #ffefd233; }
+.desktop-home-header-inner { min-height: 4.4rem; display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; }
+.desktop-home-brand { display: flex; align-items: center; gap: .68rem; font-size: 1.53rem; font-weight: 790; letter-spacing: -.06em; }
+.desktop-home-brand img { width: 2.55rem; height: 2.55rem; object-fit: contain; background: #fff9ed; padding: .24rem; border-radius: .62rem; }
+.desktop-home-brand span span { color: var(--home-gold); }
+.desktop-home-header nav { display: flex; align-items: center; gap: clamp(.55rem, 2.2vw, 2rem); }
+.desktop-home-header nav button { font-size: .86rem; font-weight: 680; padding: .58rem .15rem; }
+.desktop-home-header nav button:hover { color: #ffd68f; text-decoration: underline; text-underline-offset: .3rem; }
+.desktop-home-conso { display: flex; align-items: center; gap: .42rem; padding: .58rem .75rem; border: 1px solid #ffebca83; border-radius: 2rem; font-size: .79rem; font-weight: 700; }
+.desktop-home-conso:hover { background: #fff8e81d; }
+.desktop-home-hero :is(button, input):focus-visible { outline-color: #ffd07d; }
+.desktop-home-hero-copy { padding: 2.7rem 0 3.2rem; }
+.desktop-home-location { display: flex; align-items: center; gap: .35rem; color: #ffd58b; font-size: .86rem; font-weight: 680; }
+.desktop-home-hero h1 { margin: .5rem 0 .7rem; font-family: "Instrument Serif", Georgia, serif; font-size: clamp(3.7rem, 6.3vw, 6rem); line-height: .85; font-weight: 500; letter-spacing: -.055em; }
+.desktop-home-hero h1 em { color: #ffdc9e; font-weight: inherit; }
+.desktop-home-hero-copy > p:not(.desktop-home-location) { max-width: 27rem; margin-top: .95rem; color: #fff1dc; font-size: .96rem; }
+.desktop-home-search { display: flex; align-items: center; gap: .7rem; max-width: 30rem; margin-top: 1.1rem; padding: .28rem .28rem .28rem .75rem; border-radius: 2rem; background: #fffaf0; color: #4d3a31; }
+.desktop-home-search input { flex: 1; min-width: 0; padding: .5rem .15rem; background: transparent; font-size: .87rem; }
+.desktop-home-search button { padding: .55rem .95rem; border-radius: 2rem; background: var(--home-gold); color: #301e11; font-size: .83rem; font-weight: 760; }
+.desktop-home-search button:hover { background: #fbd184; }
+.desktop-home-photo-label { position: absolute; right: max(2.5rem, calc((100% - 73rem)/2)); bottom: .9rem; border-radius: .3rem; padding: .25rem .48rem; background: #211715d9; font-size: .69rem; }
+.desktop-home-body { padding-top: .15rem; }
+.desktop-home-section { margin-top: 1.35rem; }
+.desktop-home-section h2 { margin-bottom: .65rem; font-family: "Instrument Serif", Georgia, serif; font-size: clamp(1.35rem, 2.1vw, 1.8rem); line-height: 1.15; letter-spacing: -.032em; }
+.desktop-home-featured { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .72rem; }
+.desktop-home-featured button { position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: .14rem .65rem; padding: .72rem .9rem; border: 1px solid var(--home-border); border-radius: .68rem; background: #fffdf8; text-align: left; }
+.desktop-home-featured button:hover, .desktop-home-editorial button:hover { border-color: #bb786b; }
+.desktop-home-feature-icon { grid-row: span 2; display: grid; place-items: center; width: 2.65rem; height: 2.65rem; border-radius: .63rem; color: var(--home-wine); background: #f5e6df; }
+.desktop-home-feature-arrow { position: absolute; top: .6rem; right: .7rem; color: var(--home-wine); }
+.desktop-home-featured strong { padding-right: 1.2rem; font-size: .96rem; font-weight: 760; }
+.desktop-home-featured strong + span { color: var(--home-muted); font-size: .77rem; }
+.desktop-home-editorial { display: grid; grid-template-columns: 1.5fr 1fr; gap: .72rem; }
+.desktop-home-editorial-links { display: grid; grid-template-rows: 1fr 1fr; gap: .65rem; }
+.desktop-home-editorial-links button { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .75rem; padding: .9rem; border: 1px solid var(--home-border); border-radius: .68rem; background: #fffdf8; text-align: left; }
+.desktop-home-editorial-links strong { display: block; font-family: "Instrument Serif", Georgia, serif; font-size: 1.17rem; }
+.desktop-home-editorial-links small { color: var(--home-muted); font-size: .8rem; }
+.desktop-home-editorial-links svg { color: var(--home-wine); }
+.desktop-home-discover { display: grid; align-items: end; isolation: isolate; position: relative; min-height: 13rem; overflow: hidden; border: 1px solid var(--home-border); border-radius: .68rem; background: #5c4235; text-align: left; }
+.desktop-home-discover img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; object-position: 50% 60%; }
+.desktop-home-discover span { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .58rem; padding: 1.25rem 1rem .75rem; background: linear-gradient(transparent, #2b1815ee); color: #fff8ec; font-weight: 720; }
+.desktop-home-services { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .4rem .6rem; }
+.desktop-home-services button { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .48rem; min-height: 2.73rem; padding: .45rem .58rem; border: 1px solid var(--home-border); border-radius: .45rem; background: #fffdf8; text-align: left; font-size: .83rem; font-weight: 650; }
+.desktop-home-services button:hover { background: #f8e9e3; }
+.desktop-home-services svg { color: var(--home-wine); }
+.desktop-home-footer { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.4rem; padding: .9rem 0; border-top: 1px solid var(--home-border); color: var(--home-muted); font-size: .73rem; }
+.desktop-home-footer a { text-decoration: underline; }
 .desktop-home-footer button:hover { text-decoration: underline; }

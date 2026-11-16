@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 import Home from './pages/Home';
 import DesktopHome from './pages/DesktopHome';
@@ -34,7 +34,12 @@ import {
 import { supabase } from './lib/supabaseClient';
 
 export default function App() {
-  const [paginaActual, setPaginaActual] = useState('home');
+  const [paginaActual, setPagina] = useState('home');
+  const [busquedaGuia, setBusquedaGuia] = useState('');
+  const setPaginaActual = useCallback((pagina, busqueda = '') => {
+    setBusquedaGuia(busqueda);
+    setPagina(pagina);
+  }, []);
   const [comercioIdUrl, setComercioIdUrl] = useState(null);
   const [isDesktop, setIsDesktop] = useState(() => window.matchMedia('(min-width: 1024px)').matches);
 
@@ -67,7 +72,7 @@ export default function App() {
     } else if (vistaParam === 'gasolineras') {
       setPaginaActual('gasolineras');
     }
-  }, []);
+  }, [setPaginaActual]);
 
   const renderizarContenidoPrincipal = () => {
     if (comercioIdUrl && paginaActual === 'panel-comercio') {
@@ -92,6 +97,7 @@ export default function App() {
       case 'hosteleria':
         return (
           <GuiaComercial
+            busquedaInicial={busquedaGuia}
             setPaginaActual={setPaginaActual}
             categoriaInicial={
               paginaActual === 'hosteleria' ? 'hosteleria' : null

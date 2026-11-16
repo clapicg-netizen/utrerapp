@@ -9,11 +9,11 @@ import LandingComercio from "../components/LandingComercio";
 
 const PIN_ADMIN_MAESTRO = "9999";
 
-export default function GuiaComercial({ categoriaInicial = "Todos" }) {
+export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInicial = "" }) {
   const [comercios, setComercios] = useState([]);
   const [categoriaSel, setCategoriaSel] = useState(categoriaInicial);
   const [comercioSel, setComercioSel] = useState(null);
-  const [busqueda, setBusqueda] = useState("");
+  const [busqueda, setBusqueda] = useState(busquedaInicial);
   const [cargando, setCargando] = useState(true);
 
   // Estados para el panel de administración/edición del comercio

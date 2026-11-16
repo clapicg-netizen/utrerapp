@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ArrowRight, ArrowUpRight, CalendarDays, ClipboardList, Fuel, HeartPulse, Landmark,
-  MapPin, MessageCircle, Newspaper, Pill, Store, Stethoscope, TrainFront, UtensilsCrossed, Wrench,
+  MapPin, MessageCircle, Newspaper, Pill, Search, Store, Stethoscope, TrainFront, UtensilsCrossed, Wrench,
 } from 'lucide-react';
 import './DesktopHome.css';
 import sanctuaryPhoto from './santuario-utrera-portada.webp';
+import panorama from './panorama-utrera-portada.webp';
+import logo from './logo-utrera-portada.webp';
 
 const featured = [
   { to: 'market', icon: Store, name: 'Guía comercial', detail: 'Tiendas, profesionales y servicios de Utrera.' },
@@ -18,55 +20,60 @@ const services = [
   { to: 'salud', icon: HeartPulse, name: 'Salud' },
   { to: 'agenda-gestiones', icon: ClipboardList, name: 'Gestiones y citas' },
   { to: 'hosteleria', icon: UtensilsCrossed, name: 'Dónde comer' },
-  { to: 'menu-agenda', icon: CalendarDays, name: 'Agenda de Utrera' },
-  { to: 'noticias', icon: Newspaper, name: 'Noticias locales' },
   { to: 'tablon', icon: Newspaper, name: 'Tablón ciudadano' },
   { to: 'caja-herramientas', icon: Wrench, name: 'Herramientas' },
 ];
 
-const monument = file => process.env.PUBLIC_URL + '/monumentos/' + file;
+
 
 export default function DesktopHome({ onNavigate }) {
-  function open(section) {
+  const [query, setQuery] = useState('');
+
+  function open(section, search = '') {
     window.scrollTo(0, 0);
-    onNavigate(section);
+    onNavigate(section, search);
+  }
+
+  function searchGuide(event) {
+    event.preventDefault();
+    open('market', query.trim());
   }
 
   return (
     <div className="desktop-home">
-      <header className="desktop-home-header">
-        <div className="desktop-home-shell desktop-home-header-inner">
-          <div className="desktop-home-brand" aria-label="Utrerapp">
-            <span aria-hidden="true">U</span> Utrerapp
-          </div>
-          <nav aria-label="Navegación principal">
-            <button type="button" onClick={() => open('market')}>Guía comercial</button>
-            <button type="button" onClick={() => open('cercanias')}>Trenes</button>
-            <button type="button" onClick={() => open('gasolineras')}>Gasolineras</button>
-            <button type="button" onClick={() => open('teatro')}>Teatro y eventos</button>
-          </nav>
-          <button type="button" className="desktop-home-conso" onClick={() => open('conso')}>
-            <MessageCircle size={17} aria-hidden="true" /> Hablar con Conso
-          </button>
-        </div>
-      </header>
-
-      <main className="desktop-home-shell desktop-home-body">
-        <section className="desktop-home-hero" aria-labelledby="desktop-home-title">
-          <div className="desktop-home-hero-copy">
-            <p className="desktop-home-location"><MapPin size={17} aria-hidden="true" /> Utrera, Sevilla</p>
-            <h1 id="desktop-home-title">Tu guía<br />de Utrera</h1>
-            <p>Comercios de aquí, servicios para el día a día y planes para disfrutar de la ciudad.</p>
-            <button type="button" onClick={() => open('market')}>
-              Explorar la guía comercial <ArrowRight size={19} aria-hidden="true" />
+      <div className="desktop-home-hero">
+        <img className="desktop-home-panorama" src={panorama} alt="" fetchPriority="high" />
+        <header className="desktop-home-header">
+          <div className="desktop-home-shell desktop-home-header-inner">
+            <div className="desktop-home-brand">
+              <img src={logo} alt="" /> <span>Utrer<span>app</span></span>
+            </div>
+            <nav aria-label="Navegación principal">
+              <button type="button" onClick={() => open('que-ver')}>Qué ver</button>
+              <button type="button" onClick={() => open('market')}>Guía comercial</button>
+              <button type="button" onClick={() => open('menu-agenda')}>Agenda</button>
+              <button type="button" onClick={() => open('noticias')}>Noticias</button>
+            </nav>
+            <button type="button" className="desktop-home-conso" onClick={() => open('conso')}>
+              <MessageCircle size={17} aria-hidden="true" /> Hablar con Conso
             </button>
           </div>
-          <figure className="desktop-home-hero-photo">
-            <img src={monument('santa-maria-1.jpg')} alt="Iglesia de Santa María de la Mesa entre palmeras" fetchPriority="high" />
-            <figcaption>Santa María de la Mesa</figcaption>
-          </figure>
-        </section>
+        </header>
+        <div className="desktop-home-shell desktop-home-hero-copy">
+          <p className="desktop-home-location"><MapPin size={17} aria-hidden="true" /> Utrera, Sevilla</p>
+          <h1 id="desktop-home-title">Utrera,<br /><em>a tu alcance.</em></h1>
+          <p>Encuentra comercios, consulta servicios y descubre qué hacer en la ciudad.</p>
+          <form className="desktop-home-search" onSubmit={searchGuide} role="search" aria-label="Guía comercial">
+            <Search size={20} aria-hidden="true" />
+            <input type="search" value={query} onChange={event => setQuery(event.target.value)}
+              placeholder="Busca un comercio o servicio" aria-label="Comercio o servicio que buscas" />
+            <button type="submit">Buscar</button>
+          </form>
+        </div>
+        <div className="desktop-home-photo-label">Utrera desde la Plaza de España</div>
+      </div>
 
+      <main className="desktop-home-shell desktop-home-body">
         <section className="desktop-home-section" aria-labelledby="desktop-home-featured">
           <h2 id="desktop-home-featured">Accesos directos</h2>
           <div className="desktop-home-featured">
@@ -81,30 +88,42 @@ export default function DesktopHome({ onNavigate }) {
           </div>
         </section>
 
-        <div className="desktop-home-more">
-          <section className="desktop-home-section" aria-labelledby="desktop-home-services">
-            <h2 id="desktop-home-services">Servicios y vida local</h2>
-            <div className="desktop-home-services">
-              {services.map(({ to, icon: Icon, name }) => (
-                <button type="button" key={to} onClick={() => open(to)}>
-                  <Icon size={18} aria-hidden="true" /><span>{name}</span><ArrowRight size={15} aria-hidden="true" />
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="desktop-home-section" aria-labelledby="desktop-home-discover">
-            <h2 id="desktop-home-discover">Qué ver en Utrera</h2>
+        <section className="desktop-home-section" aria-labelledby="desktop-home-discover">
+          <h2 id="desktop-home-discover">Actualidad y planes</h2>
+          <div className="desktop-home-editorial">
             <button type="button" className="desktop-home-discover" onClick={() => open('que-ver')}>
               <img src={sanctuaryPhoto} alt="" loading="lazy" />
-              <span><Landmark size={19} aria-hidden="true" /> Monumentos y patrimonio <ArrowUpRight size={18} aria-hidden="true" /></span>
+              <span><Landmark size={20} aria-hidden="true" /> Conoce el patrimonio de Utrera <ArrowUpRight size={19} aria-hidden="true" /></span>
             </button>
-          </section>
-        </div>
+            <div className="desktop-home-editorial-links">
+              <button type="button" onClick={() => open('menu-agenda')}>
+                <CalendarDays size={24} aria-hidden="true" />
+                <span><strong>Agenda cultural</strong><small>Cartelera, eventos y actividades.</small></span>
+                <ArrowRight size={17} aria-hidden="true" />
+              </button>
+              <button type="button" onClick={() => open('noticias')}>
+                <Newspaper size={24} aria-hidden="true" />
+                <span><strong>Noticias de Utrera</strong><small>Consulta los medios locales.</small></span>
+                <ArrowRight size={17} aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </section>
+        <section className="desktop-home-section" aria-labelledby="desktop-home-services">
+          <h2 id="desktop-home-services">Servicios y vida local</h2>
+          <div className="desktop-home-services">
+            {services.map(({ to, icon: Icon, name }) => (
+              <button type="button" key={to} onClick={() => open(to)}>
+                <Icon size={18} aria-hidden="true" /><span>{name}</span><ArrowRight size={15} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </section>
       </main>
 
       <footer className="desktop-home-footer desktop-home-shell">
-        <span>Utrerapp · Guía local</span>
+        <span>Foto panorámica de <a href="https://commons.wikimedia.org/wiki/File:Panoramicautreranoche.jpg" target="_blank" rel="noreferrer">Salvador Moreno Rivas</a>
+          {' · '}<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a>{' · Adaptada para la cabecera'}</span>
         <button type="button" onClick={() => open('admin')}>Administración</button>
       </footer>
     </div>
