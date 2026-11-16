@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ExternalLink, Eye, ImagePlus, LogOut, Plus, Search, Store } from 'lucide-react';
+import { ArrowLeft, Eye, ImagePlus, LogOut, Plus, Search, Store } from 'lucide-react';
+import EscaparateComercio from '../components/EscaparateComercio';
 import { supabase } from '../lib/supabaseClient';
 import './AdminComercios.css';
 
@@ -257,16 +258,12 @@ export default function AdminComercios({ onBack }) {
               <h2>{selected.id == null ? 'Nuevo comercio' : 'Editar comercio'}</h2>
               <button type="button" onClick={() => setPreview(value => !value)}><Eye size={17} aria-hidden="true" /> {preview ? 'Editar datos' : 'Vista previa'}</button>
             </div>
-            {preview ? <article className="admin-commerce-preview">
-              {publicUrl(form.portada_url) && <img src={publicUrl(form.portada_url)} alt="" />}
-              <h3>{form.nombre || 'Nombre del comercio'}</h3>
-              <p>{form.subcategoria || form.categoria}</p>
-              <p>{form.descripcion}</p>
-              <p>{[form.direccion, form.horario_texto].filter(Boolean).join(' · ')}</p>
-              {publicUrl(form.carta_pdf_url) && <a href={publicUrl(form.carta_pdf_url)} target="_blank" rel="noreferrer">Ver carta <ExternalLink size={14} aria-hidden="true" /></a>}
-              {publicUrl(form.video_story_url) && <a href={publicUrl(form.video_story_url)} target="_blank" rel="noreferrer">Ver vídeo <ExternalLink size={14} aria-hidden="true" /></a>}
-              {photos.length > 0 && <div>{photos.map((url, index) => <img key={url + index} src={url} alt={'Foto ' + (index + 1)} loading="lazy" />)}</div>}
-            </article> : <form onSubmit={save} className="admin-commerce-form">
+            {preview ? <EscaparateComercio comercio={{
+              ...form,
+              id: selected.id ?? 'vista-previa',
+              nombre: form.nombre.trim() || 'Nombre del comercio',
+              galeria_urls: photos,
+            }} /> : <form onSubmit={save} className="admin-commerce-form">
               <fieldset disabled={busy}>
                 {fields.map(([name, label, kind]) => <div key={name} className={kind === 'multiline' ? 'admin-commerce-wide' : ''}>
                   <label>{label}
