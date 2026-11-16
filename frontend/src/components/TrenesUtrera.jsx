@@ -229,6 +229,10 @@ export default function TrenesUtrera() {
 
       <footer className="rail-footer">
         <a href="https://data.renfe.com/" target="_blank" rel="noreferrer">Datos de Renfe · CC BY 4.0 <ExternalLink size={13} /></a>
+        <span className="rail-photo-credit">
+          Foto de <a href="https://commons.wikimedia.org/wiki/File:Estaci%C3%B3n_de_Utrera_-_IMG_20250710_211631.jpg" target="_blank" rel="noreferrer">El Pantera</a>
+          {' · '}<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noreferrer">CC BY-SA 4.0</a>
+        </span>
         <a href="https://www.adif.es/w/51200-utrera" target="_blank" rel="noreferrer">Estación en Adif <ExternalLink size={13} /></a>
       </footer>
     </div>
