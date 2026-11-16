@@ -71,6 +71,8 @@ export default function App() {
       setPaginaActual('cercanias');
     } else if (vistaParam === 'gasolineras') {
       setPaginaActual('gasolineras');
+    } else if (vistaParam === 'digital-gm') {
+      setPaginaActual('digital-gm', 'DIGITAL GM');
     }
   }, [setPaginaActual]);
 
@@ -95,12 +97,15 @@ export default function App() {
 
       case 'market':
       case 'hosteleria':
+      case 'digital-gm':
         return (
           <GuiaComercial
+            key={paginaActual}
+            abrirDigitalGm={paginaActual === 'digital-gm'}
             busquedaInicial={busquedaGuia}
             setPaginaActual={setPaginaActual}
             categoriaInicial={
-              paginaActual === 'hosteleria' ? 'hosteleria' : null
+              paginaActual === 'hosteleria' ? 'hosteleria' : paginaActual === 'digital-gm' ? 'Todos' : null
             }
           />
         );

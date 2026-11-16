@@ -6,10 +6,11 @@ import { supabase } from "../lib/supabaseClient";
 import FichaInmobiliaria from "./FichaInmobiliaria";
 import FichaComida from "./FichaComida";
 import LandingComercio from "../components/LandingComercio";
+import EscaparateComercio, { DIGITAL_GM_ID } from "../components/EscaparateComercio";
 
 const PIN_ADMIN_MAESTRO = "9999";
 
-export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInicial = "" }) {
+export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInicial = "", abrirDigitalGm = false }) {
   const [comercios, setComercios] = useState([]);
   const [categoriaSel, setCategoriaSel] = useState(categoriaInicial);
   const [comercioSel, setComercioSel] = useState(null);
@@ -73,6 +74,12 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
     cargarSponsors();
   }, []);
 
+  useEffect(() => {
+    if (!abrirDigitalGm) return;
+    const piloto = comercios.find(comercio => String(comercio.id) === DIGITAL_GM_ID);
+    if (piloto) setComercioSel(piloto);
+  }, [abrirDigitalGm, comercios]);
+
   // Detector de enlaces mágicos por URL (?editar=id&pin=clave)
   useEffect(() => {
     if (comercios.length === 0) return;
@@ -120,6 +127,8 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
     }, 3000);
     return () => clearInterval(interval);
   }, [sponsors.length]);
+
+  const vistaPiloto = !modoAdmin && String(comercioSel?.id) === DIGITAL_GM_ID;
 
   const comerciosCarrusel = comercios.length > 0 ? comercios : [];
 
@@ -429,9 +438,10 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
       {/* MODAL FICHA DESPLEGABLE O PANEL DE EDICIÓN */}
       {comercioSel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl relative p-5 pb-32">
+          <div className={`bg-white rounded-t-3xl sm:rounded-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative ${vistaPiloto ? 'max-w-4xl' : 'max-w-md p-5 pb-32'}`}>
             
             <button
+              aria-label="Cerrar ficha"
               onClick={() => { setComercioSel(null); setModoAdmin(false); }}
               className="absolute top-4 right-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full w-8 h-8 flex items-center justify-center font-bold z-10 cursor-pointer"
             >
@@ -732,7 +742,9 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
               /* VISTA NORMAL O ESPECIAL DE LA FICHA DEL COMERCIO */
               <div>
                 {/* SI ES FICHA ESPECIAL 1 (INMOBILIARIA) */}
-                {comercioSel.tipo_ficha === 'especial1' ? (
+                {vistaPiloto ? (
+                  <EscaparateComercio comercio={comercioSel} />
+                ) : comercioSel.tipo_ficha === 'especial1' ? (
                   <FichaInmobiliaria negocioId={comercioSel.id} />
                 ) : comercioSel.tipo_ficha === 'especial2' ? (
                   /* SI ES FICHA ESPECIAL 2 (COMIDA) */
