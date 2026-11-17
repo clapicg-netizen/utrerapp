@@ -1,3 +1,4 @@
+import { PARKING_URL } from '../lib/parking';
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, MapPin, Car } from 'lucide-react';
@@ -159,17 +160,17 @@ export default function Conso({ setPaginaActual }) {
       return (
         <div className="space-y-3">
           <div>
-            <p className="font-bold text-slate-900 mb-0.5">🅿️ APARCAMIENTOS EN TIEMPO REAL</p>
-            <p className="text-[11px] text-slate-500">Red de sensores inteligentes de Utrera</p>
+            <p className="font-bold text-slate-900 mb-0.5">🅿️ APARCAMIENTOS DE UTRERA</p>
+            <p className="text-[11px] text-slate-500">Consulta el mapa de HolaUtrera</p>
           </div>
           <button
             onClick={(e) => {
               e.preventDefault();
-              window.open("https://holautrera.com/parking", "_blank");
+              window.open(PARKING_URL, "_blank", "noopener,noreferrer");
             }}
             className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
-            <span>🗺️ Ver Mapa de Plazas Libres (holautrera.com)</span>
+            <span>🗺️ Ver mapa de aparcamientos (holautrera.com)</span>
           </button>
         </div>
       );

@@ -1,0 +1,298 @@
+.mobile-home,
+.mobile-navigation {
+  --utra-ink: #17263e;
+  --utra-muted: #46566d;
+  --utra-ivory: #faf9f6;
+  --utra-line: #dedbd3;
+  --utra-gold: #c89542;
+  --utra-focus: #24538b;
+  --utra-radius: 1rem;
+  --utra-target: 2.75rem;
+  --utra-body: 1rem;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--utra-ink);
+}
+
+.mobile-home {
+  display: grid;
+  gap: 1.375rem;
+  width: 100%;
+  min-height: 100vh;
+  padding: 1rem max(0.875rem, env(safe-area-inset-right)) 1rem
+    max(0.875rem, env(safe-area-inset-left));
+  background: var(--utra-ivory);
+  font-size: var(--utra-body);
+}
+
+.mobile-home > * {
+  width: 100%;
+  max-width: 35rem;
+  min-width: 0;
+  margin-inline: auto;
+}
+
+.mobile-home__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+}
+
+.mobile-home__brand img {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.mobile-home h1 {
+  margin-block: 0.55rem 0.625rem;
+  font-size: clamp(1.8rem, 7vw, 2.75rem);
+  line-height: 1.14;
+  font-weight: 800;
+}
+
+.mobile-home h2 {
+  margin: 0 0 0.625rem;
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 800;
+}
+
+.mobile-home__search label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: 700;
+}
+
+.mobile-home__search > div {
+  display: flex;
+  overflow: hidden;
+  border: 1px solid #9e9c94;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.mobile-home__search:focus-within > div {
+  outline: 2px solid var(--utra-focus);
+  outline-offset: 2px;
+}
+
+.mobile-home__search input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  background: transparent;
+  font-size: 1rem;
+}
+
+.mobile-home__search input:focus {
+  outline: none;
+}
+
+.mobile-home__search input::placeholder {
+  color: var(--utra-muted);
+}
+
+.mobile-home__search button {
+  display: grid;
+  place-items: center;
+  min-width: var(--utra-target);
+  min-height: var(--utra-target);
+  background: var(--utra-ink);
+  color: #fff;
+}
+
+.mobile-home__grid,
+.mobile-home__list {
+  display: grid;
+  gap: 0.625rem;
+  padding: 0;
+  list-style: none;
+}
+
+.mobile-home__grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.mobile-home__service,
+.mobile-home__conso,
+.mobile-home__ad {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: var(--utra-target);
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--utra-line);
+  border-radius: var(--utra-radius);
+  background: #fff;
+  color: var(--utra-ink);
+  text-align: left;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.mobile-home__grid .mobile-home__service {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  font-weight: 750;
+  box-shadow: 0 2px 4px rgb(23 38 62 / 5%);
+}
+
+.mobile-home__grid .mobile-home__arrow {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.mobile-home__service > :nth-child(2),
+.mobile-home__conso > :nth-child(2),
+.mobile-home__ad > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-home__service svg,
+.mobile-home__conso svg,
+.mobile-home__ad svg {
+  flex: none;
+}
+
+.mobile-home__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 0.625rem;
+  background: #edf1f6;
+}
+
+.mobile-home__icon[data-tone="green"] { background: #e7f3ee; color: #235944; }
+.mobile-home__icon[data-tone="blue"] { background: #e9eff8; color: #274c76; }
+.mobile-home__icon[data-tone="gold"] { background: #f5ebd7; color: #684919; }
+.mobile-home__icon[data-tone="rose"] { background: #f2d7e3; color: #732747; }
+
+.mobile-home__conso {
+  min-height: 3.875rem;
+  border-color: #e9cdd9;
+  background: #f8e8ef;
+}
+
+.mobile-home__conso strong,
+.mobile-home__conso small,
+.mobile-home__ad strong,
+.mobile-home__ad small {
+  display: block;
+}
+
+.mobile-home__conso small,
+.mobile-home__ad small {
+  margin-top: 0.15rem;
+  color: var(--utra-muted);
+  font-size: 0.875rem;
+}
+
+.mobile-home__commercial {
+  padding: 0.75rem;
+  border: 1px solid #e5d7bc;
+  border-radius: var(--utra-radius);
+  background: #f7f0e3;
+}
+
+.mobile-home__footer button {
+  min-height: var(--utra-target);
+  padding-inline: 0.5rem;
+  color: var(--utra-muted);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.mobile-home :is(a, button):focus-visible,
+.mobile-navigation button:focus-visible {
+  outline: 2px solid var(--utra-focus);
+  outline-offset: 2px;
+}
+
+.mobile-home__search button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+
+.mobile-navigation {
+  position: fixed;
+  z-index: 50;
+  inset: auto 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  border-top: 1px solid var(--utra-line);
+  background: #fff;
+  box-shadow: 0 -3px 16px rgb(23 38 62 / 7%);
+}
+
+.mobile-navigation__inner {
+  display: grid;
+  grid-template-columns: 0.9fr 1fr 1.45fr 0.85fr 1fr;
+  max-width: 35rem;
+  margin-inline: auto;
+  padding-block: 0.35rem;
+}
+
+.mobile-navigation button {
+  display: flex;
+  min-width: 0;
+  min-height: 3rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  border-radius: 0.65rem;
+  color: var(--utra-muted);
+  font-size: 0.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mobile-navigation button span {
+  max-width: 100%;
+}
+
+.mobile-navigation button[aria-current="page"] {
+  background: #f5ebd7;
+  color: var(--utra-ink);
+  box-shadow: inset 0 2px var(--utra-gold);
+}
+
+@media (max-width: 359px) {
+  .mobile-navigation button { font-size: 0.6875rem; }
+}
+
+@media (max-width: 1023px) {
+  .mobile-app-content {
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  html {
+    scroll-padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-navigation { display: none; }
+}
+
+@media (hover: hover) {
+  .mobile-home__service:hover,
+  button.mobile-home__ad:hover {
+    background: #f6f4ef;
+  }
+
+  .mobile-home__conso:hover {
+    background: #f5dce7;
+  }
+}

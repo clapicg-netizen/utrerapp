@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 import Home from './pages/Home';
+import MobileNavigation from './components/app/MobileNavigation';
 import DesktopHome from './pages/DesktopHome';
 import GuiaComercial from './pages/GuiaComercial';
 import Farmacias from './pages/Farmacias';
@@ -35,6 +36,8 @@ import { supabase } from './lib/supabaseClient';
 
 export default function App() {
   const [paginaActual, setPagina] = useState('home');
+  const mainRef = useRef(null);
+  const previousPage = useRef(paginaActual);
   const [busquedaGuia, setBusquedaGuia] = useState('');
   const setPaginaActual = useCallback((pagina, busqueda = '') => {
     setBusquedaGuia(busqueda);
@@ -74,6 +77,14 @@ export default function App() {
     }
   }, [setPaginaActual]);
 
+  useEffect(() => {
+    if (previousPage.current !== paginaActual && !isDesktop) {
+      mainRef.current?.focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
+    previousPage.current = paginaActual;
+  }, [paginaActual, isDesktop]);
+
   const renderizarContenidoPrincipal = () => {
     if (comercioIdUrl && paginaActual === 'panel-comercio') {
       return (
@@ -89,7 +100,6 @@ export default function App() {
         return (
           <Home
             setPaginaActual={setPaginaActual}
-            setTab={setPaginaActual}
           />
         );
 
@@ -100,7 +110,7 @@ export default function App() {
             busquedaInicial={busquedaGuia}
             setPaginaActual={setPaginaActual}
             categoriaInicial={
-              paginaActual === 'hosteleria' ? 'hosteleria' : null
+              paginaActual === 'hosteleria' ? 'Hostelería' : 'Todos'
             }
           />
         );
@@ -172,7 +182,6 @@ export default function App() {
         return (
           <Home
             setPaginaActual={setPaginaActual}
-            setTab={setPaginaActual}
           />
         );
     }
@@ -306,75 +315,11 @@ export default function App() {
 
       {/* CONTENIDO PRINCIPAL */}
 
-      <main className="flex-1 pb-24 lg:pb-0 overflow-y-auto">
+      <main id="app-content" ref={mainRef} tabIndex={-1} className="mobile-app-content flex-1 overflow-y-auto">
         {renderizarContenidoPrincipal()}
       </main>
 
-      {/* NAVEGACIÓN INFERIOR MÓVIL */}
-
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 py-2.5 px-4 flex justify-around items-center z-50 shadow-lg max-w-md mx-auto rounded-t-3xl lg:hidden">
-
-        <button
-          onClick={() => setPaginaActual('home')}
-          className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-            paginaActual === 'home'
-              ? 'text-amber-600 font-bold'
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <HomeIcon size={20} />
-          <span className="text-[10px]">Inicio</span>
-        </button>
-
-        <button
-          onClick={() => setPaginaActual('market')}
-          className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-            paginaActual === 'market'
-              ? 'text-amber-600 font-bold'
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <Store size={20} />
-          <span className="text-[10px]">Comercio</span>
-        </button>
-
-        <button
-          onClick={() => setPaginaActual('caja-herramientas')}
-          className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-            paginaActual === 'caja-herramientas'
-              ? 'text-amber-600 font-bold'
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <Wrench size={20} />
-          <span className="text-[10px]">Herramientas</span>
-        </button>
-
-        <button
-          onClick={() => setPaginaActual('cercanias')}
-          className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-            paginaActual === 'cercanias'
-              ? 'text-blue-600 font-bold'
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <Train size={20} />
-          <span className="text-[10px]">Trenes</span>
-        </button>
-
-        <button
-          onClick={() => setPaginaActual('conso')}
-          className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-            paginaActual === 'conso'
-              ? 'text-rose-600 font-bold'
-              : 'text-slate-400 hover:text-slate-600'
-          }`}
-        >
-          <MessageSquare size={20} />
-          <span className="text-[10px]">Conso IA</span>
-        </button>
-
-      </div>
+      <MobileNavigation currentView={paginaActual} onNavigate={setPaginaActual} />
     </div>
   );
 }

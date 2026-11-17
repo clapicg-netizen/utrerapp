@@ -1,380 +1,146 @@
-// frontend/src/pages/Home.jsx
-import React, { useState, useEffect } from "react";
-import { Search, MapPin, Pill, Building2, HeartPulse, Stethoscope, CalendarDays, Landmark, UtensilsCrossed, Newspaper, Wrench, Fuel } from "lucide-react";
-import { supabase } from "../lib/supabaseClient";
+import React, { useEffect, useState } from 'react';
+import {
+  ArrowRight, ArrowUpRight, Building2, CalendarDays, Fuel, HeartPulse,
+  Landmark, MessageCircle, Newspaper, ParkingSquare, Pill, Search,
+  ShoppingBag, Stethoscope, Train, UtensilsCrossed, Wrench,
+} from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+import { PARKING_URL } from '../lib/parking';
+import logo from './logo-utrera-portada.webp';
+import './Home.css';
 
-export default function Home({ setPaginaActual, setTab }) {
-  const [slideActual, setSlideActual] = useState(0);
-  const [avisos, setAvisos] = useState([
-    {
-      id: 1,
-      tipo: "CONSO TE AYUDA 🤝",
-      color_badge: "bg-rose-500 text-white",
-      titulo: "Habla con Conso, tu asistente de Utrera",
-      subtitulo: "Pregúntale horarios, teléfonos de interés y ayuda local",
-      bg_gradient: "from-rose-600 to-pink-700",
-      icono: "💬",
-      accion_tab: "conso"
-    },
-    {
-      id: 2,
-      tipo: "UTILIDADES ÚTILES 🛠️",
-      color_badge: "bg-amber-500 text-slate-900",
-      titulo: "Caja de Herramientas",
-      subtitulo: "Conversor PDF, calculadora de costes y kit para opositores",
-      bg_gradient: "from-amber-600 to-yellow-600",
-      icono: "🧰",
-      accion_tab: "caja-herramientas"
-    },
-    {
-      id: 3,
-      tipo: "OFERTA DEL DÍA ⚡",
-      color_badge: "bg-amber-500 text-white",
-      titulo: "Bar Alonsi: 2x1 en tapas de arroz",
-      subtitulo: "Muestra la PWA Utrerapp al hacer tu pedido hoy",
-      bg_gradient: "from-amber-600 to-orange-700",
-      icono: "⚡",
-      accion_tab: "market"
-    },
-    {
-      id: 4,
-      tipo: "PAELLA EN LA CHANA 🥘",
-      color_badge: "bg-sky-500 text-white",
-      titulo: "Hoy Domingo a partir de las 13:30 horas",
-      subtitulo: "¿Te la vas a perder?",
-      bg_gradient: "from-slate-800 to-slate-900",
-      icono: "📢",
-      accion_tab: "market"
-    }
-  ]);
+const priorityServices = [
+  { label: 'Farmacia de guardia', icon: Pill, view: 'farmacias', tone: 'green' },
+  { label: 'Salud pública', icon: HeartPulse, view: 'salud', tone: 'green' },
+  { label: 'Horarios de trenes', icon: Train, view: 'cercanias', tone: 'blue' },
+  { label: 'Aparcamientos', icon: ParkingSquare, href: PARKING_URL, tone: 'blue' },
+  { label: 'Gasolineras', icon: Fuel, view: 'gasolineras', tone: 'gold' },
+  { label: 'Agenda Cultural', icon: CalendarDays, view: 'menu-agenda', tone: 'gold' },
+];
+
+const otherServices = [
+  { label: 'Comercio local', icon: ShoppingBag, view: 'market' },
+  { label: 'Visita Utrera', icon: Landmark, view: 'que-ver' },
+  { label: 'Titulares y TV Utrera', icon: Newspaper, view: 'noticias' },
+  { label: 'Gestiones y teléfonos útiles', icon: Building2, view: 'agenda-gestiones' },
+  { label: 'Anuncios entre particulares', icon: Newspaper, view: 'tablon' },
+  { label: 'Herramientas y utilidades', icon: Wrench, view: 'caja-herramientas' },
+  { label: 'Dónde comer', icon: UtensilsCrossed, view: 'hosteleria' },
+];
+
+function ServiceCard({ service, onNavigate }) {
+  const { label, icon: Icon, view, href, tone } = service;
+  const content = (
+    <>
+      <span className="mobile-home__icon" data-tone={tone}><Icon size={22} aria-hidden="true" /></span>
+      <span>{label}</span>
+      {href
+        ? <ArrowUpRight className="mobile-home__arrow" size={17} aria-hidden="true" />
+        : <ArrowRight className="mobile-home__arrow" size={17} aria-hidden="true" />}
+    </>
+  );
+
+  if (href) {
+    return <a className="mobile-home__service" href={href} target="_blank" rel="noopener noreferrer">{content}<span className="sr-only"> (HolaUtrera, se abre en otra pestaña)</span></a>;
+  }
+  return <button className="mobile-home__service" type="button" onClick={() => onNavigate(view)}>{content}</button>;
+}
+
+export default function Home({ setPaginaActual }) {
+  const [search, setSearch] = useState('');
+  const [ads, setAds] = useState([]);
 
   useEffect(() => {
-    async function cargarAnuncios() {
+    const controller = new AbortController();
+    async function loadAds() {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('anuncios')
-          .select('*')
+          .select('id,tipo,titulo,subtitulo,accion_tab')
           .eq('activo', true)
-          .order('orden', { ascending: true });
+          .order('orden', { ascending: true })
+          .abortSignal(controller.signal);
 
-        if (data && data.length > 0) {
-          setAvisos(data);
+        if (!controller.signal.aborted && !error) {
+          setAds((data ?? []).filter(ad => ad.accion_tab !== 'conso'));
         }
-      } catch (err) {
-        console.error("Error cargando anuncios de Supabase:", err);
+      } catch {
+        // The public services remain available if ads cannot load.
       }
     }
-    cargarAnuncios();
+    loadAds();
+    return () => controller.abort();
   }, []);
 
-  const cambiarPestana = (e, destino) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    const fnNavegacion = setPaginaActual || setTab;
-    if (typeof fnNavegacion === "function") {
-      fnNavegacion(destino);
-    }
-  };
-
-  useEffect(() => {
-    if (avisos.length === 0) return;
-    const timer = setInterval(() => {
-      setSlideActual((prev) => (prev + 1) % avisos.length);
-    }, 3000);
-    return () => clearInterval(timer);
-  }, [avisos.length]);
+  function submitSearch(event) {
+    event.preventDefault();
+    setPaginaActual('market', search.trim());
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
-      {/* CABECERA */}
-      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative">
-        <div className="flex justify-between items-center max-w-md mx-auto">
+    <div className="mobile-home">
+      <header className="mobile-home__header">
+        <p className="mobile-home__brand"><img src={logo} width="32" height="32" alt="" /> UtrerApp</p>
+        <h1>¡Hola, Utrera!</h1>
+        <form className="mobile-home__search" role="search" aria-label="Guía Comercial" onSubmit={submitSearch}>
+          <label htmlFor="mobile-home-search">Buscar comercios</label>
           <div>
-            <p className="text-[11px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
-              <MapPin size={12} /> Utrera en tu bolsillo
-            </p>
-            <h1 className="text-2xl font-black mt-0.5">¡Hola, Utrera! 👋</h1>
+            <input id="mobile-home-search" type="search" placeholder="Nombre o servicio" value={search} onChange={event => setSearch(event.target.value)} />
+            <button type="submit" aria-label="Buscar en la Guía Comercial"><Search size={22} aria-hidden="true" /></button>
           </div>
+        </form>
+      </header>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={(e) => cambiarPestana(e, "admin")}
-              className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base shadow-inner hover:bg-amber-500/30 transition-colors cursor-pointer"
-              title="Panel de Administración"
-            >
-              👑
-            </button>
+      <section aria-labelledby="mobile-home-priorities">
+        <h2 id="mobile-home-priorities">Servicios prioritarios</h2>
+        <ul className="mobile-home__grid">
+          {priorityServices.map(service => (
+            <li key={service.label}><ServiceCard service={service} onNavigate={setPaginaActual} /></li>
+          ))}
+        </ul>
+      </section>
 
-            <div className="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-lg shadow-inner">
-              🏰
-            </div>
-          </div>
-        </div>
+      <button className="mobile-home__conso" type="button" onClick={() => setPaginaActual('conso')}>
+        <span className="mobile-home__icon" data-tone="rose"><MessageCircle size={23} aria-hidden="true" /></span>
+        <span><strong>Habla con Conso IA</strong><small>Tu asistente utrerana, gratis</small></span>
+        <ArrowRight size={19} aria-hidden="true" />
+      </button>
 
-        <div className="mt-4 relative max-w-md mx-auto">
-          <input
-            type="text"
-            placeholder="¿Qué buscas hoy en Utrera?"
-            className="w-full bg-slate-800 text-white placeholder-slate-400 pl-10 pr-4 py-3 rounded-2xl text-xs border border-slate-700 focus:outline-none focus:border-amber-500 transition-colors"
-          />
-          <Search className="absolute left-3.5 top-3.5 text-slate-400" size={16} />
-        </div>
-      </div>
+      <section aria-labelledby="mobile-home-other">
+        <h2 id="mobile-home-other">Otros servicios</h2>
+        <ul className="mobile-home__list">
+          {otherServices.map(service => (
+            <li key={service.view}><ServiceCard service={service} onNavigate={setPaginaActual} /></li>
+          ))}
+        </ul>
+      </section>
 
-      {/* CARRUSEL */}
-      <div className="px-4 mt-4 max-w-md mx-auto">
-        <div className="relative overflow-hidden rounded-2xl shadow-md border border-slate-200">
-          <div 
-            className="flex transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${slideActual * 100}%)` }}
-          >
-            {avisos.map((aviso) => (
-              <div 
-                key={aviso.id}
-                onClick={(e) => cambiarPestana(e, aviso.accion_tab)}
-                className={`w-full flex-shrink-0 bg-gradient-to-r ${aviso.bg_gradient} p-4 text-white relative cursor-pointer min-h-[110px] flex flex-col justify-between active:opacity-90`}
-              >
-                <div className="flex justify-between items-center">
-                  <span className={`text-[9px] font-black uppercase px-2.5 py-0.5 rounded-full tracking-wider shadow-sm ${aviso.color_badge}`}>
-                    {aviso.tipo}
-                  </span>
-                  <span className="text-xl">{aviso.icono}</span>
-                </div>
+      <section className="mobile-home__commercial" aria-labelledby="mobile-home-commercial">
+        <h2 id="mobile-home-commercial">Publicidad</h2>
+        <ul className="mobile-home__list">
+          <li><ServiceCard service={{ label: 'Cuadro médico privado', icon: Stethoscope, view: 'sanidad', tone: 'gold' }} onNavigate={setPaginaActual} /></li>
+          {ads.map(({ id, tipo, titulo, subtitulo, accion_tab }) => {
+            const content = (
+              <span>
+                {tipo && <small>{tipo}</small>}
+                <strong>{titulo}</strong>
+                {subtitulo && <small>{subtitulo}</small>}
+              </span>
+            );
+            return (
+              <li key={id}>
+                {accion_tab
+                  ? <button className="mobile-home__ad" type="button" onClick={() => setPaginaActual(accion_tab)}>{content}<ArrowRight size={17} aria-hidden="true" /></button>
+                  : <div className="mobile-home__ad">{content}</div>}
+              </li>
+            );
+          })}
+        </ul>
+      </section>
 
-                <div className="mt-1">
-                  <h3 className="font-bold text-sm leading-tight truncate">{aviso.titulo}</h3>
-                  <p className="text-xs text-slate-200 mt-0.5 line-clamp-1">{aviso.subtitulo}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="absolute bottom-2 right-3 flex gap-1 z-10">
-            {avisos.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSlideActual(idx);
-                }}
-                className={`h-1.5 rounded-full transition-all ${slideActual === idx ? "w-4 bg-white" : "w-1.5 bg-white/40"}`}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* TARJETA CONSO */}
-      <div className="px-4 mt-4 max-w-md mx-auto">
-        <div 
-          onClick={(e) => cambiarPestana(e, "conso")}
-          className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-rose-950 via-rose-900 to-red-950 p-6 text-white shadow-xl border border-rose-800/50 cursor-pointer hover:scale-[0.99] transition-transform"
-        >
-          <div className="absolute -right-6 -top-6 w-28 h-28 bg-amber-400/20 rounded-full blur-2xl pointer-events-none"></div>
-          
-          <div className="relative z-10 flex items-center justify-between">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 border border-amber-400/30 rounded-full text-amber-300 text-[11px] font-bold uppercase tracking-wider">
-                <span>✨ IA Oficial</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              </div>
-              <h2 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                Conso, tu asistente 🤖
-              </h2>
-              <p className="text-xs text-rose-200/90 font-medium leading-relaxed max-w-[220px]">
-                Conectada en directo con inteligencia artificial. Horarios, farmacias y gestión de Utrera al instante.
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-rose-700 flex items-center justify-center text-3xl shadow-lg shadow-rose-950/60 border-2 border-white/25">
-                🧠✨
-              </div>
-              <span className="text-[10px] font-bold text-amber-300 mt-1.5 uppercase tracking-wider">Utrerapp</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* SERVICIOS Y GUÍA DE UTRERA */}
-      <div className="px-4 mt-5 max-w-md mx-auto">
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Servicios y Guía de Utrera
-        </h2>
-
-        <div className="grid grid-cols-2 gap-3">
-          {/* ACCESO PREMIUM PRINCIPAL: SANIDAD PRIVADA */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "sanidad")}
-            className="bg-gradient-to-br from-teal-900 to-slate-900 p-3.5 rounded-2xl border border-teal-500/40 shadow-md flex items-center gap-3 hover:shadow-lg transition-all text-left cursor-pointer col-span-2 text-white"
-          >
-            <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-300 flex items-center justify-center flex-shrink-0 border border-teal-400/30">
-              <Stethoscope size={20} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1">
-                <span className="bg-teal-400 text-slate-950 text-[8px] font-black uppercase px-2 py-0.5 rounded-full">Exclusivo</span>
-                <p className="text-[10px] text-teal-300 font-bold uppercase tracking-wider">Cuadro Médico Privado</p>
-              </div>
-              <p className="font-extrabold text-sm text-white truncate">Clínicas, Dentistas y Estética</p>
-            </div>
-            <span className="text-teal-300 text-base font-bold pr-1">→</span>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "farmacias")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-              <Pill size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Farmacias</p>
-              <p className="text-[10px] text-slate-500 truncate">Salud & Guardia</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "salud")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center flex-shrink-0">
-              <HeartPulse size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Salud</p>
-              <p className="text-[10px] text-slate-500 truncate">Pública & Urgencias</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "agenda-gestiones")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-              <Building2 size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Agenda Y Gestiones</p>
-              <p className="text-[10px] text-slate-500 truncate">Admin. & Suministros</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "que-ver")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-              <Landmark size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Visita Utrera</p>
-              <p className="text-[10px] text-slate-500 truncate">Monumentos y Patrimonio</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "menu-agenda")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
-              <CalendarDays size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Agenda Cultural</p>
-              <p className="text-[10px] text-slate-500 truncate">Teatro y eventos</p>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "noticias")}
-            className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3 hover:shadow-md transition-all text-left cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-              <Newspaper size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="font-bold text-slate-900 text-xs truncate">Titulares</p>
-              <p className="text-[10px] text-slate-500 truncate">Prensa y actualidad</p>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* OCIO, CLASIFICADOS Y UTILIDADES */}
-      <div className="px-4 mt-5 max-w-md mx-auto">
-        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
-          Ocio y Utilidades
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "tablon")}
-            className="bg-gradient-to-br from-amber-600 to-orange-700 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-amber-500/40 active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
-              <Newspaper size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-black text-amber-200 tracking-wider">Tablón</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Anuncios y Empleo</h3>
-            </div>
-          </button>
-
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "caja-herramientas")}
-            className="bg-gradient-to-br from-indigo-600 to-blue-700 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-indigo-500/40 active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
-              <Wrench size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-black text-indigo-200 tracking-wider">Productividad</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Caja de Herramientas</h3>
-            </div>
-          </button>
-
-          {/* GASTRONOMÍA (Mitad Izquierda) */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "hosteleria")}
-            className="bg-gradient-to-br from-orange-600 to-red-600 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-orange-500/40 active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
-              <UtensilsCrossed size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-black text-orange-200 tracking-wider">Gastronomía</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Bares, Tapas y Copas</h3>
-            </div>
-          </button>
-
-          {/* COMBUSTIBLE / GASOLINERAS (Mitad Derecha) */}
-          <button 
-            type="button"
-            onClick={(e) => cambiarPestana(e, "gasolineras")}
-            className="bg-gradient-to-br from-blue-600 to-cyan-700 p-3.5 rounded-2xl text-white shadow-md flex items-center gap-3 text-left border border-blue-500/40 active:scale-[0.98] transition-transform cursor-pointer"
-          >
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white shadow-inner flex-shrink-0">
-              <Fuel size={18} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase font-black text-blue-200 tracking-wider">Ahorro</p>
-              <h3 className="font-extrabold text-xs leading-tight truncate">Precios Gasolineras</h3>
-            </div>
-          </button>
-        </div>
-      </div>
+      <footer className="mobile-home__footer">
+        <button type="button" onClick={() => setPaginaActual('admin')}>Administración</button>
+      </footer>
     </div>
   );
 }
