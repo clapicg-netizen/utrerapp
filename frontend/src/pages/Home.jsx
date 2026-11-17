@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabaseClient';
 import { PARKING_URL } from '../lib/parking';
 import logo from './logo-utrera-portada.webp';
 import panorama from './panorama-utrera-portada.webp';
+import panoramaMobile from './panorama-utrera-portada-640.webp';
 import './Home.css';
 
 const priorityServices = [
@@ -83,7 +84,15 @@ export default function Home({ setPaginaActual }) {
       <header className="mobile-home__header">
         <p className="mobile-home__brand"><img src={logo} width="32" height="32" alt="" /> UtrerApp</p>
         <div className="mobile-home__welcome">
-          <img src={panorama} width="1000" height="349" alt="" />
+          <img
+            src={panoramaMobile}
+            srcSet={`${panoramaMobile} 640w, ${panorama} 1000w`}
+            sizes="(max-width: 588px) calc(100vw - 28px), 560px"
+            width="1000"
+            height="349"
+            fetchPriority="high"
+            alt=""
+          />
           <div>
             <p><MapPin size={14} aria-hidden="true" /> Utrera, Sevilla</p>
             <h1>¡Hola, <span>Utrera!</span></h1>
@@ -115,7 +124,7 @@ export default function Home({ setPaginaActual }) {
 
       <section aria-labelledby="mobile-home-other">
         <h2 id="mobile-home-other">Otros servicios</h2>
-        <ul className="mobile-home__list">
+        <ul className="mobile-home__list mobile-home__directory">
           {otherServices.map(service => (
             <li key={service.view}><ServiceCard service={service} onNavigate={setPaginaActual} /></li>
           ))}
