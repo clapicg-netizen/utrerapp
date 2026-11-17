@@ -5,6 +5,7 @@ import {
   ShoppingBag, Stethoscope, Train, UtensilsCrossed, Wrench,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
+import CarruselAvisos from '../components/CarruselAvisos';
 import { PARKING_URL } from '../lib/parking';
 import logo from './logo-utrera-portada.webp';
 import panorama from './panorama-utrera-portada.webp';
@@ -121,6 +122,8 @@ export default function Home({ setPaginaActual }) {
         <span><strong>Habla con Conso IA</strong><small>Tu asistente utrerana, gratis</small></span>
         <ArrowRight size={19} aria-hidden="true" />
       </button>
+
+      <CarruselAvisos />
 
       <section aria-labelledby="mobile-home-other">
         <h2 id="mobile-home-other">Otros servicios</h2>

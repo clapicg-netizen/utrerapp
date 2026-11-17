@@ -5,8 +5,21 @@
   "display": "standalone",
   "orientation": "portrait",
   "theme_color": "#C84B31",
-  "background_color": "#FAF8F5",
+  "background_color": "#FFFFFF",
   "lang": "es",
   "description": "Servicios locales de Utrera: tráfico, farmacias, teatro, buses, agenda, TV y noticias con el asistente Conso.",
-  "icons": []
+  "icons": [
+    {
+      "src": "icons/utrerapp-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/utrerapp-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
