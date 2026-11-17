@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import {
   ArrowRight, ArrowUpRight, Building2, CalendarDays, Fuel, HeartPulse,
-  Landmark, MessageCircle, Newspaper, ParkingSquare, Pill, Search,
+  Landmark, MapPin, MessageCircle, Newspaper, ParkingSquare, Pill, Search,
   ShoppingBag, Stethoscope, Train, UtensilsCrossed, Wrench,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { PARKING_URL } from '../lib/parking';
 import logo from './logo-utrera-portada.webp';
+import panorama from './panorama-utrera-portada.webp';
 import './Home.css';
 
 const priorityServices = [
@@ -41,9 +42,9 @@ function ServiceCard({ service, onNavigate }) {
   );
 
   if (href) {
-    return <a className="mobile-home__service" href={href} target="_blank" rel="noopener noreferrer">{content}<span className="sr-only"> (HolaUtrera, se abre en otra pestaña)</span></a>;
+    return <a className="mobile-home__service" data-tone={tone} href={href} target="_blank" rel="noopener noreferrer">{content}<span className="sr-only"> (HolaUtrera, se abre en otra pestaña)</span></a>;
   }
-  return <button className="mobile-home__service" type="button" onClick={() => onNavigate(view)}>{content}</button>;
+  return <button className="mobile-home__service" data-tone={tone} type="button" onClick={() => onNavigate(view)}>{content}</button>;
 }
 
 export default function Home({ setPaginaActual }) {
@@ -81,7 +82,13 @@ export default function Home({ setPaginaActual }) {
     <div className="mobile-home">
       <header className="mobile-home__header">
         <p className="mobile-home__brand"><img src={logo} width="32" height="32" alt="" /> UtrerApp</p>
-        <h1>¡Hola, Utrera!</h1>
+        <div className="mobile-home__welcome">
+          <img src={panorama} width="1000" height="349" alt="" />
+          <div>
+            <p><MapPin size={14} aria-hidden="true" /> Utrera, Sevilla</p>
+            <h1>¡Hola, <span>Utrera!</span></h1>
+          </div>
+        </div>
         <form className="mobile-home__search" role="search" aria-label="Guía Comercial" onSubmit={submitSearch}>
           <label htmlFor="mobile-home-search">Buscar comercios</label>
           <div>
@@ -139,6 +146,9 @@ export default function Home({ setPaginaActual }) {
       </section>
 
       <footer className="mobile-home__footer">
+        <p>Foto de <a href="https://commons.wikimedia.org/wiki/File:Panoramicautreranoche.jpg">Salvador Moreno Rivas</a>
+          {' · '}<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>{' · Adaptada para la cabecera'}
+        </p>
         <button type="button" onClick={() => setPaginaActual('admin')}>Administración</button>
       </footer>
     </div>
