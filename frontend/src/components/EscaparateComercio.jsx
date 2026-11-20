@@ -33,6 +33,7 @@ function webLink(value) {
   if (!text) return null;
   try {
     const url = new URL(/^[a-z][a-z0-9+.-]*:/i.test(text) ? text : 'https://' + text);
+    if (url.protocol === "blob:" && url.origin === window.location.origin) return url.href;
     return ['https:', 'http:'].includes(url.protocol) && url.hostname.includes('.') ? url.href : null;
   } catch {
     return null;
@@ -49,6 +50,7 @@ function videoDetails(value) {
   const href = webLink(value);
   if (!href) return null;
   const url = new URL(href);
+    if (url.protocol === "blob:" && url.origin === window.location.origin) return url.href;
   const hostname = url.hostname.toLowerCase();
   let id;
   if (hostname === 'youtu.be') {

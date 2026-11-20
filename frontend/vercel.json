@@ -1,7 +1,10 @@
 {
-  "git": {
-    "deploymentEnabled": {
-      "utrerapp-2-portada-movil": false
-    }
-  }
+  "rewrites": [{ "source": "/admin", "destination": "/index.html" }],
+  "headers": [{
+    "source": "/(.*)",
+    "headers": [
+      { "key": "Content-Security-Policy", "value": "default-src 'self'; connect-src 'none'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; object-src 'none'; form-action 'none'; frame-src 'none'; base-uri 'none'" },
+      { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+    ]
+  }]
 }
