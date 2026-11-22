@@ -1,7 +1,8 @@
 {
   "git": {
     "deploymentEnabled": {
-      "utrerapp-2-portada-movil": false
+      "utrerapp-2-portada-movil": false,
+      "revision/anuncios-goze-guerrero": false
     }
   }
 }

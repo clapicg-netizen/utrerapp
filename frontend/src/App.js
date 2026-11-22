@@ -35,7 +35,10 @@ import {
 import { supabase } from './lib/supabaseClient';
 
 export default function App() {
-  const [paginaActual, setPagina] = useState('home');
+  const [paginaActual, setPagina] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('vista') === 'guia' && !params.get('id') ? 'market' : 'home';
+  });
   const mainRef = useRef(null);
   const previousPage = useRef(paginaActual);
   const [busquedaGuia, setBusquedaGuia] = useState('');

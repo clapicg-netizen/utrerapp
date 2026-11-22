@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowDown, ArrowUpRight, Clock, Facebook, Globe, Instagram, MapPin, MessageCircle, Phone, ShieldCheck, ShoppingBag, Utensils } from 'lucide-react';
+import CarruselVehiculos from './CarruselVehiculos';
 import './EscaparateComercio.css';
 
 export const DIGITAL_GM_ID = '13';
@@ -39,6 +40,10 @@ function webLink(value) {
   }
 }
 
+function imageLink(value) {
+  return typeof value === 'string' && /^(?:[.])?\/(?![\/\\])/.test(value) ? value : webLink(value);
+}
+
 function phoneNumber(value) {
   const digits = String(value ?? '').replace(/\D/g, '').replace(/^00/, '');
   if (digits.length === 9) return '34' + digits;
@@ -70,9 +75,10 @@ export default function EscaparateComercio({ comercio }) {
   const category = profile.category || comercio.subcategoria?.trim() || comercio.categoria;
   const menu = restaurant ? webLink(comercio.carta_pdf_url) : null;
   const menuImage = menu && /\.(png|jpe?g|webp|avif)$/i.test(new URL(menu).pathname);
-  const image = webLink(comercio.portada_url);
-  const photos = [...new Set((Array.isArray(comercio.galeria_urls) ? comercio.galeria_urls : []).map(webLink).filter(Boolean))];
+  const image = imageLink(comercio.portada_url);
+  const photos = [...new Set((Array.isArray(comercio.galeria_urls) ? comercio.galeria_urls : []).map(imageLink).filter(Boolean))];
   const shop = webLink(comercio.tienda_url);
+  const vehicleCatalog = webLink(comercio.catalogo);
   const site = webLink(comercio.web_url);
   const facebook = webLink(profile.facebook || comercio.facebook_url);
   const instagram = webLink(comercio.instagram_url || comercio.instagram_username);
@@ -95,7 +101,7 @@ export default function EscaparateComercio({ comercio }) {
   return (
     <article className="commerce-showcase" aria-label={comercio.nombre}>
       <header className="commerce-showcase-hero">
-        {image && <img src={image} alt={'Fachada de ' + comercio.nombre} />}
+        {image && <img src={image} alt={comercio.portadaAlt || 'Fachada de ' + comercio.nombre} />}
         <div className="commerce-showcase-hero-copy">
           {category && <p>{category}</p>}
           <h1>{comercio.nombre}</h1>
@@ -108,8 +114,11 @@ export default function EscaparateComercio({ comercio }) {
             {menu && <button className="commerce-showcase-primary" type="button" onClick={() => jumpTo(menuId)}>
               <Utensils size={16} aria-hidden="true" /> Ver carta <ArrowDown size={17} aria-hidden="true" />
             </button>}
-            {!menu && photos.length > 0 && <button className="commerce-showcase-primary" type="button" onClick={() => jumpTo(catalogId)}>
-              {config?.galleryLabel ? 'Ver fotos' : 'Ver catálogo'} <ArrowDown size={17} aria-hidden="true" />
+            {vehicleCatalog && <a className="commerce-showcase-primary" href={vehicleCatalog} target="_blank" rel="noreferrer">
+              Ver vehículos <ArrowUpRight size={16} aria-hidden="true" />
+            </a>}
+            {!menu && !vehicleCatalog && photos.length > 0 && <button className="commerce-showcase-primary" type="button" onClick={() => jumpTo(catalogId)}>
+              {(config?.galleryLabel || comercio.escaparate) ? 'Ver fotos' : 'Ver catálogo'} <ArrowDown size={17} aria-hidden="true" />
             </button>}
             {whatsapp && <a href={'https://wa.me/' + whatsapp} target="_blank" rel="noreferrer"><MessageCircle size={17} aria-hidden="true" /> WhatsApp</a>}
             {phone && <a href={'tel:+' + phone}><Phone size={16} aria-hidden="true" /> Llamar</a>}
@@ -130,7 +139,8 @@ export default function EscaparateComercio({ comercio }) {
             <span>Abrir carta en otra pestaña <ArrowUpRight size={16} aria-hidden="true" /></span>
           </a>
         </section>}
-        {photos.length > 0 && <section className="commerce-showcase-catalog" aria-labelledby={catalogId}>
+        {comercio.vehiculos?.length > 0 && <CarruselVehiculos vehiculos={comercio.vehiculos} headingId={catalogId} />}
+        {!comercio.vehiculos?.length && photos.length > 0 && <section className="commerce-showcase-catalog" aria-labelledby={catalogId}>
           <h2 id={catalogId} tabIndex={-1}>{config?.galleryLabel || (restaurant ? 'Fotos del local y sus platos' : 'Catálogo destacado')}</h2>
           <ul>
             {photos.map((url, index) => <li key={url}>
@@ -154,7 +164,7 @@ export default function EscaparateComercio({ comercio }) {
           </a>
         </section>}
         <section className="commerce-showcase-visit" aria-labelledby={detailsId}>
-          <h2 id={detailsId} tabIndex={-1}>Visita la tienda</h2>
+          <h2 id={detailsId} tabIndex={-1}>{comercio.escaparate ? 'Cómo llegar' : 'Visita la tienda'}</h2>
           <div className="commerce-showcase-details">
             {map && <div><h3><MapPin size={17} aria-hidden="true" /> Dirección</h3><p>{address}</p>
               <a href={map} target="_blank" rel="noreferrer">Cómo llegar <ArrowUpRight size={14} aria-hidden="true" /></a></div>}

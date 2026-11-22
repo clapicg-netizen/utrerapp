@@ -51,3 +51,22 @@
 .commerce-showcase-video :is(video, iframe) { display: block; width: 100%; max-width: 42rem; aspect-ratio: 16 / 9; background: #172634; border: 0; border-radius: .65rem; }
 .commerce-showcase-video video { object-fit: contain; }
 .commerce-showcase-video a { display: inline-flex; align-items: center; gap: .35rem; margin-top: .42rem; color: var(--shop-blue); font-size: .86rem; font-weight: 700; text-decoration: underline; }
+
+.commerce-carousel-arrow,
+.commerce-carousel-dot {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  color: #233344;
+}
+
+.commerce-carousel-arrow {
+  width: 44px;
+  border: 1px solid #d5dce2;
+  border-radius: 50%;
+}
+
+.commerce-carousel-arrow[aria-disabled="true"] { opacity: .42; }
+.commerce-carousel-dot { width: clamp(29px, 8vw, 44px); }
+.commerce-carousel-dot span { width: 9px; height: 9px; border-radius: 50%; background: #8995a2; }
+.commerce-carousel-dot[aria-current="true"] span { background: #94510d; }

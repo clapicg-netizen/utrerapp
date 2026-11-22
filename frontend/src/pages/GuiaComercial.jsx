@@ -1,8 +1,9 @@
 // src/pages/GuiaComercial.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { Phone, Search, MapPin, Image, ArrowUpRight, ArrowRight, Store, Utensils, BriefcaseBusiness, HeartPulse, Building2, GraduationCap, LayoutGrid, X } from "lucide-react";
+import { Phone, Search, MapPin, Image, ArrowUpRight, ArrowRight, Store, Utensils, BriefcaseBusiness, HeartPulse, Building2, GraduationCap, LayoutGrid, CarFront, X } from "lucide-react";
 import { obtenerComercios } from "../lib/comerciosService";
 import { supabase } from "../lib/supabaseClient";
+import { anunciosComerciales, anunciosComercialesActivos } from "../lib/anunciosComerciales";
 import FichaInmobiliaria from "./FichaInmobiliaria";
 import FichaComida from "./FichaComida";
 import EscaparateComercio, { ESCAPARATES } from "../components/EscaparateComercio";
@@ -33,6 +34,8 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
 
 
   const categorias = ["Todos", "Hostelería", "Comercio", "Servicios", "Salud y Belleza", "Inmobiliarias", "Formación"];
+
+  if (anunciosComercialesActivos) categorias.push("Motor");
 
   useEffect(() => {
     cargarComercios();
@@ -102,7 +105,11 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-  const comerciosFiltrados = comercios.filter((c) => {
+  const comerciosVisibles = anunciosComercialesActivos
+    ? [...anunciosComerciales.filter(anuncio => !comercios.some(c => normalizar(c.nombre?.trim()) === normalizar(anuncio.nombre))), ...comercios]
+    : comercios;
+
+  const comerciosFiltrados = comerciosVisibles.filter((c) => {
     const coincideCategoria =
       categoriaSel === "Todos" ||
       normalizar(c.categoria) === normalizar(categoriaSel) ||
@@ -124,8 +131,8 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
     return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5";
   };
 
-  const escaparateSeleccionado = ESCAPARATES.some(({ id }) => id === String(comercioSel?.id));
-  const categoryIcons = [LayoutGrid, Utensils, Store, BriefcaseBusiness, HeartPulse, Building2, GraduationCap];
+  const escaparateSeleccionado = comercioSel?.escaparate || ESCAPARATES.some(({ id }) => id === String(comercioSel?.id));
+  const categoryIcons = [LayoutGrid, Utensils, Store, BriefcaseBusiness, HeartPulse, Building2, GraduationCap, CarFront];
   function abrirFicha(event, comercio) {
     opener.current = event.currentTarget;
     setComercioSel(comercio);
