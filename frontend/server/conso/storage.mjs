@@ -12,10 +12,20 @@ redis.call('EXPIRE', KEYS[3], 90)
 return 1
 `;
 
-export function redisStore(prefix, env) {
-  const url = env.CONSO_REDIS_REST_URL || env.KV_REST_API_URL || env.UPSTASH_REDIS_REST_URL;
-  const token = env.CONSO_REDIS_REST_TOKEN || env.KV_REST_API_TOKEN || env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) throw new Error('Conso storage unavailable');
+function credentials(env, readOnly) {
+  const sources = [
+    [env.KV_REST_API_URL, readOnly ? env.KV_REST_API_READ_ONLY_TOKEN : env.KV_REST_API_TOKEN],
+    [env.CONSO_REDIS_REST_URL, readOnly ? env.CONSO_REDIS_REST_READ_ONLY_TOKEN : env.CONSO_REDIS_REST_TOKEN],
+    [env.UPSTASH_REDIS_REST_URL, readOnly ? env.UPSTASH_REDIS_REST_READ_ONLY_TOKEN : env.UPSTASH_REDIS_REST_TOKEN],
+  ];
+  const [url, token] = sources.find(([url]) => url) || [];
+  if (!url || !token || new URL(url).protocol !== 'https:') throw new Error('Conso storage unavailable');
+  return { url, token };
+}
+
+export function redisStore(prefix, env, { readOnly = false } = {}) {
+  const { url, token } = credentials(env, readOnly);
+  const rateSecret = readOnly ? undefined : env.CONSO_RATE_SECRET || token;
   async function command(args, pipeline = false) {
     const response = await fetch(url.replace(/\/$/, '') + (pipeline ? '/pipeline' : ''), {
       method: 'POST',
@@ -30,11 +40,16 @@ export function redisStore(prefix, env) {
   }
 
   return {
-    reserve: async (day, user, minute, limits) => Boolean(await command([
-      'EVAL', reserveScript, 3, prefix + ':user:' + day + ':' + user,
-      prefix + ':day:' + day, prefix + ':burst:' + minute + ':' + user,
-      limits.userLimit, limits.globalLimit,
-    ])),
+    rateSecret,
+    reserve: async (day, user, minute, limits) => {
+      const result = await command([
+        'EVAL', reserveScript, 3, prefix + ':user:' + day + ':' + user,
+        prefix + ':day:' + day, prefix + ':burst:' + minute + ':' + user,
+        limits.userLimit, limits.globalLimit,
+      ]);
+      if (result !== 0 && result !== 1) throw new Error('Invalid quota response');
+      return result === 1;
+    },
     record: async (day, metrics) => {
       const key = prefix + ':day:' + day;
       await command(Object.entries(metrics).map(([field, value]) => ['HINCRBY', key, field, value]), true);

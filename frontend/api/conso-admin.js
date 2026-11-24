@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
       today.slice(0, -2) + String(i + 1).padStart(2, '0'));
     let rows;
     try {
-      rows = await redisStore(app.id, process.env).metrics(days);
+      rows = await redisStore(app.id, process.env, { readOnly: true }).metrics(days);
     } catch {
       return res.status(200).json({ settings, billingConfirmed, today: null, month: null });
     }
