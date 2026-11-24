@@ -4,7 +4,7 @@ const { isIP } = require('node:net');
 function createHandler({ env = process.env, namespace, generate } = {}) {
   return async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
-    const { VERCEL_ENV, GEMINI_API_KEY } = env;
+    const { VERCEL_ENV } = env;
     const { answerQuestion, unavailable } = await import('../server/conso/engine.mjs');
     if (VERCEL_ENV !== 'preview') return res.status(404).end();
     if (req.method !== 'POST') {
@@ -25,21 +25,31 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
 
     const { app, ...sources } = await import('../server/conso/utrerapp.mjs');
     const { redisStore } = await import('../server/conso/storage.mjs');
+    const { openai } = await import('../server/conso/openai.mjs');
     const { gemini } = await import('../server/conso/gemini.mjs');
-    const { loadSettings, localDay } = await import('../server/conso/settings.mjs');
-    const { rates, maxCallNanoUsd, monthlyBudgetNanoUsd, SpendingLimit, usageCost } = await import('../server/conso/budget.mjs');
+    const { billingReady, loadSettings, localDay } = await import('../server/conso/settings.mjs');
+    const { pricing, monthlyBudgetNanoUsd, SpendingLimit } = await import('../server/conso/budget.mjs');
     const metrics = { calls: 0, searches: 0, input: 0, output: 0 };
     const day = localDay(app.timeZone);
     let store;
     let reserved = false;
-    let selectedModel;
+    let estimatedNanoUsd = 0;
     try {
       const ip = req.headers['x-vercel-forwarded-for'];
-      if (env.CONSO_GEMINI_BILLING_CONFIRMED !== 'true' || !GEMINI_API_KEY || typeof ip !== 'string' || !isIP(ip)) throw new Error('Conso server unavailable');
-      store = redisStore(namespace || app.id, env);
       const settings = loadSettings(app, env);
-      if (!settings.enabled || !settings.adultAccessVerified) return res.status(503).json({ answer: unavailable });
-      selectedModel = settings.model;
+      const { provider, model, region } = settings;
+      const apiKey = provider === 'openai' ? env.OPENAI_API_KEY : env.GEMINI_API_KEY;
+      if (!settings.enabled || !settings.adultAccessVerified || !billingReady(provider, env) ||
+          !apiKey || typeof ip !== 'string' || !isIP(ip)) return res.status(503).json({ answer: unavailable });
+
+      // Preview privado: nunca se reenvía texto libre. Solo se envían las preguntas
+      // públicas y ficticias enumeradas en la configuración de la aplicación.
+      if (provider === 'openai' && !app.previewQuestions.includes(question)) {
+        return res.status(422).json({ answer: 'En este Preview solo se pueden enviar preguntas de prueba aprobadas.', examples: app.previewQuestions });
+      }
+
+      store = redisStore(namespace || app.id, env);
+      const price = pricing(provider, model, region);
       const visitor = createHmac('sha256', store.rateSecret).update(day + '\n' + ip).digest('hex');
       reserved = await store.reserve(day, visitor, Math.floor(Date.now() / 60000), settings);
       if (!reserved) return res.status(429).json({ answer: 'Se ha alcanzado el límite de consultas. Vuelve a intentarlo más tarde.' });
@@ -48,25 +58,27 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
         const now = new Date();
         const month = localDay(app.timeZone, now).slice(0, 7);
         const id = randomUUID();
-        const decision = await store.reserveSpend(month, id, now.getTime(), maxCallNanoUsd, monthlyBudgetNanoUsd);
+        const decision = await store.reserveSpend(month, id, now.getTime(), price.reserve, monthlyBudgetNanoUsd);
         if (decision !== 'reserved') throw new SpendingLimit(decision);
         const settle = async usage => {
-          const actual = usageCost(selectedModel, usage);
+          const actual = price.cost(usage);
           if (actual == null) return;
+          estimatedNanoUsd += actual;
           try {
             await store.settleSpend(month, id, actual);
           } catch {
             // Si el resultado es incierto, el importe reservado sigue cubriendo la llamada.
           }
         };
-        return (generate || gemini(GEMINI_API_KEY, metrics, selectedModel, settle))(request);
+        const adapter = provider === 'openai' ? openai : gemini;
+        return (generate || adapter(apiKey, metrics, model, settle, region))(request);
       };
       const data = await answerQuestion({
         question, app, settings, generate: guardedGenerate, sources, day, metrics,
       });
       try {
         await store.record(day, {
-          ...metrics, nanoUsd: metrics.input * rates[selectedModel].input + metrics.output * rates[selectedModel].output,
+          ...metrics, nanoUsd: estimatedNanoUsd,
         });
       } catch {
         // La reserva persistente se conserva aunque fallen las métricas.
@@ -81,10 +93,10 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       if (reserved) {
         try {
           await store.record(day, {
-            ...metrics, failures: 1, nanoUsd: metrics.input * rates[selectedModel].input + metrics.output * rates[selectedModel].output,
+            ...metrics, failures: 1, nanoUsd: estimatedNanoUsd,
           });
         } catch {
-          // El límite ya quedó reservado. No se repite la llamada a Gemini.
+          // El límite ya quedó reservado. No se repite la llamada al proveedor.
         }
       }
       return res.status(503).json({ answer: unavailable });

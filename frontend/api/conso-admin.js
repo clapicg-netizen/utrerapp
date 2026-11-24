@@ -15,9 +15,9 @@ module.exports = async function handler(req, res) {
     });
     if (!guard.ok || await guard.json() !== true) return res.status(403).end();
     const { redisStore } = await import('../server/conso/storage.mjs');
-    const { loadSettings, localDay } = await import('../server/conso/settings.mjs');
-    const billingConfirmed = process.env.CONSO_GEMINI_BILLING_CONFIRMED === 'true';
+    const { billingReady, loadSettings, localDay } = await import('../server/conso/settings.mjs');
     const settings = loadSettings(app, process.env);
+    const billingConfirmed = billingReady(settings.provider, process.env);
     const today = localDay(app.timeZone);
     const days = Array.from({ length: Number(today.slice(-2)) }, (_, i) =>
       today.slice(0, -2) + String(i + 1).padStart(2, '0'));

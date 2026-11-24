@@ -177,7 +177,7 @@ export default function Conso({ setPaginaActual }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: pregunta }),
       });
-      const { answer, links = [], suggestions } = await response.json();
+      const { answer, links = [], suggestions, examples = [] } = await response.json();
       if (!answer) throw new Error();
       return (
         <div className="space-y-2">
@@ -185,6 +185,11 @@ export default function Conso({ setPaginaActual }) {
           {links.length > 0 && <ul className="space-y-1">
             {links.map(({ label, url }) => <li key={url}>
               <a className="underline text-sky-800" href={url}>{label}</a>
+            </li>)}
+          </ul>}
+          {examples.length > 0 && <ul className="space-y-1">
+            {examples.map(example => <li key={example}>
+              <button type="button" className="underline text-sky-800" onClick={() => enviarMensaje(example)}>{example}</button>
             </li>)}
           </ul>}
           {suggestions && <iframe

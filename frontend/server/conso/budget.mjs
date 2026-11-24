@@ -1,4 +1,5 @@
 import { model } from './gemini.mjs';
+import { openaiModel } from './openai.mjs';
 
 // USD × 10⁹. El margen para un objetivo de 5 EUR se fija en un techo interno de 3,50 USD.
 export const monthlyBudgetNanoUsd = 3_500_000_000;
@@ -6,6 +7,30 @@ export const rates = { [model]: { input: 250, output: 1500 } };
 const modelInputLimit = 1_048_576;
 const modelOutputLimit = 65_536;
 export const maxCallNanoUsd = modelInputLimit * rates[model].input + modelOutputLimit * rates[model].output;
+
+// Para Luna se reserva el contexto completo al mayor precio de entrada, incluidas
+// las escrituras en caché, y el límite de salida configurado en la petición.
+export function openaiPricing(region) {
+  const premium = region === 'eu' ? 1.1 : 1;
+  return {
+    reserve: Math.ceil(1_050_000 * 250 * premium + 250 * 750 * premium),
+    cost(usage) {
+      const { input_tokens: input, output_tokens: output, total_tokens: total } = usage || {};
+      if (![input, output, total].every(value => Number.isSafeInteger(value) && value >= 0) ||
+          input < 1 || input > 1_050_000 || output > 250 || total !== input + output) return null;
+      const long = input > 272_000;
+      return Math.ceil((input * (long ? 250 : 125) + output * (long ? 750 : 500)) * premium);
+    },
+  };
+}
+
+export function pricing(provider, modelId, region) {
+  if (provider === 'openai' && modelId === openaiModel) return openaiPricing(region);
+  if (provider === 'gemini' && modelId === model) {
+    return { reserve: maxCallNanoUsd, cost: usage => usageCost(modelId, usage) };
+  }
+  throw new Error('Unsupported pricing');
+}
 
 export class SpendingLimit extends Error {
   constructor(reason) {

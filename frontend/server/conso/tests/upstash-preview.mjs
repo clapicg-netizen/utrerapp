@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import handler from '../../../api/conso.js';
-import { maxCallNanoUsd, monthlyBudgetNanoUsd, usageCost } from '../budget.mjs';
+import { maxCallNanoUsd, monthlyBudgetNanoUsd, openaiPricing, usageCost } from '../budget.mjs';
 import { model } from '../gemini.mjs';
 import { localDay } from '../settings.mjs';
 import { redisStore } from '../storage.mjs';
@@ -11,14 +11,14 @@ import { redisStore } from '../storage.mjs';
 const [phase, prefix, day, minute] = process.argv.slice(2);
 const env = process.env;
 
-async function request(fn, address) {
+async function request(fn, address, question = 'Prueba del contador') {
   const request = {
     method: 'POST',
     headers: {
       host: 'preview.example', origin: 'https://preview.example',
       'content-type': 'application/json', 'x-vercel-forwarded-for': address,
     },
-    body: { question: 'Prueba del contador' },
+    body: { question },
   };
   const response = {
     setHeader() {},
@@ -36,7 +36,27 @@ async function run() {
   const redisOrigin = new URL(env.KV_REST_API_URL).origin;
   // Los procesos de prueba solo pueden enviar tráfico a esta instancia de Redis.
   const realFetch = globalThis.fetch;
+  let openaiRequests = 0;
   globalThis.fetch = (url, options) => {
+    if (url === 'https://api.openai.com/v1/responses') {
+      openaiRequests++;
+      assert.equal(options.headers.Authorization, 'Bearer simulated-openai-key');
+      const body = JSON.parse(options.body);
+      assert.equal(body.model, 'gpt-6-luna');
+      assert.equal(body.store, false);
+      assert.equal(body.background, undefined);
+      assert.equal(body.tools, undefined);
+      assert.equal(body.max_output_tokens, 250);
+      assert.equal(body.text.format.strict, true);
+      assert.equal(body.text.format.schema.additionalProperties, false);
+      assert.equal(body.text.format.schema.type, 'object');
+      assert.equal(JSON.parse(body.input).question, '¿Cuál es la capital de Canadá?');
+      return Promise.resolve(Response.json({
+        status: 'completed', usage: { input_tokens: 400, output_tokens: 50, total_tokens: 450 },
+        output: [{ type: 'message', content: [{ type: 'output_text',
+          text: JSON.stringify({ topic: 'outside', terms: [], constraints: [], explicitExternal: false, current: false }) }] }],
+      }));
+    }
     assert.equal(new URL(url).origin, redisOrigin);
     return realFetch(url, options);
   };
@@ -67,7 +87,7 @@ async function run() {
     console.log('CONSO REDIS OK: 2 de 10 reservas simultáneas para el mismo visitante.');
 
     const syntheticEnv = {
-      ...env, CONSO_GEMINI_BILLING_CONFIRMED: 'true', GEMINI_API_KEY: 'test-never-sent',
+      ...env, CONSO_AI_PROVIDER: 'gemini', CONSO_GEMINI_BILLING_CONFIRMED: 'true', GEMINI_API_KEY: 'test-never-sent',
       CONSO_ENABLED: 'true', CONSO_ADULT_ACCESS_VERIFIED: 'true', CONSO_USER_LIMIT: '1', CONSO_GLOBAL_LIMIT: '5',
     };
     let providerCalls = 0;
@@ -126,6 +146,29 @@ async function run() {
     assert.equal(attempts.filter(result => result === 'rate').length, 1);
     assert.equal(await rateStore.reserveSpend(month, 'inside-window', now + 59_999, 1, monthlyBudgetNanoUsd), 'rate');
     assert.equal(await rateStore.reserveSpend(month, 'after-window', now + 60_001, 1, monthlyBudgetNanoUsd), 'reserved');
+    const openaiEnv = {
+      ...syntheticEnv, CONSO_AI_PROVIDER: 'openai', OPENAI_API_KEY: 'simulated-openai-key',
+      CONSO_OPENAI_BILLING_CONFIRMED: 'true', CONSO_OPENAI_REGION: 'global',
+    };
+    const approved = '¿Cuál es la capital de Canadá?';
+    const sharedNamespace = prefix + ':providers';
+    const shared = redisStore(sharedNamespace, env);
+    assert.equal(await shared.reserveSpend(month, 'gemini-hold', now, monthlyBudgetNanoUsd, monthlyBudgetNanoUsd), 'reserved');
+    const openai = handler.createHandler({ env: openaiEnv, namespace: sharedNamespace });
+    assert.equal(await request(openai, '203.0.113.8', 'Mi email es prueba@example.com'), 422);
+    assert.equal(await request(openai, '203.0.113.8', approved), 429);
+    assert.equal(openaiRequests, 0);
+    assert.equal(await shared.settleSpend(month, 'gemini-hold', 100_000), 1);
+    assert.equal(await request(openai, '203.0.113.9', approved), 200);
+    assert.equal(openaiRequests, 1);
+    const openaiCost = openaiPricing('global').cost({ input_tokens: 400, output_tokens: 50, total_tokens: 450 });
+    assert.equal(await shared.monthlyReserved(month), 100_000 + openaiCost);
+    const disabled = handler.createHandler({
+      env: { ...openaiEnv, CONSO_OPENAI_BILLING_CONFIRMED: 'false' }, namespace: sharedNamespace,
+    });
+    assert.equal(await request(disabled, '203.0.113.10', approved), 503);
+    assert.equal(openaiRequests, 1);
+    console.log('CONSO OPENAI OK: Responses simulada, preguntas aprobadas y presupuesto compartido entre proveedores.');
     console.log('CONSO REDIS OK: techo mensual y diez llamadas por ventana móvil; confirmación de acceso adulto obligatoria.');
     console.log('CONSO REDIS OK: HTTP 429 por visitante y cuota global; HTTP 503 ante Redis inaccesible y facturación pendiente.');
     return;

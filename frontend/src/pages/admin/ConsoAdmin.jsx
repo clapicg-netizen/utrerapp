@@ -44,13 +44,14 @@ export default function ConsoAdmin() {
   const { settings } = data;
   return (
     <div className="space-y-5">
-      {!data.billingConfirmed && <p role="status">Activación pendiente de verificar la facturación de Gemini para España.</p>}
+      {!data.billingConfirmed && <p role="status">Activación pendiente de confirmar la facturación del proveedor.</p>}
       <p>La configuración de Preview se gestiona en Vercel.</p>
       <dl>
         {Object.entries(toggles).map(([key, label]) => (
           <div className="flex gap-2" key={key}><dt>{label}</dt><dd>{settings[key] ? 'Sí' : 'No'}</dd></div>
         ))}
-        <div><dt>Modelo Gemini</dt><dd>{settings.model}</dd></div>
+        <div><dt>Proveedor</dt><dd>{settings.provider}</dd></div>
+        <div><dt>Modelo</dt><dd>{settings.model}</dd></div>
         <div><dt>Personalidad</dt><dd>{settings.personality}</dd></div>
         <div><dt>Consultas diarias por visitante</dt><dd>{settings.userLimit}</dd></div>
         <div><dt>Consultas diarias globales</dt><dd>{settings.globalLimit}</dd></div>
