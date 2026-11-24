@@ -1,15 +1,11 @@
 import { model } from './gemini.mjs';
 
 export const models = [model];
-export const rates = {
-  [model]: { input: 250, output: 1500 },
-};
-
 export function defaults(app) {
   return {
-    enabled: false, model, personality: app.defaultPersonality,
+    enabled: false, adultAccessVerified: false, model, personality: app.defaultPersonality,
     directory: true, pharmacies: true, official: true,
-    commercialPriority: true, externalSearch: false, userLimit: 20, globalLimit: 200,
+    commercialPriority: true, externalSearch: false, userLimit: 20, globalLimit: 100,
   };
 }
 
@@ -19,7 +15,7 @@ export function validSettings(settings, app) {
   return Object.keys(shape).every(key => typeof settings[key] === typeof shape[key]) &&
     models.includes(settings.model) && settings.personality.trim().length > 0 && settings.personality.length <= 480 &&
     Number.isInteger(settings.userLimit) && settings.userLimit > 0 && settings.userLimit <= 20 &&
-    Number.isInteger(settings.globalLimit) && settings.globalLimit >= settings.userLimit && settings.globalLimit <= 200;
+    Number.isInteger(settings.globalLimit) && settings.globalLimit >= settings.userLimit && settings.globalLimit <= 100;
 }
 
 export const localDay = (zone, date = new Date()) => new Intl.DateTimeFormat('sv-SE', { timeZone: zone }).format(date);
@@ -27,9 +23,8 @@ export const localDay = (zone, date = new Date()) => new Intl.DateTimeFormat('sv
 export function loadSettings(app, env) {
   const values = defaults(app);
   const flags = {
-    enabled: 'CONSO_ENABLED', directory: 'CONSO_DIRECTORY', pharmacies: 'CONSO_PHARMACIES',
-    official: 'CONSO_OFFICIAL_SOURCES', commercialPriority: 'CONSO_COMMERCIAL_PRIORITY',
-    externalSearch: 'CONSO_EXTERNAL_SEARCH',
+    enabled: 'CONSO_ENABLED', adultAccessVerified: 'CONSO_ADULT_ACCESS_VERIFIED', directory: 'CONSO_DIRECTORY', pharmacies: 'CONSO_PHARMACIES',
+    official: 'CONSO_OFFICIAL_SOURCES',
   };
   for (const [key, name] of Object.entries(flags)) {
     if (env[name] != null) values[key] = env[name] === 'true';

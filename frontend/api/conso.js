@@ -1,4 +1,4 @@
-const { createHmac } = require('node:crypto');
+const { createHmac, randomUUID } = require('node:crypto');
 const { isIP } = require('node:net');
 
 function createHandler({ env = process.env, namespace, generate } = {}) {
@@ -26,7 +26,8 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
     const { app, ...sources } = await import('../server/conso/utrerapp.mjs');
     const { redisStore } = await import('../server/conso/storage.mjs');
     const { gemini } = await import('../server/conso/gemini.mjs');
-    const { loadSettings, localDay, rates } = await import('../server/conso/settings.mjs');
+    const { loadSettings, localDay } = await import('../server/conso/settings.mjs');
+    const { rates, maxCallNanoUsd, monthlyBudgetNanoUsd, SpendingLimit, usageCost } = await import('../server/conso/budget.mjs');
     const metrics = { calls: 0, searches: 0, input: 0, output: 0 };
     const day = localDay(app.timeZone);
     let store;
@@ -37,13 +38,31 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       if (env.CONSO_GEMINI_BILLING_CONFIRMED !== 'true' || !GEMINI_API_KEY || typeof ip !== 'string' || !isIP(ip)) throw new Error('Conso server unavailable');
       store = redisStore(namespace || app.id, env);
       const settings = loadSettings(app, env);
-      if (!settings.enabled) return res.status(503).json({ answer: unavailable });
+      if (!settings.enabled || !settings.adultAccessVerified) return res.status(503).json({ answer: unavailable });
       selectedModel = settings.model;
       const visitor = createHmac('sha256', store.rateSecret).update(day + '\n' + ip).digest('hex');
       reserved = await store.reserve(day, visitor, Math.floor(Date.now() / 60000), settings);
       if (!reserved) return res.status(429).json({ answer: 'Se ha alcanzado el límite de consultas. Vuelve a intentarlo más tarde.' });
+      const guardedGenerate = async request => {
+        if (request.search) throw new Error('Search disabled in Preview');
+        const now = new Date();
+        const month = localDay(app.timeZone, now).slice(0, 7);
+        const id = randomUUID();
+        const decision = await store.reserveSpend(month, id, now.getTime(), maxCallNanoUsd, monthlyBudgetNanoUsd);
+        if (decision !== 'reserved') throw new SpendingLimit(decision);
+        const settle = async usage => {
+          const actual = usageCost(selectedModel, usage);
+          if (actual == null) return;
+          try {
+            await store.settleSpend(month, id, actual);
+          } catch {
+            // Si el resultado es incierto, el importe reservado sigue cubriendo la llamada.
+          }
+        };
+        return (generate || gemini(GEMINI_API_KEY, metrics, selectedModel, settle))(request);
+      };
       const data = await answerQuestion({
-        question, app, settings, generate: generate || gemini(GEMINI_API_KEY, metrics, selectedModel), sources, day, metrics,
+        question, app, settings, generate: guardedGenerate, sources, day, metrics,
       });
       try {
         await store.record(day, {
@@ -53,7 +72,12 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
         // La reserva persistente se conserva aunque fallen las métricas.
       }
       return res.status(200).json(data);
-    } catch {
+    } catch (error) {
+      if (error instanceof SpendingLimit) return res.status(429).json({
+        answer: error.reason === 'budget'
+          ? 'Se ha alcanzado el presupuesto mensual de Conso.'
+          : 'Conso ha alcanzado el límite de llamadas por minuto. Inténtalo de nuevo en un momento.',
+      });
       if (reserved) {
         try {
           await store.record(day, {
