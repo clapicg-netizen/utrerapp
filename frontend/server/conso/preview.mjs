@@ -1,3 +1,6 @@
+import { resolveWeatherDate } from './weather-dates.mjs';
+import { localDay } from './settings.mjs';
+
 export function normalizePreviewQuestion(question) {
   return question.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
     .replace(/[¿?¡!,.;:]+/g, ' ').replace(/\s+/g, ' ').trim()
@@ -13,15 +16,22 @@ export function previewIntent(question, app) {
 }
 
 const weatherPhrase = /^(?:(?:que tiempo|que temperatura) (?:hace|hara|va a hacer)|(?:va a llover|llueve|llovera)|(?:el )?tiempo|(?:la )?prevision(?: del tiempo)?|(?:necesito|hara falta|hace falta|me llevo|llevo) (?:un )?paraguas|(?:hara|habra|hace|va a hacer) (?:mucho )?viento|(?:cuanto|que) viento (?:hara|hace))$/;
-const when = /\b(este fin de semana|el fin de semana|este finde|el finde|manana por la tarde|manana por la manana|esta tarde|esta manana|hoy|manana)\b/;
+const outing = /^(?:podre|puedo|se podra) (?:salir|pasear|dar un paseo)(?: al aire libre)?$/;
+const partPhrase = /\b(?:(?:por la|esta|a la) (manana|tarde|noche)|(?:al )?(mediodia))\b/;
 
-export function weatherIntent(question) {
-  const clean = normalizePreviewQuestion(question).replace(/\s+en utrera$/, '');
-  const timing = clean.match(when)?.[0] || '';
-  if (!weatherPhrase.test(clean.replace(when, '').replace(/\s+/g, ' ').trim())) return;
+export function weatherIntent(question, { today = localDay('Europe/Madrid'), followUp = false } = {}) {
+  const clean = normalizePreviewQuestion(question).replace(/\ben utrera\b/, ' ');
+  const part = clean.match(partPhrase);
+  const withoutPart = clean.replace(partPhrase, ' ');
+  const timing = resolveWeatherDate(withoutPart, today);
+  const subject = withoutPart.replace(timing?.phrase || /$^/, ' ')
+    .replace(/^\s*y(?:\s+|$)/, '').replace(/\bpara\s*$/, '').replace(/^\s*para\b/, '')
+    .replace(/\s+/g, ' ').trim();
+  if (!weatherPhrase.test(subject) && !(outing.test(subject) && timing) &&
+      !(followUp && (timing || part) && !subject)) return;
   return {
-    day: /fin de semana|finde/.test(timing) ? 'finde' : timing.startsWith('manana') ? 'manana' : 'hoy',
-    part: timing.endsWith('tarde') ? 'tarde' : timing.startsWith('esta manana') || timing.endsWith('por la manana') ? 'manana' : undefined,
+    dates: timing?.dates || [today],
+    part: part?.[1] || part?.[2],
     focus: /viento/.test(clean) ? 'wind' : /paraguas|llov|llue/.test(clean) ? 'rain' : undefined,
     umbrella: /paraguas/.test(clean),
   };

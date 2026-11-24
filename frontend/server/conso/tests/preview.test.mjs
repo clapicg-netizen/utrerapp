@@ -16,10 +16,32 @@ test('mapea variantes a preguntas fijas, sin reenviar la frase original', () => 
   ]) assert.equal(previewIntent(question, app)?.question, approved, question);
 });
 
-test('interpreta fecha, tramo y localidad de preguntas meteorológicas', () => {
-  assert.equal(weatherIntent('hola, que tiempo hará mañana en utrera?').day, 'manana');
-  assert.equal(weatherIntent('¿Mañana necesito paraguas?').umbrella, true);
-  assert.equal(weatherIntent('¿Qué tiempo hará este fin de semana?').day, 'finde');
-  assert.equal(weatherIntent('¿Hará mucho viento esta tarde?').part, 'tarde');
-  assert.equal(weatherIntent('¿Qué tiempo hará mañana en Sevilla?'), undefined);
+const today = '2026-11-24';
+const parse = (question, followUp = false) => weatherIntent(question, { today, followUp });
+
+test('resuelve días de la semana, fechas y plazos escritos de distintas formas', () => {
+  for (const [question, dates, followUp] of [
+    ['¿Y el sábado, qué tiempo hará?', ['2026-11-28']],
+    ['¿Qué tiempo hará en Utrera el próximo sábado?', ['2026-11-28']],
+    ['¿Qué tiempo hará el sábado?', ['2026-11-28']],
+    ['¿Y el domingo?', ['2026-11-29'], true],
+    ['¿Lloverá el próximo viernes?', ['2026-11-27']],
+    ['¿Qué tiempo hará dentro de tres días?', ['2026-11-27']],
+    ['¿Va a llover este finde?', ['2026-11-28', '2026-11-29']],
+    ['¿Podré salir el sábado por la tarde?', ['2026-11-28']],
+    ['¿Y pasado mañana?', ['2026-11-26'], true],
+    ['¿La previsión para el 28 de noviembre?', ['2026-11-28']],
+    ['¿Lloverá el 29/11/2026 en Utrera?', ['2026-11-29']],
+    ['¿Y el 2026-11-30?', ['2026-11-30'], true],
+    ['¿Va a llover de aquí a veintiún días?', ['2026-12-15']],
+    ['¿Qué tiempo hará el 31 de noviembre?', []],
+  ]) assert.deepEqual(parse(question, followUp)?.dates, dates, question);
+
+  assert.equal(parse('¿Mañana necesito paraguas?').umbrella, true);
+  assert.equal(parse('¿Hará mucho viento esta tarde?').part, 'tarde');
+  assert.equal(parse('¿Podré salir el sábado por la tarde?').part, 'tarde');
+  assert.equal(parse('¿Y el domingo?'), undefined);
+  assert.equal(parse('¿Y pasado mañana?'), undefined);
+  assert.equal(parse('¿Qué tiempo hará mañana en Sevilla?', true), undefined);
+  assert.equal(parse('¿Qué academias hay el sábado?', true), undefined);
 });

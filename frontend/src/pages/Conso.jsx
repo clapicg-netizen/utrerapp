@@ -1,10 +1,11 @@
 import { PARKING_URL } from '../lib/parking';
 // src/pages/Conso.jsx
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, MapPin, Car } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
 export default function Conso({ setPaginaActual }) {
+  const weatherContext = useRef(false);
   const [mensaje, setMensaje] = useState('');
   const [cargandoIA, setCargandoIA] = useState(false);
   
@@ -34,6 +35,8 @@ export default function Conso({ setPaginaActual }) {
   };
 
   const procesarRespuesta = async (pregunta) => {
+    const weatherFollowUp = weatherContext.current;
+    weatherContext.current = false;
     const texto = pregunta.toLowerCase();
 
     if (/^farmacias? de guardia(?: hoy)?[?!.]?$/i.test(texto.trim())) {
@@ -175,9 +178,10 @@ export default function Conso({ setPaginaActual }) {
       const response = await fetch('/api/conso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: pregunta }),
+        body: JSON.stringify({ question: pregunta, weatherFollowUp }),
       });
-      const { answer, links = [], suggestions, examples = [] } = await response.json();
+      const { answer, links = [], suggestions, examples = [], context } = await response.json();
+      weatherContext.current = context === 'weather';
       if (!answer) throw new Error();
       return (
         <div className="space-y-2">

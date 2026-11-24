@@ -18,8 +18,10 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       return res.status(403).json({ answer: 'La consulta debe enviarse desde UtrerApp.' });
     }
     const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
+    const followUp = req.body?.weatherFollowUp;
     if (!question || question.length > 500 || Buffer.byteLength(question) > 1600 ||
-        Object.keys(req.body).length !== 1 || /[\u0000-\u0008\u000b-\u001f]/.test(question)) {
+        Object.keys(req.body).some(key => key !== 'question' && key !== 'weatherFollowUp') ||
+        (followUp !== undefined && typeof followUp !== 'boolean') || /[\u0000-\u0008\u000b-\u001f]/.test(question)) {
       return res.status(400).json({ answer: 'Escribe una pregunta de hasta 500 caracteres.' });
     }
 
@@ -44,7 +46,7 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       }
 
       const { previewIntent, weatherIntent } = await import('../server/conso/preview.mjs');
-      const weather = app.weather && weatherIntent(question);
+      const weather = app.weather && weatherIntent(question, { today: day, followUp });
       const intent = !weather && provider === 'openai' && previewIntent(question, app);
       if (!weather && provider === 'openai' && !intent) {
         return res.status(422).json({
@@ -75,7 +77,7 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
           place: app.weather, apiKey: env.AEMET_API_KEY, request: weather, zone: app.timeZone,
         });
         await recordUsage({ topic_weather: 1, ...(available ? { direct: 1 } : { weatherUnavailable: 1 }) });
-        return res.status(200).json(data);
+        return res.status(200).json({ ...data, context: 'weather' });
       }
       if (intent?.answer) {
         await recordUsage({ direct: 1 });
