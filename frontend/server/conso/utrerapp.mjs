@@ -16,14 +16,12 @@ export const app = {
       variants: /^(?:buenas(?: tardes| noches)?|buenos dias)$/,
       answer: '¡Hola! Puedo orientarte sobre comercios, sitios que visitar, trámites y trenes de Utrera.',
     },
-    {
-      question: '¿Dónde consulto las farmacias de guardia?',
-      variants: /^(?:donde (?:puedo )?(?:consultar|ver)|que|cuales son) (?:las )?farmacias?(?: hay| estan| esta)? de guardia(?: hoy)?(?: en utrera)?$/,
-      answer: 'Puedes consultar el calendario de farmacias de guardia en UtrerApp.',
-      links: [{ label: 'Farmacias de guardia en UtrerApp', url: '/?vista=farmacias' }],
-    },
     { question: '¿Cuál es la capital de Canadá?' },
   ],
+  pharmacySource: {
+    label: 'Buscador oficial de farmacias de guardia',
+    url: 'https://www.utrera.org/farmacia-de-guardia-en-utrera/',
+  },
   weather: {
     code: '41095', name: 'Utrera',
     url: 'https://www.aemet.es/es/eltiempo/prediccion/municipios/utrera-id41095',

@@ -9,32 +9,24 @@ export default function Farmacias({ setPaginaActual }) {
   const [loading, setLoading] = useState(true);
 
   const hoy = new Date();
-  const opcionesFecha = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const opcionesFecha = { weekday: 'long', timeZone: 'Europe/Madrid', year: 'numeric', month: 'long', day: 'numeric' };
   const fechaActualFormateada = hoy.toLocaleDateString('es-ES', opcionesFecha);
-  const fechaStr = hoy.toISOString().split('T')[0];
+  const fechaStr = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' }).format(hoy);
 
   useEffect(() => {
     async function cargarGuardias() {
       try {
         setLoading(true);
-        let { data, error } = await supabase
+        const { data, error } = await supabase
           .from('farmacias_calendario')
-          .select('*')
+          .select('id,fecha,turno,horario,nombre_farmacia,boticario,direccion,telefono')
           .eq('fecha', fechaStr);
 
         if (error) throw error;
 
-        if (!data || data.length === 0) {
-          const { data: fallback } = await supabase
-            .from('farmacias_calendario')
-            .select('*')
-            .limit(10);
-          data = fallback || [];
-        }
-
-        setGuardiasHoy(data);
+        setGuardiasHoy((data || []).filter(row => row.fecha === fechaStr && row.horario && row.nombre_farmacia));
       } catch (err) {
-        console.error("Error al cargar las farmacias:", err);
+        setGuardiasHoy([]);
       } finally {
         setLoading(false);
       }
@@ -58,14 +50,14 @@ export default function Farmacias({ setPaginaActual }) {
   const farmaciasDia = farmaciasFiltradas.filter(f => {
     const horario = (f.horario || "").toLowerCase();
     const turno = (f.turno || "").toLowerCase();
-    if (horario.includes('22:00 a 9:30') || turno.includes('noche')) return false;
+    if (/22:00 a 0?9:30/.test(horario) || turno.includes('noche')) return false;
     return true;
   });
 
   const farmaciasNoche = farmaciasFiltradas.filter(f => {
     const horario = (f.horario || "").toLowerCase();
     const turno = (f.turno || "").toLowerCase();
-    return horario.includes('22:00 a 9:30') || turno.includes('noche');
+    return /22:00 a 0?9:30/.test(horario) || turno.includes('noche');
   });
 
   return (
@@ -114,7 +106,8 @@ export default function Farmacias({ setPaginaActual }) {
           <div className="bg-white p-6 rounded-3xl border border-amber-200 text-center space-y-2 shadow-sm">
             <div className="text-2xl">⚠️</div>
             <p className="font-bold text-slate-800 text-sm">Sin registros disponibles</p>
-            <p className="text-xs text-slate-500">Revisa la tabla en Supabase.</p>
+            <p className="text-xs text-slate-500">No hay registros verificados para esta fecha.</p>
+            <a className="underline text-sm" href="https://www.utrera.org/farmacia-de-guardia-en-utrera/">Consultar el buscador oficial</a>
           </div>
         ) : (
           <div className="space-y-6">
@@ -141,7 +134,7 @@ export default function Farmacias({ setPaginaActual }) {
                     </p>
                     <p className="text-xs text-slate-600 flex items-center gap-1.5">
                       <Clock size={14} className="text-emerald-600 flex-shrink-0" />
-                      <span className="font-bold text-emerald-700">{farmacia.horario || "09:30 a 22:00 h"}</span>
+                      <span className="font-bold text-emerald-700">{farmacia.horario}</span>
                     </p>
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                       <a href={"tel:" + farmacia.telefono} className="py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-colors">
@@ -179,7 +172,7 @@ export default function Farmacias({ setPaginaActual }) {
                     </p>
                     <p className="text-xs text-slate-600 flex items-center gap-1.5">
                       <Clock size={14} className="text-indigo-600 flex-shrink-0" />
-                      <span className="font-bold text-indigo-700">{farmacia.horario || "22:00 a 9:30 h"}</span>
+                      <span className="font-bold text-indigo-700">{farmacia.horario}</span>
                     </p>
                     <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
                       <a href={"tel:" + farmacia.telefono} className="py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow transition-colors">

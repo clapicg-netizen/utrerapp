@@ -67,14 +67,8 @@ export async function answerQuestion({ question, app, settings, generate, source
   }
 
   const section = app.sections[topic];
-  if (topic === 'pharmacy' && settings.pharmacies && /\b(hoy|ahora|today|now)\b/i.test(question)) {
-    const rows = await sources.readPublic(app.db, 'farmacias_calendario', {
-      select: 'nombre_farmacia,direccion,horario,turno,telefono', fecha: 'eq.' + day, limit: '12',
-    });
-    if (rows.length) return {
-      answer: rows.map(row => [row.nombre_farmacia, row.turno, row.horario, row.direccion, row.telefono].filter(Boolean).join(' · ')).join('\n'),
-      links: [section],
-    };
+  if (topic === 'pharmacy' && app.pharmacySource) {
+    return { answer: 'No puedo confirmar un turno para esa consulta. Indícame la fecha o consulta el buscador oficial.', links: [app.pharmacySource] };
   }
   const official = settings.official ? app.official : [];
   const links = [section, ...official].filter(Boolean);

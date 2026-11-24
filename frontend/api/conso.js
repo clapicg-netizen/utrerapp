@@ -32,7 +32,8 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
     const { billingReady, loadSettings, localDay } = await import('../server/conso/settings.mjs');
     const { pricing, monthlyBudgetNanoUsd, SpendingLimit } = await import('../server/conso/budget.mjs');
     const metrics = { calls: 0, searches: 0, input: 0, output: 0 };
-    const day = localDay(app.timeZone);
+    const now = new Date();
+    const day = localDay(app.timeZone, now);
     let store;
     let reserved = false;
     let estimatedNanoUsd = 0;
@@ -46,15 +47,17 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       }
 
       const { previewIntent, weatherIntent } = await import('../server/conso/preview.mjs');
-      const weather = app.weather && weatherIntent(question, { today: day, followUp });
-      const intent = !weather && provider === 'openai' && previewIntent(question, app);
-      if (!weather && provider === 'openai' && !intent) {
+      const { pharmacyIntent, pharmacyAnswer } = await import('../server/conso/pharmacy.mjs');
+      const pharmacy = settings.pharmacies && app.pharmacySource && pharmacyIntent(question, day);
+      const weather = !pharmacy && app.weather && weatherIntent(question, { today: day, followUp });
+      const intent = !pharmacy && !weather && provider === 'openai' && previewIntent(question, app);
+      if (!pharmacy && !weather && provider === 'openai' && !intent) {
         return res.status(422).json({
           answer: 'No he entendido la consulta. En esta prueba puedo orientarte sobre comercios, visitas, trámites, trenes y el tiempo en Utrera.',
           examples: app.previewIntents.slice(0, 5).map(({ question }) => question),
         });
       }
-      if (!weather && !intent?.answer && (!billingReady(provider, env) || !apiKey)) {
+      if (!pharmacy && !weather && !intent?.answer && (!billingReady(provider, env) || !apiKey)) {
         return res.status(503).json({ answer: unavailable });
       }
 
@@ -71,6 +74,13 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
         }
       }
 
+      if (pharmacy) {
+        const { available, ...data } = await pharmacyAnswer({
+          request: pharmacy, today: day, timeZone: app.timeZone, now, app, readPublic: sources.readPublic,
+        });
+        await recordUsage({ topic_pharmacy: 1, ...(available ? { direct: 1 } : {}) });
+        return res.status(200).json(data);
+      }
       if (weather) {
         const { weatherAnswer } = await import('../server/conso/weather.mjs');
         const { available, ...data } = await weatherAnswer({
