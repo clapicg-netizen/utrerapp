@@ -156,10 +156,11 @@ async function run() {
     assert.equal(await shared.reserveSpend(month, 'gemini-hold', now, monthlyBudgetNanoUsd, monthlyBudgetNanoUsd), 'reserved');
     const openai = handler.createHandler({ env: openaiEnv, namespace: sharedNamespace });
     assert.equal(await request(openai, '203.0.113.8', 'Mi email es prueba@example.com'), 422);
+    assert.equal(await request(openai, '203.0.113.8', 'hola, que tiempo hará mañana en utrera?'), 200);
     assert.equal(await request(openai, '203.0.113.8', approved), 429);
     assert.equal(openaiRequests, 0);
     assert.equal(await shared.settleSpend(month, 'gemini-hold', 100_000), 1);
-    assert.equal(await request(openai, '203.0.113.9', approved), 200);
+    assert.equal(await request(openai, '203.0.113.9', 'Hola, cual es la capital de Canada?'), 200);
     assert.equal(openaiRequests, 1);
     const openaiCost = openaiPricing('global').cost({ input_tokens: 400, output_tokens: 50, total_tokens: 450 });
     assert.equal(await shared.monthlyReserved(month), 100_000 + openaiCost);

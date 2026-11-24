@@ -42,10 +42,18 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       if (!settings.enabled || !settings.adultAccessVerified || !billingReady(provider, env) ||
           !apiKey || typeof ip !== 'string' || !isIP(ip)) return res.status(503).json({ answer: unavailable });
 
-      // Preview privado: nunca se reenvía texto libre. Solo se envían las preguntas
-      // públicas y ficticias enumeradas en la configuración de la aplicación.
-      if (provider === 'openai' && !app.previewQuestions.includes(question)) {
-        return res.status(422).json({ answer: 'En este Preview solo se pueden enviar preguntas de prueba aprobadas.', examples: app.previewQuestions });
+      let approvedQuestion = question;
+      if (provider === 'openai') {
+        const { previewIntent } = await import('../server/conso/preview.mjs');
+        const intent = previewIntent(question, app);
+        if (!intent) {
+          return res.status(422).json({
+            answer: 'No he entendido la consulta. En esta prueba puedo orientarte sobre comercios, visitas, trámites y trenes de Utrera.',
+            examples: app.previewIntents.slice(0, 5).map(({ question }) => question),
+          });
+        }
+        if (intent.answer) return res.status(200).json({ answer: intent.answer, links: intent.links });
+        approvedQuestion = intent.question;
       }
 
       store = redisStore(namespace || app.id, env);
@@ -74,7 +82,7 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
         return (generate || adapter(apiKey, metrics, model, settle, region))(request);
       };
       const data = await answerQuestion({
-        question, app, settings, generate: guardedGenerate, sources, day, metrics,
+        question: approvedQuestion, app, settings, generate: guardedGenerate, sources, day, metrics,
       });
       try {
         await store.record(day, {

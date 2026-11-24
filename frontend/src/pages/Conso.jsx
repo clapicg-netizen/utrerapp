@@ -302,7 +302,7 @@ export default function Conso({ setPaginaActual }) {
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="Pregúntale a Conso sobre Utrera, el tiempo, trenes..."
+            placeholder="Pregunta por comercios, visitas, trámites o trenes"
             maxLength={500}
                 value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
