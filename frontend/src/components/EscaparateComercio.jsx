@@ -63,20 +63,23 @@ function videoDetails(value) {
   };
 }
 
-export default function EscaparateComercio({ comercio }) {
+export default function EscaparateComercio({ comercio, archivoLocal }) {
   const config = ESCAPARATES.find(({ id }) => id === String(comercio.id));
   const profile = config?.slug === 'digital-gm' ? digitalGm : {};
   const restaurant = config?.restaurante || comercio.categoria === 'Hostelería';
   const category = profile.category || comercio.subcategoria?.trim() || comercio.categoria;
-  const menu = restaurant ? webLink(comercio.carta_pdf_url) : null;
-  const menuImage = menu && /\.(png|jpe?g|webp|avif)$/i.test(new URL(menu).pathname);
-  const image = webLink(comercio.portada_url);
-  const photos = [...new Set((Array.isArray(comercio.galeria_urls) ? comercio.galeria_urls : []).map(webLink).filter(Boolean))];
+  const enlaceMedio = valor => archivoLocal?.(valor) ? valor : webLink(valor);
+  const menu = restaurant ? enlaceMedio(comercio.carta_pdf_url) : null;
+  const menuImage = menu && (archivoLocal?.(menu)?.type.startsWith('image/') || /\.(png|jpe?g|webp|avif)$/i.test(new URL(menu).pathname));
+  const image = enlaceMedio(comercio.portada_url);
+  const photos = [...new Set((Array.isArray(comercio.galeria_urls) ? comercio.galeria_urls : []).map(enlaceMedio).filter(Boolean))];
   const shop = webLink(comercio.tienda_url);
   const site = webLink(comercio.web_url);
   const facebook = webLink(profile.facebook || comercio.facebook_url);
   const instagram = webLink(comercio.instagram_url || comercio.instagram_username);
-  const video = videoDetails(comercio.video_story_url);
+  const video = archivoLocal?.(comercio.video_story_url)
+    ? { href: comercio.video_story_url, native: true }
+    : videoDetails(comercio.video_story_url);
   const phone = phoneNumber(comercio.telefono);
   const whatsapp = phoneNumber(comercio.whatsapp);
   const address = profile.address || comercio.direccion?.trim();

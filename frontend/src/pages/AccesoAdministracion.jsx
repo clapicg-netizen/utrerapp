@@ -19,6 +19,7 @@ export default function AccesoAdministracion({ children }) {
   const usuarioId = session?.user.id;
   const [ocupado, setOcupado] = useState(false);
   const [mensaje, setMensaje] = useState('');
+  const [mensajePanel, setMensajePanel] = useState('');
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((evento, nextSession) => {
@@ -115,7 +116,7 @@ export default function AccesoAdministracion({ children }) {
         return;
       }
       cerrarRecuperacion();
-      setMensaje('Contraseña actualizada.');
+      setMensajePanel('Contraseña actualizada.');
     } catch {
       setMensaje('No se pudo conectar con Supabase. Vuelve a intentarlo.');
     } finally {
@@ -125,9 +126,12 @@ export default function AccesoAdministracion({ children }) {
 
   async function salir() {
     setMensaje('');
+    setMensajePanel('');
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) {
-      setMensaje('No se pudo cerrar la sesión. Inténtalo de nuevo.');
+      const aviso = 'No se pudo cerrar la sesión. Inténtalo de nuevo.';
+      setMensaje(aviso);
+      setMensajePanel(aviso);
     } else {
       setAutorizada(null);
       cerrarRecuperacion();
@@ -139,7 +143,7 @@ export default function AccesoAdministracion({ children }) {
     return <p className="p-8 text-center" role="status">Comprobando acceso…</p>;
   }
   if (session && autorizada?.permiso && !cambiandoContrasena && !enlaceRecuperacion) {
-    return children(salir, mensaje, usuarioId);
+    return children(salir, mensajePanel, usuarioId);
   }
 
   return (
