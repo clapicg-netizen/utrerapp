@@ -189,7 +189,7 @@ export default function Conso({ setPaginaActual }) {
           </ul>}
           {examples.length > 0 && <ul className="space-y-1">
             {examples.map(example => <li key={example}>
-              <button type="button" className="underline text-sky-800" onClick={() => enviarMensaje(example)}>{example}</button>
+              <button type="button" className="underline text-sky-800" onClick={() => setMensaje(example)}>{example}</button>
             </li>)}
           </ul>}
           {suggestions && <iframe
@@ -236,7 +236,7 @@ export default function Conso({ setPaginaActual }) {
               <h1 className="text-lg font-bold">Conso IA</h1>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </div>
-            <p className="text-[11px] text-rose-200">Asistente Oficial de Utrera</p>
+            <p className="text-[11px] text-rose-200">Asistente de UtrerApp</p>
           </div>
         </div>
       </div>
