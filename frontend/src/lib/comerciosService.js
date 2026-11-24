@@ -86,20 +86,21 @@ export const crearComercio = async (formData) => {
 };
 
 // 3. Actualizar comercio existente
-export const actualizarComercio = async (id, pinMaestro, formData) => {
+export const actualizarComercio = async (id, _pin, formData) => {
   try {
     const datosSaneados = limpiarDatosComercio(formData);
     const { data, error } = await supabase
       .from('comercios_utrera')
       .update(datosSaneados)
       .eq('id', id)
-      .select();
+      .select()
+      .single();
 
     if (error) {
       console.error("Error al actualizar comercio:", error.message);
       return { success: false, message: error.message };
     }
-    return { success: true, data };
+    return { success: true, data: [data] };
   } catch (err) {
     console.error("Excepción en actualizarComercio:", err);
     return { success: false, message: err.message };
@@ -112,7 +113,9 @@ export const eliminarComercio = async (id) => {
     const { error } = await supabase
       .from('comercios_utrera')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .select('id')
+      .single();
 
     if (error) {
       console.error("Error al eliminar comercio:", error.message);
@@ -126,17 +129,17 @@ export const eliminarComercio = async (id) => {
 };
 
 // 5. Subir archivos al Storage de Supabase (Blindado)
-export const subirArchivoComercio = async (file) => {
+export const subirArchivoComercio = async (file, adminId) => {
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = adminId ? `gestor/${adminId}/${fileName}` : fileName;
 
     const { error: uploadError } = await supabase.storage
       .from('comercios')
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: true
+        upsert: !adminId
       });
 
     if (uploadError) {

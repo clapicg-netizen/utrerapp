@@ -1,13 +1,20 @@
 // src/pages/PanelAdmin.jsx
 import React, { useState, useEffect } from 'react';
 import { obtenerComercios, crearComercio, actualizarComercio, eliminarComercio, subirArchivoComercio } from '../lib/comerciosService';
-import { supabase } from '../lib/supabaseClient';
 
-const PIN_ADMIN_MAESTRO = "9999";
+import AccesoAdministracion from './AccesoAdministracion';
 
 export default function PanelAdmin() {
-  const [autenticado, setAutenticado] = useState(false);
-  const [pinInput, setPinInput] = useState('');
+  return (
+    <AccesoAdministracion>
+      {(salir, mensajeAcceso, adminId) => (
+        <ContenidoAdmin salir={salir} mensajeAcceso={mensajeAcceso} adminId={adminId} />
+      )}
+    </AccesoAdministracion>
+  );
+}
+
+function ContenidoAdmin({ salir, mensajeAcceso, adminId }) {
   const [comercios, setComercios] = useState([]);
   const [editandoId, setEditandoId] = useState(null);
   const [mensaje, setMensaje] = useState({ tipo: '', texto: '' });
@@ -88,20 +95,8 @@ export default function PanelAdmin() {
   };
 
   useEffect(() => {
-    if (autenticado) {
-      cargarLista();
-    }
-  }, [autenticado]);
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (pinInput === PIN_ADMIN_MAESTRO) {
-      setAutenticado(true);
-      setMensaje({ tipo: '', texto: '' });
-    } else {
-      setMensaje({ tipo: 'error', texto: 'PIN de Administrador incorrecto' });
-    }
-  };
+    cargarLista();
+  }, []);
 
   const handleFileUpload = async (e, campo, esGaleria = false, formularioDestino = 'normal') => {
     const file = e.target.files[0];
@@ -110,7 +105,7 @@ export default function PanelAdmin() {
     setSubiendo(true);
     setMensaje({ tipo: 'exito', texto: 'Subiendo archivo a Supabase Storage...' });
 
-    const res = await subirArchivoComercio(file);
+    const res = await subirArchivoComercio(file, adminId);
     setSubiendo(false);
 
     if (res.success) {
@@ -164,7 +159,7 @@ export default function PanelAdmin() {
       }
 
       if (editandoId) {
-        const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, datosAEnviar);
+        const res = await actualizarComercio(editandoId, null, datosAEnviar);
         setGuardando(false);
         if (res.success) {
           setMensaje({ tipo: 'exito', texto: '¡Registro actualizado con éxito!' });
@@ -273,42 +268,6 @@ export default function PanelAdmin() {
     }
   };
 
-  if (!autenticado) {
-    return (
-      <div className="max-w-md mx-auto p-6 pt-16 font-sans">
-        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-          <span className="text-5xl">👑</span>
-          <h1 className="text-2xl font-black text-slate-900 mt-3">Panel Admin Utrerapp</h1>
-          <p className="text-xs text-slate-500 mt-1 mb-6">Gestión independiente para JuanRa</p>
-
-          {mensaje.texto && (
-            <div className={`p-3 rounded-2xl text-xs font-bold mb-4 ${
-              mensaje.tipo === 'error' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'
-            }`}>
-              {mensaje.texto}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="password"
-              placeholder="PIN Maestro (9999)"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center text-lg font-black tracking-widest"
-            />
-            <button
-              type="submit"
-              className="w-full bg-slate-900 hover:bg-black text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg transition"
-            >
-              Entrar al Dashboard
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto p-4 pb-24 space-y-8 font-sans">
       
@@ -318,12 +277,13 @@ export default function PanelAdmin() {
           <h1 className="text-2xl font-black">Gestión Total de Utrerapp</h1>
         </div>
         <button
-          onClick={() => setAutenticado(false)}
+          onClick={salir}
           className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-4 py-2 rounded-xl transition cursor-pointer"
         >
           Cerrar Sesión
         </button>
       </div>
+      {mensajeAcceso && <p role="alert">{mensajeAcceso}</p>}
 
       {mensaje.texto && (
         <div className={`p-4 rounded-2xl text-xs font-bold text-center ${
