@@ -69,6 +69,14 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
   }, [categoriaInicial, busquedaInicial]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('vista') !== 'market') return;
+    const id = params.get('ficha');
+    const ficha = id && comercios.find(comercio => String(comercio.id) === id);
+    if (ficha) setComercioSel(ficha);
+  }, [comercios]);
+
+  useEffect(() => {
     if (!comercioSel) return;
     closeButton.current?.focus();
     const previousOverflow = document.body.style.overflow;

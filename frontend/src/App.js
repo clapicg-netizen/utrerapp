@@ -72,8 +72,8 @@ export default function App() {
 
     if (vistaParam === 'trenes' || vistaParam === 'cercanias') {
       setPaginaActual('cercanias');
-    } else if (vistaParam === 'gasolineras') {
-      setPaginaActual('gasolineras');
+    } else if (['gasolineras', 'market', 'farmacias', 'agenda-gestiones', 'que-ver', 'menu-agenda', 'conso'].includes(vistaParam)) {
+      setPaginaActual(vistaParam);
     }
   }, [setPaginaActual]);
 

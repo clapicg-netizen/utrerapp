@@ -9,6 +9,7 @@ export default function Conso({ setPaginaActual }) {
   const [cargandoIA, setCargandoIA] = useState(false);
   
   const fechaHoyStr = new Date().toLocaleDateString('es-ES', { 
+    timeZone: 'Europe/Madrid',
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
@@ -18,7 +19,7 @@ export default function Conso({ setPaginaActual }) {
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: `¡¡Hola, soy Conso, y en breve seré tu asistente para todo lo que necesites en Utrera. Por ahora, te ofrezco las farmacias de guardia, los horarios de los trenes y los estacionamientos que el ayuntamiento nos facilita a toos. Estoy de mudanza para venirme a Utrera, en breve estoy al 100% con todos!`
+      texto: `¡Hola! Soy Conso, la asistente de UtrerApp. Pregúntame por Utrera y sus pedanías o usa los accesos rápidos de abajo.`
     }
   ]);
 
@@ -35,23 +36,17 @@ export default function Conso({ setPaginaActual }) {
   const procesarRespuesta = async (pregunta) => {
     const texto = pregunta.toLowerCase();
 
-    if (texto.includes('farmacia') || texto.includes('guardia')) {
+    if (/^farmacias? de guardia(?: hoy)?[?!.]?$/i.test(texto.trim())) {
       try {
-        const fechaStr = new Date().toISOString().split('T')[0];
-        let { data: guardiasHoy, error } = await supabase
+        const fechaStr = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' }).format(new Date());
+        const { data: guardiasHoy, error } = await supabase
           .from('farmacias_calendario')
-          .select('*')
+          .select('nombre_farmacia,direccion,telefono,horario,turno')
           .eq('fecha', fechaStr);
 
         if (error) throw error;
 
-        if (!guardiasHoy || guardiasHoy.length === 0) {
-          const { data: fallback } = await supabase
-            .from('farmacias_calendario')
-            .select('*')
-            .limit(5);
-          guardiasHoy = fallback || [];
-        }
+        if (!guardiasHoy?.length) return 'No tengo una guardia publicada para la fecha de hoy.';
 
         const farmaciasDia = guardiasHoy.filter(f => {
           const t = (f.turno || "").toLowerCase();
@@ -73,12 +68,12 @@ export default function Conso({ setPaginaActual }) {
             {farmaciasDia.length > 0 && (
               <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/60 space-y-2">
                 <span className="inline-block bg-emerald-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  ☀️ Turno de Día (9:30 a 22:00 h)
+                  ☀️ Turno de Día
                 </span>
                 {farmaciasDia.map((f, idx) => (
                   <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
                     <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
-                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
+                    {f.horario && <p className="text-[11px]">{f.horario}</p>}
                     <p className="text-slate-600 text-[11px] flex items-center gap-1">
                       <MapPin size={12} className="text-slate-400 flex-shrink-0" />
                       <span>{f.direccion}</span>
@@ -98,12 +93,12 @@ export default function Conso({ setPaginaActual }) {
             {farmaciasNoche.length > 0 && (
               <div className="bg-indigo-50/60 p-3 rounded-2xl border border-indigo-200/60 space-y-2">
                 <span className="inline-block bg-indigo-900 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  🌙 Turno de Noche (22:00 a 9:30 h)
+                  🌙 Turno de Noche
                 </span>
                 {farmaciasNoche.map((f, idx) => (
                   <div key={idx} className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm space-y-1">
                     <p className="font-bold text-slate-900 text-xs">{f.nombre_farmacia}</p>
-                    {f.boticario && <p className="text-[10px] text-slate-500">Titular: {f.boticario}</p>}
+                    {f.horario && <p className="text-[11px]">{f.horario}</p>}
                     <p className="text-slate-600 text-[11px] flex items-center gap-1">
                       <MapPin size={12} className="text-slate-400 flex-shrink-0" />
                       <span>{f.direccion}</span>
@@ -132,7 +127,7 @@ export default function Conso({ setPaginaActual }) {
       }
     }
 
-    if (texto.includes('tren') || texto.includes('renfe') || texto.includes('horario')) {
+    if (texto.trim() === 'horario de trenes') {
       return (
         <div className="space-y-3">
           <div>
@@ -144,7 +139,7 @@ export default function Conso({ setPaginaActual }) {
             <button
               onClick={(e) => {
                 e.preventDefault();
-                setPaginaActual('trenes');
+                setPaginaActual('cercanias');
               }}
               className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs flex items-center justify-center gap-2 transition-all shadow-lg cursor-pointer"
             >
@@ -156,7 +151,7 @@ export default function Conso({ setPaginaActual }) {
       );
     }
 
-    if (texto.includes('aparcamiento') || texto.includes('parking') || texto.includes('aparcar')) {
+    if (texto.trim() === 'aparcamientos') {
       return (
         <div className="space-y-3">
           <div>
@@ -177,31 +172,37 @@ export default function Conso({ setPaginaActual }) {
     }
 
     try {
-      const apiKey = process.env.REACT_APP_GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY || "";
-      const promptSistema = "Eres Conso, la asistente virtual oficial de Utrera (Sevilla). Eres amable, cercana, experta en los servicios locales, comercios, farmacias de guardia, horarios de trenes, autobuses, aparcamientos y costumbres de Utrera. Responde de forma útil, concisa, natural y con un toque andaluz cercano.";
-
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `${promptSistema}\n\nPregunta del vecino o visitante: ${pregunta}`
-            }]
-          }]
-        })
+      const response = await fetch('/api/conso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: pregunta }),
       });
-
-      const data = await response.json();
-      return data?.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, vecino, en este momento no puedo conectar con el servicio.";
-    } catch (err) {
-      console.error("Error al consultar Gemini:", err);
-      return "Disculpa, ahora mismo tengo un pequeño problema de conexión con el servicio de inteligencia artificial.";
+      const { answer, links = [], suggestions } = await response.json();
+      if (!answer) throw new Error();
+      return (
+        <div className="space-y-2">
+          <p className="whitespace-pre-line">{answer}</p>
+          {links.length > 0 && <ul className="space-y-1">
+            {links.map(({ label, url }) => <li key={url}>
+              <a className="underline text-sky-800" href={url}>{label}</a>
+            </li>)}
+          </ul>}
+          {suggestions && <iframe
+            title="Sugerencias de Google Search"
+            className="w-full min-h-24 border-0"
+            sandbox="allow-popups allow-popups-to-escape-sandbox"
+            referrerPolicy="no-referrer"
+            srcDoc={`<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data: https://www.google.com https://www.gstatic.com">${suggestions}`}
+          />}
+        </div>
+      );
+    } catch {
+      return 'Ahora mismo no puedo conectar con Conso IA. Puedes seguir usando los accesos rápidos.';
     }
   };
 
   const enviarMensaje = async (textoEnvio) => {
-    if (!textoEnvio.trim()) return;
+    if (cargandoIA || !textoEnvio.trim() || textoEnvio.length > 500) return;
 
     const nuevoChat = [...chat, { origen: 'usuario', texto: textoEnvio }];
     setChat(nuevoChat);
@@ -297,7 +298,8 @@ export default function Conso({ setPaginaActual }) {
           <input
             type="text"
             placeholder="Pregúntale a Conso sobre Utrera, el tiempo, trenes..."
-            value={mensaje}
+            maxLength={500}
+                value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"
           />

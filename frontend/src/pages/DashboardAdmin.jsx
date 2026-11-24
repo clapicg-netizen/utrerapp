@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Activity, BarChart3, Calendar, ChevronRight, LayoutDashboard, LogOut,
+  Activity, BarChart3, Bot, Calendar, ChevronRight, LayoutDashboard, LogOut,
   Megaphone, Menu, Newspaper, Settings, Store, Users, X,
 } from 'lucide-react';
 import { eliminarComercio } from '../lib/comerciosService';
@@ -10,6 +10,7 @@ import AccesoAdministracion from './AccesoAdministracion';
 import logo from './logo-utrera-portada.webp';
 import { Aviso, Dialogo } from './admin/Controles';
 import { DirectorioAnuncios, DirectorioComercios } from './admin/Directorios';
+import ConsoAdmin from './admin/ConsoAdmin';
 import EditorAnuncio from './admin/EditorAnuncio';
 import EditorComercio from './admin/EditorComercio';
 import { categoriasBase, leerFilas } from './admin/modelos';
@@ -19,6 +20,7 @@ import './admin/dashboard.css';
 
 const modulos = [
   ['inicio', 'Inicio', LayoutDashboard], ['comercios', 'Comercios', Store], ['anuncios', 'Anuncios', Megaphone],
+  ['conso', 'Conso IA', Bot],
   ['agenda', 'Agenda', Calendar, true], ['noticias', 'Noticias', Newspaper, true], ['sanidad', 'Sanidad', Activity, true],
   ['usuarios', 'Usuarios', Users, true], ['estadisticas', 'Estadísticas', BarChart3, true],
   ['configuracion', 'Configuración', Settings, true],
@@ -158,6 +160,7 @@ function Panel({ salir, mensajeAcceso, adminId }) {
             <Aviso mensaje={{ error: true, texto: `No se pudieron cargar los ${nombre}.` }} />
             <button type="button" className="admin-button" onClick={() => consulta.refetch()}>Reintentar</button>
           </div> : null)}
+        {seccion === 'conso' && <ConsoAdmin />}
         {seccion === 'inicio' && <ResumenAdmin comercios={comercios.data} anuncios={anuncios.data}
           crearComercio={() => navegar('comercios', { fila: null })} crearAnuncio={() => navegar('anuncios', { fila: null })} />}
         {seccion === 'comercios' && (editor
