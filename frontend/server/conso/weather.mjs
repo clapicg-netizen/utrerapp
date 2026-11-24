@@ -16,6 +16,14 @@ function issuedAt(value) {
     ? Date.parse(value + 'Z') : NaN;
 }
 
+function matchesMunicipality(id, code) {
+  if (typeof id !== 'number' && (typeof id !== 'string' || !/^-?\d+$/.test(id))) return false;
+  const reported = Number(id);
+  const expected = Number(code);
+  // AEMET puede serializar los códigos INE como enteros de 16 bits con signo.
+  return reported === expected || (expected >= 32_768 && expected <= 65_535 && reported === expected - 65_536);
+}
+
 async function forecast(place, apiKey, now, zone) {
   const request = async (url, headers) => {
     const response = await fetch(url, { headers, redirect: 'error', signal: AbortSignal.timeout(4500) });
@@ -36,7 +44,7 @@ async function forecast(place, apiKey, now, zone) {
     const rows = await request(dataUrl, { Accept: 'application/json' });
     const data = rows?.[0];
     const age = issuedAt(localWallTime(now, zone)) - issuedAt(data?.elaborado);
-    if (String(data?.id) !== place.code || !Array.isArray(data?.prediccion?.dia) ||
+    if (!matchesMunicipality(data?.id, place.code) || !Array.isArray(data?.prediccion?.dia) ||
         !Number.isFinite(age) || age < -15 * 60_000 || age > 24 * 60 * 60_000) {
       throw new Error('AEMET forecast missing or stale');
     }

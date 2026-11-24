@@ -25,7 +25,7 @@ test('descarga una vez y responde a preguntas distintas con datos de AEMET', asy
     }
     assert.equal(options.headers.api_key, undefined);
     assert.equal(options.redirect, 'error');
-    return Response.json([{ id: 41095, elaborado: '2026-11-24T10:00:00', prediccion: {
+    return Response.json([{ id: -24441, elaborado: '2026-11-24T10:00:00', prediccion: {
       dia: ['2026-11-25', '2026-11-28', '2026-11-29'].map(day),
     } }]);
   });
