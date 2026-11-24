@@ -6,29 +6,32 @@ import handler from '../../../api/conso.js';
 import { maxCallNanoUsd, monthlyBudgetNanoUsd, openaiPricing, usageCost } from '../budget.mjs';
 import { model } from '../gemini.mjs';
 import { localDay } from '../settings.mjs';
+import { app } from '../utrerapp.mjs';
 import { redisStore } from '../storage.mjs';
 
 const [phase, prefix, day, minute] = process.argv.slice(2);
 const env = process.env;
 
-async function request(fn, address, question = 'Prueba del contador') {
+async function requestResult(fn, address, question = 'Prueba del contador', weatherFollowUp = false) {
   const request = {
     method: 'POST',
     headers: {
       host: 'preview.example', origin: 'https://preview.example',
       'content-type': 'application/json', 'x-vercel-forwarded-for': address,
     },
-    body: { question },
+    body: { question, weatherFollowUp },
   };
   const response = {
     setHeader() {},
     status(code) { this.code = code; return this; },
-    json() {},
+    json(body) { this.body = body; },
     end() {},
   };
   await fn(request, response);
-  return response.code;
+  return response;
 }
+
+const request = async (...args) => (await requestResult(...args)).code;
 
 async function run() {
   assert.equal(env.VERCEL_ENV, 'preview');
@@ -56,6 +59,12 @@ async function run() {
         output: [{ type: 'message', content: [{ type: 'output_text',
           text: JSON.stringify({ topic: 'outside', terms: [], constraints: [], explicitExternal: false, current: false }) }] }],
       }));
+    }
+    const u = new URL(url);
+    if (u.origin === new URL(app.db.url).origin) {
+      assert.equal(u.pathname, '/rest/v1/farmacias_calendario');
+      assert.equal(u.searchParams.get('fecha'), 'eq.' + day);
+      return Promise.resolve(Response.json([{ fecha: day, nombre_farmacia: 'Turno de prueba', horario: '09:30 a 22:00 h' }]));
     }
     assert.equal(new URL(url).origin, redisOrigin);
     return realFetch(url, options);
@@ -169,6 +178,13 @@ async function run() {
     });
     assert.equal(await request(disabled, '203.0.113.10', approved), 503);
     assert.equal(openaiRequests, 1);
+    const pharmacy = handler.createHandler({ env: openaiEnv, namespace: prefix + ':pharmacy' });
+    const guard = await requestResult(pharmacy, '203.0.113.14', '¿Qué farmacia hay de guardia hoy?', true);
+    assert.equal(guard.code, 200);
+    assert.match(guard.body.answer, /Turno de prueba/);
+    assert.equal(guard.body.context, undefined);
+    assert.equal(openaiRequests, 1);
+    console.log('CONSO FARMACIAS OK: fecha exacta, cambio de tema y cero llamadas de IA.');
     console.log('CONSO OPENAI OK: Responses simulada, preguntas aprobadas y presupuesto compartido entre proveedores.');
     console.log('CONSO REDIS OK: techo mensual y diez llamadas por ventana móvil; confirmación de acceso adulto obligatoria.');
     console.log('CONSO REDIS OK: HTTP 429 por visitante y cuota global; HTTP 503 ante Redis inaccesible y facturación pendiente.');
