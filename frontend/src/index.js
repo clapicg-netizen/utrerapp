@@ -4,6 +4,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/index.css";
 import App from "@/App";
 import DashboardAdmin from "@/pages/DashboardAdmin";
+import { retornoRecuperacion } from "@/lib/supabaseClient";
+
+if (retornoRecuperacion && window.location.pathname === "/") {
+  const retorno = new URL(window.location.href);
+  retorno.pathname = "/admin";
+  retorno.searchParams.set("recuperar", "1");
+  window.history.replaceState(window.history.state, "", retorno);
+}
 
 const esPanelAdmin = /^\/admin\/?$/.test(window.location.pathname);
 
