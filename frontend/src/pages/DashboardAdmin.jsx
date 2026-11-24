@@ -3,11 +3,19 @@ import React, { useState, useEffect } from 'react';
 import { obtenerComercios, crearComercio, actualizarComercio, eliminarComercio, subirArchivoComercio } from '../lib/comerciosService';
 import { supabase } from '../lib/supabaseClient';
 
-const PIN_ADMIN_MAESTRO = "9999";
+import AccesoAdministracion from './AccesoAdministracion';
 
 export default function DashboardAdmin() {
-  const [autenticado, setAutenticado] = useState(false);
-  const [pinInput, setPinInput] = useState('');
+  return (
+    <AccesoAdministracion>
+      {(salir, mensajeAcceso, adminId) => (
+        <ContenidoDashboardAdmin salir={salir} mensajeAcceso={mensajeAcceso} adminId={adminId} />
+      )}
+    </AccesoAdministracion>
+  );
+}
+
+function ContenidoDashboardAdmin({ salir, mensajeAcceso, adminId }) {
   const [seccionActiva, setSeccionActiva] = useState('comercios');
   
   const [comercios, setComercios] = useState([]);
@@ -83,21 +91,9 @@ export default function DashboardAdmin() {
   };
 
   useEffect(() => {
-    if (autenticado) {
-      cargarLista();
-      cargarAnuncios();
-    }
-  }, [autenticado]);
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (pinInput === PIN_ADMIN_MAESTRO) {
-      setAutenticado(true);
-      setMensaje({ tipo: '', texto: '' });
-    } else {
-      setMensaje({ tipo: 'error', texto: 'PIN incorrecto' });
-    }
-  };
+    cargarLista();
+    cargarAnuncios();
+  }, []);
 
   const handleFileUpload = async (e, campo, esGaleria = false) => {
     const file = e.target.files[0];
@@ -106,7 +102,7 @@ export default function DashboardAdmin() {
     setSubiendo(true);
     setMensaje({ tipo: 'exito', texto: 'Subiendo archivo a Supabase...' });
 
-    const res = await subirArchivoComercio(file);
+    const res = await subirArchivoComercio(file, adminId);
     setSubiendo(false);
 
     if (res && res.success && res.url) {
@@ -173,7 +169,7 @@ export default function DashboardAdmin() {
     delete datosAEnviar.datos_especiales_json;
 
     if (editandoId) {
-      const res = await actualizarComercio(editandoId, PIN_ADMIN_MAESTRO, datosAEnviar);
+      const res = await actualizarComercio(editandoId, null, datosAEnviar);
       setGuardando(false);
       if (res && res.success) {
         setMensaje({ tipo: 'exito', texto: '¡Comercio actualizado correctamente!' });
@@ -201,7 +197,9 @@ export default function DashboardAdmin() {
         const { error } = await supabase
           .from('anuncios')
           .update(formAnuncio)
-          .eq('id', editandoAnuncioId);
+          .eq('id', editandoAnuncioId)
+          .select('id')
+          .single();
         if (error) throw error;
         setMensaje({ tipo: 'exito', texto: '¡Anuncio actualizado correctamente!' });
       } else {
@@ -238,7 +236,12 @@ export default function DashboardAdmin() {
   const handleEliminarAnuncio = async (id, titulo) => {
     if (window.confirm(`¿Seguro que deseas borrar el anuncio "${titulo}"?`)) {
       try {
-        const { error } = await supabase.from('anuncios').delete().eq('id', id);
+        const { error } = await supabase
+          .from('anuncios')
+          .delete()
+          .eq('id', id)
+          .select('id')
+          .single();
         if (error) throw error;
         setMensaje({ tipo: 'exito', texto: `Anuncio eliminado: ${titulo}` });
         cargarAnuncios();
@@ -291,40 +294,6 @@ export default function DashboardAdmin() {
     }
   };
 
-  if (!autenticado) {
-    return (
-      <div className="max-w-md mx-auto p-6 pt-16">
-        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center">
-          <span className="text-5xl">👑</span>
-          <h1 className="text-2xl font-black text-slate-900 mt-3">Panel Admin</h1>
-          <p className="text-xs text-slate-500 mt-1 mb-6">Utrerapp Management</p>
-
-          {mensaje.texto && (
-            <div className={`p-3 rounded-2xl text-xs font-bold mb-4 ${mensaje.tipo === 'error' ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
-              {mensaje.texto}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="password"
-              placeholder="PIN Maestro (9999)"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value)}
-              className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-center text-lg font-black tracking-widest"
-            />
-            <button
-              type="submit"
-              className="w-full bg-slate-900 hover:bg-black text-white font-bold text-sm py-3.5 rounded-2xl shadow-lg cursor-pointer"
-            >
-              Entrar
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto p-4 pb-24 space-y-8 font-sans">
       <div className="flex justify-between items-center bg-slate-900 text-white p-6 rounded-3xl shadow-lg">
@@ -333,12 +302,13 @@ export default function DashboardAdmin() {
           <h1 className="text-2xl font-black">Panel de Control Utrerapp</h1>
         </div>
         <button
-          onClick={() => setAutenticado(false)}
+          onClick={salir}
           className="bg-white/10 text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
         >
           Salir
         </button>
       </div>
+      {mensajeAcceso && <p role="alert">{mensajeAcceso}</p>}
 
       <div className="flex gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm">
         <button
