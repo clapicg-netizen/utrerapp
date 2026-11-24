@@ -13,6 +13,10 @@ export const app = {
     '¿Dónde veo la información del tren?',
     '¿Cuál es la capital de Canadá?',
   ],
+  directoryQueries: {
+    '¿Qué bares hay en Utrera?': ['bar', 'bares', 'taberna', 'tapas'],
+    '¿Qué academias hay en Utrera?': ['academia', 'academias', 'formación'],
+  },
   timeZone: 'Europe/Madrid',
   defaultPersonality: 'Cercana, amable y directa. Responde en español por defecto y cambia al idioma de la consulta si procede.',
   db: publicSupabase,

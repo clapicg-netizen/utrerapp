@@ -45,14 +45,15 @@ export async function answerQuestion({ question, app, settings, generate, source
 
   if (topic === 'commercial' && settings.directory) {
     const rows = await sources.directory(app.db);
-    const terms = intent.terms.map(term => words(normalize(escape(term)))).filter(term => term.length >= 3);
-    const constraints = intent.constraints.map(term => words(normalize(escape(term)))).filter(Boolean);
+    const preset = Object.hasOwn(app.directoryQueries ?? {}, question) ? app.directoryQueries[question] : undefined;
+    const terms = (preset ?? intent.terms).map(term => words(normalize(escape(term)))).filter(term => term.length >= 3);
+    const constraints = preset ? [] : intent.constraints.map(term => words(normalize(escape(term)))).filter(Boolean);
     const matches = rows.filter(row => {
       const fields = normalize([row.nombre, row.categoria, row.subcategoria].join(' '));
       const evidence = fields + ' ' + normalize(row.descripcion);
       return terms.some(term => includes(fields, term)) && constraints.every(term => includes(evidence, term));
     }).sort((a, b) => settings.commercialPriority ? Number(b.destacado === true) - Number(a.destacado === true) : 0).slice(0, 5);
-    if (matches.length && !intent.explicitExternal) {
+    if (matches.length && (preset || !intent.explicitExternal)) {
       return {
         answer: intent.current
           ? 'Estas fichas del directorio de ' + app.name + ' coinciden con la búsqueda. No puedo confirmar datos de actualidad como horarios, precios o disponibilidad.'

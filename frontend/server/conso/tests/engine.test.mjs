@@ -7,7 +7,7 @@ import { defaults } from '../settings.mjs';
 const rows = [
   { id: '1', nombre: 'Bar Centro', categoria: 'Hostelería', subcategoria: 'Tapas' },
   { id: '2', nombre: 'Bar Plaza', categoria: 'Hostelería', subcategoria: 'Tapas', destacado: true },
-  { id: '3', nombre: 'Academia Local', categoria: 'Formación' },
+  { id: '3', nombre: 'Centro Local', categoria: 'Formación' },
 ];
 const searchReply = {
   answer: 'Respuesta con fuente.',
@@ -44,6 +44,13 @@ test('ordena bares registrados y etiqueta las fichas promocionales', async () =>
 test('enlaza las academias registradas', async () => {
   const sample = scenario('commercial', { terms: ['formación'] });
   assert.equal((await sample.ask('¿Qué academias hay?')).links[0].url, '/?vista=market&ficha=3');
+  assert.deepEqual(sample.calls, ['classify', 'directory']);
+});
+
+test('usa la categoría pública aunque el modelo repita la localidad como filtro', async () => {
+  const sample = scenario('commercial', { terms: ['academias'], constraints: ['Utrera'] });
+  const result = await sample.ask('¿Qué academias hay en Utrera?');
+  assert.equal(result.links[0].url, '/?vista=market&ficha=3');
   assert.deepEqual(sample.calls, ['classify', 'directory']);
 });
 
