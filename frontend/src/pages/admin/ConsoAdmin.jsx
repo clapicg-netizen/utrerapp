@@ -62,7 +62,8 @@ export default function ConsoAdmin() {
       <table className="w-full text-left">
         <thead><tr><th>Concepto</th><th>Hoy</th><th>Este mes</th></tr></thead>
         <tbody>
-          {Object.entries({ queries: 'Consultas', calls: 'Llamadas a Gemini', searches: 'Llamadas con búsqueda',
+          {Object.entries({ queries: 'Consultas', direct: 'Resueltas sin IA', aiQueries: 'Consultas con IA', calls: 'Llamadas al proveedor de IA',
+            weatherUnavailable: 'Previsión no disponible', searches: 'Llamadas con búsqueda',
             input: 'Tokens de entrada', output: 'Tokens de salida', failures: 'Errores' }).map(([key, label]) => (
             <tr key={key}><th scope="row">{label}</th><td>{data.today[key] || 0}</td><td>{data.month[key] || 0}</td></tr>
           ))}

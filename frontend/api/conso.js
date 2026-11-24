@@ -39,21 +39,21 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       const settings = loadSettings(app, env);
       const { provider, model, region } = settings;
       const apiKey = provider === 'openai' ? env.OPENAI_API_KEY : env.GEMINI_API_KEY;
-      if (!settings.enabled || !settings.adultAccessVerified || !billingReady(provider, env) ||
-          !apiKey || typeof ip !== 'string' || !isIP(ip)) return res.status(503).json({ answer: unavailable });
+      if (!settings.enabled || !settings.adultAccessVerified || typeof ip !== 'string' || !isIP(ip)) {
+        return res.status(503).json({ answer: unavailable });
+      }
 
-      let approvedQuestion = question;
-      if (provider === 'openai') {
-        const { previewIntent } = await import('../server/conso/preview.mjs');
-        const intent = previewIntent(question, app);
-        if (!intent) {
-          return res.status(422).json({
-            answer: 'No he entendido la consulta. En esta prueba puedo orientarte sobre comercios, visitas, trámites y trenes de Utrera.',
-            examples: app.previewIntents.slice(0, 5).map(({ question }) => question),
-          });
-        }
-        if (intent.answer) return res.status(200).json({ answer: intent.answer, links: intent.links });
-        approvedQuestion = intent.question;
+      const { previewIntent, weatherIntent } = await import('../server/conso/preview.mjs');
+      const weather = app.weather && weatherIntent(question);
+      const intent = !weather && provider === 'openai' && previewIntent(question, app);
+      if (!weather && provider === 'openai' && !intent) {
+        return res.status(422).json({
+          answer: 'No he entendido la consulta. En esta prueba puedo orientarte sobre comercios, visitas, trámites, trenes y el tiempo en Utrera.',
+          examples: app.previewIntents.slice(0, 5).map(({ question }) => question),
+        });
+      }
+      if (!weather && !intent?.answer && (!billingReady(provider, env) || !apiKey)) {
+        return res.status(503).json({ answer: unavailable });
       }
 
       store = redisStore(namespace || app.id, env);
@@ -61,6 +61,27 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       const visitor = createHmac('sha256', store.rateSecret).update(day + '\n' + ip).digest('hex');
       reserved = await store.reserve(day, visitor, Math.floor(Date.now() / 60000), settings);
       if (!reserved) return res.status(429).json({ answer: 'Se ha alcanzado el límite de consultas. Vuelve a intentarlo más tarde.' });
+      async function recordUsage(extra = {}) {
+        try {
+          await store.record(day, { ...metrics, nanoUsd: estimatedNanoUsd, ...extra });
+        } catch {
+          // Una incidencia en las métricas no libera una reserva previa.
+        }
+      }
+
+      if (weather) {
+        const { weatherAnswer } = await import('../server/conso/weather.mjs');
+        const { available, ...data } = await weatherAnswer({
+          place: app.weather, apiKey: env.AEMET_API_KEY, request: weather, zone: app.timeZone,
+        });
+        await recordUsage({ topic_weather: 1, ...(available ? { direct: 1 } : { weatherUnavailable: 1 }) });
+        return res.status(200).json(data);
+      }
+      if (intent?.answer) {
+        await recordUsage({ direct: 1 });
+        return res.status(200).json({ answer: intent.answer, links: intent.links });
+      }
+
       const guardedGenerate = async request => {
         if (request.search) throw new Error('Search disabled in Preview');
         const now = new Date();
@@ -78,19 +99,14 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
             // Si el resultado es incierto, el importe reservado sigue cubriendo la llamada.
           }
         };
+        metrics.aiQueries = 1;
         const adapter = provider === 'openai' ? openai : gemini;
         return (generate || adapter(apiKey, metrics, model, settle, region))(request);
       };
       const data = await answerQuestion({
-        question: approvedQuestion, app, settings, generate: guardedGenerate, sources, day, metrics,
+        question: intent?.question || question, app, settings, generate: guardedGenerate, sources, day, metrics,
       });
-      try {
-        await store.record(day, {
-          ...metrics, nanoUsd: estimatedNanoUsd,
-        });
-      } catch {
-        // La reserva persistente se conserva aunque fallen las métricas.
-      }
+      await recordUsage(metrics.aiQueries ? {} : { direct: 1 });
       return res.status(200).json(data);
     } catch (error) {
       if (error instanceof SpendingLimit) return res.status(429).json({

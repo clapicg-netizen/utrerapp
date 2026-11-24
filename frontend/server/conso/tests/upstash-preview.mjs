@@ -148,7 +148,7 @@ async function run() {
     assert.equal(await rateStore.reserveSpend(month, 'after-window', now + 60_001, 1, monthlyBudgetNanoUsd), 'reserved');
     const openaiEnv = {
       ...syntheticEnv, CONSO_AI_PROVIDER: 'openai', OPENAI_API_KEY: 'simulated-openai-key',
-      CONSO_OPENAI_BILLING_CONFIRMED: 'true', CONSO_OPENAI_REGION: 'global',
+      CONSO_OPENAI_BILLING_CONFIRMED: 'true', CONSO_OPENAI_REGION: 'global', AEMET_API_KEY: '',
     };
     const approved = '¿Cuál es la capital de Canadá?';
     const sharedNamespace = prefix + ':providers';
@@ -156,7 +156,7 @@ async function run() {
     assert.equal(await shared.reserveSpend(month, 'gemini-hold', now, monthlyBudgetNanoUsd, monthlyBudgetNanoUsd), 'reserved');
     const openai = handler.createHandler({ env: openaiEnv, namespace: sharedNamespace });
     assert.equal(await request(openai, '203.0.113.8', 'Mi email es prueba@example.com'), 422);
-    assert.equal(await request(openai, '203.0.113.8', 'hola, que tiempo hará mañana en utrera?'), 200);
+    assert.equal(await request(openai, '203.0.113.11', 'hola, que tiempo hará mañana en utrera?'), 200);
     assert.equal(await request(openai, '203.0.113.8', approved), 429);
     assert.equal(openaiRequests, 0);
     assert.equal(await shared.settleSpend(month, 'gemini-hold', 100_000), 1);
@@ -177,7 +177,7 @@ async function run() {
 
   assert.equal(phase, 'verify');
   assert.deepEqual(await read.metrics([day]), [{
-    queries: 5, calls: 0, searches: 0, input: 0, output: 0, topic_outside: 3, nanoUsd: 0,
+    queries: 5, calls: 0, searches: 0, input: 0, output: 0, topic_outside: 3, aiQueries: 3, nanoUsd: 0,
   }]);
   assert.equal(await write.reserve(day, 'new-visitor', minute, { userLimit: 2, globalLimit: 5 }), false);
   assert.equal((await read.metrics([day]))[0].queries, 5);

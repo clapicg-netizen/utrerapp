@@ -23,13 +23,11 @@ export const app = {
       links: [{ label: 'Farmacias de guardia en UtrerApp', url: '/?vista=farmacias' }],
     },
     { question: '¿Cuál es la capital de Canadá?' },
-    {
-      question: '¿Qué tiempo hará mañana en Utrera?',
-      variants: /^(?:(?:que tiempo|que temperatura) (?:hace|hara|va a hacer)(?: hoy| manana| esta tarde)?|(?:va a llover|llueve|llovera)(?: hoy| manana| esta tarde)?|(?:el )?tiempo(?: de)? (?:hoy|manana)|(?:la )?prevision(?: del tiempo)?(?: de)? (?:hoy|manana))(?: en utrera)?$/,
-      answer: 'Todavía no tengo una previsión meteorológica verificada para Utrera. Puedes consultarla en AEMET.',
-      links: [{ label: 'Previsión de Utrera en AEMET', url: 'https://www.aemet.es/es/eltiempo/prediccion/municipios/utrera-id41095' }],
-    },
   ],
+  weather: {
+    code: '41095', name: 'Utrera',
+    url: 'https://www.aemet.es/es/eltiempo/prediccion/municipios/utrera-id41095',
+  },
   directoryQueries: {
     '¿Qué bares hay en Utrera?': ['bar', 'bares', 'taberna', 'tapas'],
     '¿Qué academias hay en Utrera?': ['academia', 'academias', 'formación'],

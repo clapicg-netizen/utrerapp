@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { previewIntent } from '../preview.mjs';
+import { previewIntent, weatherIntent } from '../preview.mjs';
 import { app } from '../utrerapp.mjs';
 
 test('mapea variantes a preguntas fijas, sin reenviar la frase original', () => {
@@ -16,8 +16,10 @@ test('mapea variantes a preguntas fijas, sin reenviar la frase original', () => 
   ]) assert.equal(previewIntent(question, app)?.question, approved, question);
 });
 
-test('la previsión devuelve una respuesta local y un enlace directo', () => {
-  const intent = previewIntent('hola, que tiempo hará mañana en utrera?', app);
-  assert.match(intent.answer, /no tengo una previsión meteorológica verificada/);
-  assert.match(intent.links[0].url, /aemet\.es\/.*utrera-id41095$/);
+test('interpreta fecha, tramo y localidad de preguntas meteorológicas', () => {
+  assert.equal(weatherIntent('hola, que tiempo hará mañana en utrera?').day, 'manana');
+  assert.equal(weatherIntent('¿Mañana necesito paraguas?').umbrella, true);
+  assert.equal(weatherIntent('¿Qué tiempo hará este fin de semana?').day, 'finde');
+  assert.equal(weatherIntent('¿Hará mucho viento esta tarde?').part, 'tarde');
+  assert.equal(weatherIntent('¿Qué tiempo hará mañana en Sevilla?'), undefined);
 });

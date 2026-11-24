@@ -302,7 +302,7 @@ export default function Conso({ setPaginaActual }) {
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="Pregunta por comercios, visitas, trámites o trenes"
+            placeholder="Pregunta por el tiempo, comercios, visitas o trenes"
             maxLength={500}
                 value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
