@@ -18,7 +18,8 @@ function Funcion({ funcion, compacta, demo }) {
     <p className="cultura-meta">
       <CalendarDays size={16} aria-hidden="true"/>
       <span>{funcion.fecha ? <time dateTime={funcion.fecha}>{compacta ? fechaCorta(funcion.fecha) : fechaVisible(funcion.fecha)}</time> : 'Fecha pendiente'}
-        {' · '}{funcion.hora || 'Hora sin confirmar'}</span>
+        {' · '}{funcion.hora || 'Hora sin confirmar'}
+        {funcion.fin && <> · hasta {funcion.fin}{funcion.finFecha && funcion.finFecha !== funcion.fecha && <> ({fechaCorta(funcion.finFecha)})</>}</>}</span>
     </p>
     <p className="cultura-precio">{funcion.precio === '' ? 'Precio sin confirmar' : Number(funcion.precio) === 0 ? 'Entrada gratuita' : moneda(funcion.precio)}</p>
     {funcion.venta !== 'normal' && <strong className="cultura-estado">{{agotado:'Entradas agotadas',cancelado:'Cancelado',cambio:'Cambio confirmado'}[funcion.venta]}</strong>}

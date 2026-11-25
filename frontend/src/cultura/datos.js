@@ -36,7 +36,8 @@ export function normalizar(evento) {
 export function vigente(funcion, ahora = new Date()) {
   const hoy = diaLocal(ahora);
   const hora = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(ahora);
-  return Boolean(funcion.fecha && (funcion.fecha > hoy || (funcion.fecha === hoy && (funcion.fin || '24:00') > hora)));
+  const fechaFinal = funcion.finFecha || funcion.fecha;
+  return Boolean(!funcion.retirada && funcion.fecha && fechaFinal+(funcion.fin || '24:00') > hoy+hora);
 }
 export const ordenFuncion = (a,b) => (a.fecha+(a.hora || '24:00')).localeCompare(b.fecha+(b.hora || '24:00'));
 export function publicos(filas = leerCultura(), ahora = new Date()) {

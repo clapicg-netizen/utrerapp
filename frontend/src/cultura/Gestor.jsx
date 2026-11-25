@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { categorias, enlaceCompra, fechaCorta, guardarCultura, leerCultura, ordenFuncion, teatro, vigente } from './datos';
 import { Cartel, FichaCultural } from './Cartelera';
-import { borrarRemoto, culturaDB, guardarRemoto, leerGestion } from './supabaseCultural';
+import { culturaDB, guardarRemoto, leerGestion } from './supabaseCultural';
 
-const funcionNueva = () => ({ id:crypto.randomUUID(), fecha:'', hora:'', fin:'', precio:'', compra:'', venta:'normal' });
+const funcionNueva = () => ({ id:crypto.randomUUID(), fecha:'', hora:'', fin:'', finFecha:'', precio:'', compra:'', venta:'normal' });
 const nuevo = () => ({ id:crypto.randomUUID(), titulo:'', categoria:categorias[0], ...teatro, descripcion:'', cartel:'', estado:'borrador', funciones:[funcionNueva()] });
 const estados = { normal:'Venta normal', agotado:'Agotado', cancelado:'Cancelado', cambio:'Cambio confirmado' };
 const tipoPrecio = f => f.precio === '' ? 'desconocido' : Number(f.precio) === 0 ? 'gratis' : 'pago';
@@ -19,7 +19,13 @@ export default function GestorCultural({ onDirty }) {
   const [categoria,setCategoria] = useState('');
   const [sesion,setSesion] = useState(null);
   const [ocupado,setOcupado] = useState(false);
-  const editor = sesion?.user?.app_metadata?.cultural_editor === true;
+  const [editor,setEditor] = useState(false);
+  useEffect(() => {
+    let activo = true;
+    setEditor(false);
+    if (culturaDB && sesion) culturaDB.rpc('es_editor_programacion_teatro').then(({data})=>{ if(activo)setEditor(data===true); });
+    return ()=>{activo=false;};
+  },[sesion]);
   useEffect(() => {
     if (!culturaDB) return;
     const { data } = culturaDB.auth.onAuthStateChange((_, actual) => setSesion(actual));
@@ -33,12 +39,12 @@ export default function GestorCultural({ onDirty }) {
   }, [editor]);
 
   function cambiar(fila) { setEdicion(fila); setPreview(false); setAviso(''); onDirty?.(Boolean(fila)); }
-  async function guardar(fila) {
+  async function guardar(fila, cambios) {
     if (ocupado) return;
     setOcupado(true);
     try {
       if (culturaDB) {
-        await guardarRemoto(fila);
+        await guardarRemoto(fila,cambios);
         setFilas(await leerGestion());
       } else {
         const { archivo, ...local } = fila;
@@ -55,9 +61,8 @@ export default function GestorCultural({ onDirty }) {
     if (ocupado || !window.confirm(`¿Eliminar «${fila.titulo}» y todas sus funciones?`)) return;
     setOcupado(true);
     try {
-      if (culturaDB) await borrarRemoto(fila);
       const lista=filas.filter(e=>e.id!==fila.id);
-      if (!culturaDB) guardarCultura(lista);
+      guardarCultura(lista);
       setFilas(lista);
       setAviso('Espectáculo eliminado.');
     } catch { setAviso('No se pudo eliminar el espectáculo.'); }
@@ -90,14 +95,14 @@ export default function GestorCultural({ onDirty }) {
     const estado = event.nativeEvent.submitter?.value === 'publicado' ? 'publicado' : 'borrador';
     const titulo = edicion.titulo.trim();
     const lugar = edicion.lugar.trim();
-    const funciones = edicion.funciones.map(f=>({...f, compra:enlaceCompra(f.compra)}));
+    const funciones = edicion.funciones.filter(f=>!f.retirada).map(f=>({...f, compra:enlaceCompra(f.compra)}));
     if (!titulo || !lugar) return setAviso('Indica el título y el recinto.');
-    if (edicion.funciones.some((f,i)=>f.compra && !funciones[i].compra)) return setAviso('Usa un enlace HTTPS de la ficha concreta de Giglon.');
-    if (funciones.some(f=>f.fin && (!f.hora || f.fin<=f.hora))) return setAviso('Indica una hora de inicio anterior a la hora de fin.');
+    if (edicion.funciones.some(f=>!f.retirada && f.compra && !enlaceCompra(f.compra))) return setAviso('Usa un enlace HTTPS de la ficha concreta de Giglon.');
+    if (funciones.some(f=>f.fin && (!f.fecha || !f.hora || (f.finFecha || f.fecha)+f.fin <= f.fecha+f.hora))) return setAviso('Indica una hora de inicio anterior a la hora de fin.');
     if (estado==='publicado' && !funciones.every(f=>f.fecha)) return setAviso('Confirma la fecha de cada función antes de publicar.');
     const claves = funciones.filter(f=>f.fecha).map(f=>f.fecha+' '+f.hora);
     if (new Set(claves).size!==claves.length) return setAviso('Hay funciones duplicadas para la misma fecha y hora.');
-    guardar({...edicion,titulo,lugar,funciones,estado});
+    guardar({...edicion,titulo,lugar,funciones:[...funciones,...edicion.funciones.filter(f=>f.retirada)],estado});
   }
   function imagen(event) {
     const archivo = event.target.files[0];
@@ -134,9 +139,16 @@ export default function GestorCultural({ onDirty }) {
         <div className="cultura-acciones">
           <button disabled={ocupado} onClick={()=>cambiar({...e})}>Editar</button>
           <button disabled={ocupado} onClick={()=>cambiar({...e,id:crypto.randomUUID(),titulo:e.titulo+' (copia)',estado:'borrador',
-            cartel:e.cartel_ruta?'':e.cartel,cartel_ruta:null,funciones:e.funciones.map(f=>({...f,id:crypto.randomUUID()}))})}>Duplicar</button>
-          {e.estado==='publicado' && <button disabled={ocupado} onClick={()=>guardar({...e,estado:'retirado'})}>Retirar</button>}
-          <button disabled={ocupado} onClick={()=>eliminar(e)}>Eliminar</button>
+            cartel:e.cartel_ruta?'':e.cartel,cartel_ruta:null,revision:0,funciones:e.funciones.filter(f=>!f.retirada).map(f=>({...f,id:crypto.randomUUID()}))})}>Duplicar</button>
+          {e.estado==='publicado' && <button disabled={ocupado} onClick={()=>guardar({...e,estado:'retirado'},{editarFunciones:false})}>Retirar</button>}
+          {e.estado==='retirado' && culturaDB && <button disabled={ocupado} onClick={()=>guardar({...e,estado:'publicado'},{editarFunciones:false})}>Restaurar publicación</button>}
+          {!culturaDB && <button disabled={ocupado} onClick={()=>eliminar(e)}>Eliminar</button>}
+          {culturaDB && e.funciones.map(f=>f.retirada ? <button key={f.id} disabled={ocupado}
+            onClick={()=>guardar(e,{editarFunciones:false,restaurar:[f.id]})}>Restaurar función · {fechaCorta(f.fecha)}</button> :
+            <button key={f.id} disabled={ocupado} onClick={()=>{
+              const motivo=window.prompt('Motivo de retirada de esta función');
+              if(motivo?.trim()) guardar(e,{editarFunciones:false,retirar:[{id:f.id,motivo:motivo.trim()}]});
+            }}>Retirar función · {fechaCorta(f.fecha)}</button>)}
         </div>
       </li>)}</ul>
     </> : <form onSubmit={guardarEdicion}>
@@ -153,10 +165,11 @@ export default function GestorCultural({ onDirty }) {
         </div>
       </fieldset>
       <fieldset><legend>Funciones y entradas</legend>
-        {edicion.funciones.map((f,i)=><fieldset key={f.id} className="cultura-funcion"><legend>Función {i+1}</legend>
+        {edicion.funciones.filter(f=>!f.retirada).map((f,i)=><fieldset key={f.id} className="cultura-funcion"><legend>Función {i+1}</legend>
           <div className="cultura-campos">
             <label>Fecha<input type="date" value={f.fecha} onChange={e=>ajustarFuncion(f.id,{fecha:e.target.value})}/></label>
             <label>Hora de inicio<input type="time" value={f.hora} onChange={e=>ajustarFuncion(f.id,{hora:e.target.value})}/></label>
+            <label>Fecha de fin<input type="date" value={f.finFecha || ''} onChange={e=>ajustarFuncion(f.id,{finFecha:e.target.value})}/></label>
             <label>Hora de fin<input type="time" value={f.fin} onChange={e=>ajustarFuncion(f.id,{fin:e.target.value})}/></label>
             <label>Tipo de entrada<select value={f.tipoPrecio || tipoPrecio(f)} onChange={e=>ajustarFuncion(f.id,{tipoPrecio:e.target.value,precio:e.target.value==='gratis'?'0':''})}>
               <option value="desconocido">Precio sin confirmar</option><option value="gratis">Gratuita</option><option value="pago">De pago</option>
@@ -165,7 +178,7 @@ export default function GestorCultural({ onDirty }) {
             <label>Estado de venta<select value={f.venta} onChange={e=>ajustarFuncion(f.id,{venta:e.target.value})}>{Object.entries(estados).map(([v,t])=><option value={v} key={v}>{t}</option>)}</select></label>
             <label>Enlace directo a Giglon<input type="url" value={f.compra} onChange={e=>ajustarFuncion(f.id,{compra:e.target.value})}/></label>
           </div>
-          <button type="button" disabled={edicion.funciones.length===1} onClick={()=>actualizar('funciones',edicion.funciones.filter(x=>x.id!==f.id))}>Quitar función</button>
+          <button type="button" disabled={edicion.funciones.filter(x=>!x.retirada).length===1 || Boolean(culturaDB && filas.find(x=>x.id===edicion.id)?.funciones.some(x=>x.id===f.id))} onClick={()=>actualizar('funciones',edicion.funciones.filter(x=>x.id!==f.id))}>Quitar función</button>
         </fieldset>)}
         <button type="button" onClick={()=>actualizar('funciones',[...edicion.funciones,funcionNueva()])}>Añadir función</button>
       </fieldset>

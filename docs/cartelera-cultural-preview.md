@@ -15,3 +15,6 @@ El Preview no llama a OpenAI para resolver consultas culturales ni usa nuevos se
 
 ## Revisión del teatro
 El formulario permite varias funciones y distingue gratuidad, importe confirmado y precio desconocido. Las horas opcionales se muestran como pendientes. El Preview permanece en modo navegador. El adaptador solo admite el proyecto aislado utrerapp-pruebas y requiere configuración explícita. La ejecución de la migración se ha pausado. El archivo SQL se conserva para revisión y no pertenece al directorio de migraciones automáticas.
+
+## Conexión del Preview v2
+La rama de Preview usa las variables públicas de conexión de utrerapp-pruebas. La ruta `?vista=gestor-teatro` permite autenticarse directamente en el proyecto aislado sin iniciar sesión contra las cuentas de producción. El cliente público tiene sesión independiente y nunca utiliza la del editor. La edición remota usa revisión optimista y acciones explícitas de retirada y restauración. El almacenamiento cultural conserva las versiones anteriores de carteles. El escaparate y Conso consultan la misma vista de publicaciones en el proyecto aislado.

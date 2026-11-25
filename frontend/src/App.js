@@ -16,6 +16,8 @@ import PanelComercio from './pages/PanelComercio';
 import Admin from './pages/Admin';
 import Tablon from './pages/Tablon';
 import Cartelera from './cultura/Cartelera';
+import GestorCultural from './cultura/Gestor';
+import { culturaDB } from './cultura/supabaseCultural';
 import { demoCultural } from './cultura/datos';
 import Teatro from './pages/Teatro';
 import Noticias from './pages/Noticias';
@@ -74,6 +76,8 @@ export default function App() {
 
     if (vistaParam === 'trenes' || vistaParam === 'cercanias') {
       setPaginaActual('cercanias');
+    } else if (vistaParam === 'gestor-teatro' && culturaDB) {
+      setPaginaActual('gestor-teatro');
     } else if (vistaParam === 'cultura' && demoCultural) {
       setPaginaActual('cultura');
     } else if (['gasolineras', 'market', 'farmacias', 'agenda-gestiones', 'que-ver', 'menu-agenda', 'conso'].includes(vistaParam)) {
@@ -145,6 +149,8 @@ export default function App() {
       case 'menu-agenda':
         return <MenuAgenda setPaginaActual={setPaginaActual} />;
 
+      case 'gestor-teatro':
+        return culturaDB ? <GestorCultural /> : null;
       case 'cultura':
         return demoCultural ? <Cartelera volver={() => setPaginaActual('menu-agenda')} /> : <Teatro setPaginaActual={setPaginaActual} />;
       case 'teatro':
