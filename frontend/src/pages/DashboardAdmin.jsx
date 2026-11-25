@@ -17,11 +17,13 @@ import { categoriasBase, leerFilas } from './admin/modelos';
 import ResumenAdmin from './admin/ResumenAdmin';
 import VistaFicha from './admin/VistaFicha';
 import './admin/dashboard.css';
+import GestorCultural from '../cultura/Gestor';
+import { demoCultural } from '../cultura/datos';
 
 const modulos = [
   ['inicio', 'Inicio', LayoutDashboard], ['comercios', 'Comercios', Store], ['anuncios', 'Anuncios', Megaphone],
   ['conso', 'Conso IA', Bot],
-  ['agenda', 'Agenda', Calendar, true], ['noticias', 'Noticias', Newspaper, true], ['sanidad', 'Sanidad', Activity, true],
+  ...(demoCultural ? [['cultura', 'Programación cultural', Calendar]] : []), ['agenda', 'Agenda', Calendar, true], ['noticias', 'Noticias', Newspaper, true], ['sanidad', 'Sanidad', Activity, true],
   ['usuarios', 'Usuarios', Users, true], ['estadisticas', 'Estadísticas', BarChart3, true],
   ['configuracion', 'Configuración', Settings, true],
 ];
@@ -155,6 +157,7 @@ function Panel({ salir, mensajeAcceso, adminId }) {
           <h1 ref={encabezado} tabIndex={-1}>{titulo}</h1></div>
         {mensajeAcceso && <Aviso mensaje={{ texto: mensajeAcceso, error: mensajeAcceso.startsWith('No se pudo') }} />}
         <Aviso mensaje={mensaje} />
+        {seccion === 'cultura' && <GestorCultural onDirty={setPendiente}/>}
         {consultas.map(([consulta, nombre]) => consulta.isPending ? <p key={nombre} role="status">Cargando {nombre}…</p>
           : consulta.isError ? <div key={nombre} className="admin-load-error">
             <Aviso mensaje={{ error: true, texto: `No se pudieron cargar los ${nombre}.` }} />

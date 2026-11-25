@@ -1,3 +1,6 @@
+import { demoCultural } from '../cultura/datos';
+import { consultaCultural } from '../cultura/consulta';
+import { FichaCultural } from '../cultura/Cartelera';
 import { PARKING_URL } from '../lib/parking';
 // src/pages/Conso.jsx
 import React, { useRef, useState } from 'react';
@@ -93,6 +96,7 @@ function PharmacyReply({ days, fallback }) {
 
 export default function Conso({ setPaginaActual }) {
   const previousTopic = useRef(undefined);
+  const contextoCultural = useRef(undefined);
   const [mensaje, setMensaje] = useState('');
   const [cargandoIA, setCargandoIA] = useState(false);
   
@@ -107,6 +111,20 @@ export default function Conso({ setPaginaActual }) {
     const queryContext = previousTopic.current;
     previousTopic.current = undefined;
     const texto = pregunta.toLowerCase();
+    const cultura = demoCultural && consultaCultural(pregunta, contextoCultural.current);
+    contextoCultural.current = cultura ? cultura.contexto : undefined;
+    if (cultura) {
+      return { wide: true, content: <section className="cultura cultura-chat" aria-label="Programación cultural">
+        <h2 className="text-lg font-bold">Programación cultural</h2>
+        <p>Vista previa con espectáculos ficticios.</p>
+        {cultura.resultados.length ? <>
+          {cultura.resultados.slice(0,6).map(evento => <FichaCultural key={evento.id} evento={evento} resumida
+            abrir={() => { window.location.href = '/?vista=cultura&evento=' + encodeURIComponent(evento.id); }}/>)}
+          <p>¡Nos vemos en escena! 🎭</p>
+        </> : <p>No encuentro espectáculos para esa consulta. ¿Buscamos otro día?</p>}
+      </section> };
+    }
+
 
     if (texto.trim() === 'horario de trenes') {
       return (
@@ -161,7 +179,7 @@ export default function Conso({ setPaginaActual }) {
       const { answer, links = [], suggestions, examples = [], context, pharmacy } = await response.json();
       previousTopic.current = context === 'weather' || context === 'pharmacy' ? context : undefined;
       if (context === 'pharmacy' && pharmacy?.days?.length) {
-        return { pharmacy: true, content: <PharmacyReply days={pharmacy.days} fallback={answer} /> };
+        return { wide: true, content: <PharmacyReply days={pharmacy.days} fallback={answer} /> };
       }
       if (!answer) throw new Error();
       return (
@@ -200,8 +218,8 @@ export default function Conso({ setPaginaActual }) {
     setCargandoIA(true);
 
     const respuestaConso = await procesarRespuesta(textoEnvio);
-    setChat((prev) => [...prev, respuestaConso?.pharmacy
-      ? { origen: 'conso', texto: respuestaConso.content, pharmacy: true }
+    setChat((prev) => [...prev, respuestaConso?.wide
+      ? { origen: 'conso', texto: respuestaConso.content, wide: true }
       : { origen: 'conso', texto: respuestaConso }]);
     setCargandoIA(false);
   };
@@ -229,7 +247,7 @@ export default function Conso({ setPaginaActual }) {
       </div>
 
       <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full space-y-3 overflow-y-auto">
-        {chat.map((msg, index) => msg.pharmacy ? (
+        {chat.map((msg, index) => msg.wide ? (
           <div key={index} className="w-full">{msg.texto}</div>
         ) : (
           <div

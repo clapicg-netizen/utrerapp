@@ -2,6 +2,8 @@
 import React from "react";
 import { ArrowLeft, ArrowRight, CalendarDays } from "lucide-react";
 
+import { demoCultural } from '../cultura/datos';
+
 export default function MenuAgenda({ setPaginaActual }) {
   return (
     <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans">
@@ -26,6 +28,11 @@ export default function MenuAgenda({ setPaginaActual }) {
       {/* CONTENIDO */}
       <div className="px-4 mt-5 max-w-md mx-auto space-y-4">
         {/* TARJETA 1: TEATRO ENRIQUE DE LA CUADRA */}
+        {demoCultural && <button type="button" onClick={() => setPaginaActual("cultura")}
+          className="w-full rounded-3xl bg-rose-950 px-5 py-5 text-left text-white">
+          <span className="block text-lg font-bold">Cartelera cultural</span>
+          <span className="text-sm text-rose-100">Vista previa con programación ficticia</span>
+        </button>}
         <div
           onClick={() => setPaginaActual("teatro")}
           className="bg-gradient-to-br from-slate-900 via-rose-950 to-slate-900 p-5 rounded-3xl text-white shadow-md border border-slate-800 cursor-pointer hover:scale-[0.99] transition-transform relative overflow-hidden flex items-center justify-between"
