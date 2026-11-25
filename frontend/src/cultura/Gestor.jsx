@@ -7,7 +7,7 @@ import { culturaDB, culturaPruebas, guardarRemoto, leerGestion } from './supabas
 const funcionNueva = () => ({ id:crypto.randomUUID(), fecha:'', hora:'', fin:'', finFecha:'', precio:'', compra:'', venta:'normal' });
 const nuevo = () => ({ id:crypto.randomUUID(), titulo:'', categoria:categorias[0], ...teatro, descripcion:'', cartel:'', estado:'borrador', funciones:[funcionNueva()] });
 const estados = { normal:'Venta normal', agotado:'Agotado', cancelado:'Cancelado', cambio:'Cambio confirmado' };
-const tipoPrecio = f => f.precio === '' ? 'desconocido' : Number(f.precio) === 0 ? 'gratis' : 'pago';
+const tipoPrecio = f => f.tipoPrecio || (f.precio === '' ? 'desconocido' : Number(f.precio) === 0 ? 'gratis' : 'pago');
 const normal = texto => texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
 const enlace = new URLSearchParams(window.location.hash.slice(1));
@@ -155,7 +155,9 @@ export default function GestorCultural({ onDirty, onBusy }) {
     if (estado === 'publicado' && edicion.cargaGiglon) return;
     const titulo = edicion.titulo.trim();
     const lugar = edicion.lugar.trim();
-    const funciones = edicion.funciones.filter(f=>!f.retirada).map(f=>({...f, compra:enlaceCompra(f.compra)}));
+    const funciones = edicion.funciones.filter(f=>!f.retirada).map(f=>({
+      ...f, compra:enlaceCompra(f.compra), precio:tipoPrecio(f)==='desde' ? '' : f.precio,
+    }));
     if (!titulo || !lugar) return setAviso('Indica el título y el recinto.');
     if (edicion.funciones.some(f=>!f.retirada && f.compra && !enlaceCompra(f.compra))) return setAviso('Usa un enlace HTTPS de la ficha concreta de Giglon.');
     if (funciones.some(f=>f.fin && (!f.fecha || !f.hora || (f.finFecha || f.fecha)+f.fin <= f.fecha+f.hora))) return setAviso('Indica una hora de inicio anterior a la hora de fin.');
@@ -189,9 +191,9 @@ export default function GestorCultural({ onDirty, onBusy }) {
     {!edicion ? <>
       <button className="cultura-primario" onClick={()=>cambiar(nuevo())}>Crear espectáculo</button>
       {culturaPruebas && directorioListo && <CargaGiglon filas={filas} editar={fila=>cambiar({...fila})}
-        crear={({titulo,pases})=>cambiar({...nuevo(),titulo,cargaGiglon:true,funciones:pases.map(
-          ({fecha,hora,precio,compra})=>({...funcionNueva(),fecha,hora,precio,compra})
-        )})}/>}
+        crear={({titulo,lugar,direccion,compra,pases})=>cambiar({...nuevo(),titulo,lugar,direccion,cargaGiglon:true,
+          funciones:pases.length ? pases.map(pase=>({...funcionNueva(),...pase})) : [{...funcionNueva(),compra}]
+        })}/>}
       <div className="cultura-filtros" aria-label="Estado de publicación">
         {[['proximos','Próximos espectáculos'],['borradores','Borradores'],['historico','Histórico y retirados']].map(([id,titulo])=><button key={id} aria-pressed={filtro===id} onClick={()=>setFiltro(id)}>{titulo}</button>)}
       </div>
@@ -237,10 +239,10 @@ export default function GestorCultural({ onDirty, onBusy }) {
             <label>Hora de inicio<input type="time" value={f.hora} onChange={e=>ajustarFuncion(f.id,{hora:e.target.value})}/></label>
             <label>Fecha de fin<input type="date" value={f.finFecha || ''} onChange={e=>ajustarFuncion(f.id,{finFecha:e.target.value})}/></label>
             <label>Hora de fin<input type="time" value={f.fin} onChange={e=>ajustarFuncion(f.id,{fin:e.target.value})}/></label>
-            <label>Tipo de entrada<select value={f.tipoPrecio || tipoPrecio(f)} onChange={e=>ajustarFuncion(f.id,{tipoPrecio:e.target.value,precio:e.target.value==='gratis'?'0':''})}>
-              <option value="desconocido">Precio sin confirmar</option><option value="gratis">Gratuita</option><option value="pago">De pago</option>
+            <label>Tipo de entrada<select value={tipoPrecio(f)} onChange={e=>ajustarFuncion(f.id,{tipoPrecio:e.target.value,precio:e.target.value==='gratis'?'0':e.target.value==='desconocido'?'':f.precio==='0'?'':f.precio})}>
+              <option value="desconocido">Precio sin confirmar</option><option value="gratis">Gratuita</option><option value="pago">Precio fijo</option><option value="desde">Desde</option>
             </select></label>
-            {(f.tipoPrecio || tipoPrecio(f))==='pago' && <label>Precio (€)<input type="number" min="0.01" step="0.01" required value={f.precio} onChange={e=>ajustarFuncion(f.id,{precio:e.target.value})}/></label>}
+            {['pago','desde'].includes(tipoPrecio(f)) && <label>{tipoPrecio(f)==='desde' ? 'Precio anunciado desde (€)' : 'Precio (€)'}<input type="number" min="0.01" step="0.01" required value={f.precio} onChange={e=>ajustarFuncion(f.id,{precio:e.target.value})}/></label>}
             <label>Estado de venta<select value={f.venta} onChange={e=>ajustarFuncion(f.id,{venta:e.target.value})}>{Object.entries(estados).map(([v,t])=><option value={v} key={v}>{t}</option>)}</select></label>
             <label>Enlace directo a Giglon<input type="url" value={f.compra} onChange={e=>ajustarFuncion(f.id,{compra:e.target.value})}/></label>
           </div>
@@ -248,6 +250,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
         </fieldset>)}
         <button type="button" onClick={()=>actualizar('funciones',[...edicion.funciones,funcionNueva()])}>Añadir función</button>
       </fieldset>
+      {edicion.funciones.some(f=>!f.retirada && tipoPrecio(f)==='desde') && <p>El importe «desde» se conserva en esta revisión. Al guardar quedará como precio sin confirmar, ya que el registro admite un importe único.</p>}
       {edicion.cargaGiglon && <p>Revisa los datos y guarda el borrador antes de publicarlo.</p>}
       <div className="cultura-acciones">
         <button type="submit" value="borrador" disabled={ocupado}>Guardar borrador</button>
