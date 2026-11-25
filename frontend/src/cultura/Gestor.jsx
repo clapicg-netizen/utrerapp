@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { categorias, enlaceCompra, fechaCorta, guardarCultura, leerCultura, ordenFuncion, publicos, teatro, vigente } from './datos';
 import { Cartel, FichaCultural } from './Cartelera';
+import CargaGiglon from './CargaGiglon';
 import { culturaDB, culturaPruebas, guardarRemoto, leerGestion } from './supabaseCultural';
 
 const funcionNueva = () => ({ id:crypto.randomUUID(), fecha:'', hora:'', fin:'', finFecha:'', precio:'', compra:'', venta:'normal' });
@@ -18,6 +19,7 @@ const credencialesEnlace = flujoTeatro ? {
 if (flujoTeatro) window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);
 
 export default function GestorCultural({ onDirty, onBusy }) {
+  const [directorioListo,setDirectorioListo] = useState(false);
   const [filas,setFilas] = useState(() => culturaDB ? [] : leerCultura());
   const [edicion,setEdicion] = useState(null);
   const [preview,setPreview] = useState(false);
@@ -33,6 +35,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
   useEffect(() => {
     let activo = true;
     setEditor(false);
+    setDirectorioListo(false);
     if (culturaDB && sesion) culturaDB.rpc('es_editor_programacion_teatro').then(({data})=>{ if(activo)setEditor(data===true); });
     return ()=>{activo=false;};
   },[sesion]);
@@ -44,7 +47,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
   useEffect(() => {
     if (!editor) return;
     let activo = true;
-    leerGestion().then(f => { if (activo) setFilas(f); }, () => { if (activo) setAviso('No se pudo cargar la programación.'); });
+    leerGestion().then(f => { if (activo) { setFilas(f); setDirectorioListo(true); } }, () => { if (activo) setAviso('No se pudo cargar la programación.'); });
     return () => { activo = false; };
   }, [editor]);
 
@@ -149,6 +152,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
   function guardarEdicion(event) {
     event.preventDefault();
     const estado = event.nativeEvent.submitter?.value === 'publicado' ? 'publicado' : 'borrador';
+    if (estado === 'publicado' && edicion.cargaGiglon) return;
     const titulo = edicion.titulo.trim();
     const lugar = edicion.lugar.trim();
     const funciones = edicion.funciones.filter(f=>!f.retirada).map(f=>({...f, compra:enlaceCompra(f.compra)}));
@@ -184,6 +188,10 @@ export default function GestorCultural({ onDirty, onBusy }) {
     {aviso && <p role="status">{aviso}</p>}
     {!edicion ? <>
       <button className="cultura-primario" onClick={()=>cambiar(nuevo())}>Crear espectáculo</button>
+      {culturaPruebas && directorioListo && <CargaGiglon filas={filas} editar={fila=>cambiar({...fila})}
+        crear={({titulo,pases})=>cambiar({...nuevo(),titulo,cargaGiglon:true,funciones:pases.map(
+          ({fecha,hora,precio,compra})=>({...funcionNueva(),fecha,hora,precio,compra})
+        )})}/>}
       <div className="cultura-filtros" aria-label="Estado de publicación">
         {[['proximos','Próximos espectáculos'],['borradores','Borradores'],['historico','Histórico y retirados']].map(([id,titulo])=><button key={id} aria-pressed={filtro===id} onClick={()=>setFiltro(id)}>{titulo}</button>)}
       </div>
@@ -240,11 +248,11 @@ export default function GestorCultural({ onDirty, onBusy }) {
         </fieldset>)}
         <button type="button" onClick={()=>actualizar('funciones',[...edicion.funciones,funcionNueva()])}>Añadir función</button>
       </fieldset>
-      <fieldset disabled><legend>Importación desde Giglon</legend><label>URL del espectáculo<input type="url"/></label><p>Disponible cuando exista una fuente autorizada.</p></fieldset>
+      {edicion.cargaGiglon && <p>Revisa los datos y guarda el borrador antes de publicarlo.</p>}
       <div className="cultura-acciones">
         <button type="submit" value="borrador" disabled={ocupado}>Guardar borrador</button>
         <button type="button" onClick={()=>setPreview(!preview)}>{preview?'Cerrar vista previa':'Previsualizar'}</button>
-        <button type="submit" value="publicado" className="cultura-primario" disabled={ocupado}>Publicar</button>
+        <button type="submit" value="publicado" className="cultura-primario" disabled={ocupado || edicion.cargaGiglon}>Publicar</button>
         <button type="button" onClick={()=>{if(window.confirm('¿Descartar los cambios de esta ficha?'))cambiar(null);}}>Descartar</button>
       </div>
       {preview && <section className="cultura-contenido" aria-label="Vista previa de la ficha pública">
