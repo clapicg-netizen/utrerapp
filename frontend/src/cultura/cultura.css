@@ -9,7 +9,8 @@
 .cultura-filtros,.cultura-acciones { display:flex; flex-wrap:wrap; gap:.55rem; }
 .cultura-filtros button,.cultura-secundario,.cultura-gestor button { min-height:44px; border:1px solid #cdadbc; border-radius:.65rem; padding:.45rem .8rem; }
 .cultura-filtros button[aria-pressed=true],.cultura-primario { min-height:44px; background:var(--vino); color:#fff; border:1px solid var(--vino); border-radius:.65rem; padding:.45rem .8rem; font-weight:700; }
-.cultura-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr)); gap:1rem; align-items:start; }
+.cultura-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,17rem),1fr)); gap:1rem; align-items:start; }
+.cultura-grid > .cultura-ficha { width:100%; max-width:22rem; }
 .cultura-ficha { min-width:0; border-radius:1rem; overflow:hidden; background:#fff; border:1px solid #e4d4d7; box-shadow:0 6px 16px #3019290d; }
 .cultura-pos { display:block; width:100%; aspect-ratio: 5 / 4; object-fit:contain; background:#301929; }
 .cultura-arte { display:flex; flex-direction:column; justify-content:space-between; padding:1.25rem; color:#fff8e9; background:radial-gradient(ellipse at 75% 0%,#a33d50 0%,transparent 60%),#301929; }
