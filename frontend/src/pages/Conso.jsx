@@ -1,7 +1,95 @@
 import { PARKING_URL } from '../lib/parking';
 // src/pages/Conso.jsx
 import React, { useRef, useState } from 'react';
-import { Send, Bot, User, Sparkles, Pill, Train, Car } from 'lucide-react';
+import { Send, Bot, User, Sparkles, Pill, Train, Car, Plus, Sun, Moon, Clock, MapPin, Phone, Navigation } from 'lucide-react';
+
+const pharmacyStatus = {
+  active: { label: 'Vigente en el momento de la consulta', style: 'bg-emerald-100 text-emerald-950' },
+  scheduled: { label: 'Programada', style: 'bg-sky-100 text-sky-950' },
+  ended: { label: 'Finalizada', style: 'bg-slate-100 text-slate-700' },
+};
+
+const pharmacyGroups = [
+  { shift: 'day', title: 'Turno de día', Icon: Sun, style: 'text-amber-900 bg-amber-50' },
+  { shift: 'night', title: 'Turno de noche', Icon: Moon, style: 'text-indigo-900 bg-indigo-50' },
+];
+
+function PharmacyCard({ shift }) {
+  const { name, address, municipality, destination, hours, phone, status, carryover } = shift;
+  const badge = pharmacyStatus[status];
+  const dial = phone?.replace(/[\s()-]/g, '');
+  const mapUrl = destination && `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+  const focus = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-800';
+
+  return (
+    <article className={`space-y-3 rounded-xl border bg-white p-3.5 ${status === 'active' ? 'border-emerald-700' : 'border-slate-300'}`}>
+      <p className={`inline-block rounded-md px-2 py-1 text-sm font-bold ${badge.style}`}>{badge.label}</p>
+      <h5 className="break-words text-xl font-bold leading-tight text-slate-950">{name}</h5>
+      {address && <p className="flex items-start gap-2 text-base text-slate-800">
+        <MapPin aria-hidden="true" size={19} className="mt-1 shrink-0" />
+        <span>{address}<span className="block text-sm text-slate-600">{municipality}</span></span>
+      </p>}
+      <p className="flex items-start gap-2 text-base font-semibold text-slate-800">
+        <Clock aria-hidden="true" size={19} className="mt-1 shrink-0" />
+        <span>{hours}{carryover && <span className="block text-sm font-normal">Empezó anoche</span>}</span>
+      </p>
+      <div className="grid gap-2 min-[380px]:grid-cols-2">
+        {dial && /^\+?\d{9,15}$/.test(dial) && (
+          <a href={`tel:${dial}`} aria-label={`Llamar a ${name}`}
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-lg bg-emerald-800 px-2 py-2 text-center text-base font-bold text-white hover:bg-emerald-900 ${focus}`}>
+            <Phone aria-hidden="true" size={19} className="shrink-0" /> Llamar
+          </a>
+        )}
+        {mapUrl && (
+          <a href={mapUrl} target="_blank" rel="noopener noreferrer" aria-label={`Cómo llegar a ${name} (abre mapas)`}
+            className={`flex min-h-12 items-center justify-center gap-2 rounded-lg border border-emerald-800 px-2 py-2 text-center text-base font-bold text-emerald-950 hover:bg-emerald-50 ${focus}`}>
+            <Navigation aria-hidden="true" size={19} className="shrink-0" /> Cómo llegar
+          </a>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function PharmacyReply({ days, fallback }) {
+  return (
+    <section aria-label="Farmacias de guardia" className="overflow-hidden rounded-2xl border border-emerald-200 bg-white text-base leading-snug shadow-sm">
+      <header className="flex items-center gap-3 bg-emerald-950 px-4 py-4 text-white">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-emerald-100 text-emerald-800">
+          <Plus aria-hidden="true" size={31} strokeWidth={4} />
+        </span>
+        <div>
+          <h2 className="text-xl font-bold">Farmacias de guardia</h2>
+          {days.length === 1 && <h3 className="mt-1 text-base capitalize text-emerald-100">
+            <time dateTime={days[0].date}>{days[0].label}</time>
+          </h3>}
+        </div>
+      </header>
+      <div className="space-y-5 p-3 sm:p-4">
+        {days.map(day => (
+          <section key={day.date} className="space-y-3">
+            {days.length > 1 && <h3 className="text-lg font-bold capitalize text-slate-950"><time dateTime={day.date}>{day.label}</time></h3>}
+            {day.shifts.length === 0 && <p className="text-slate-700">{days.length === 1 ? fallback : 'No hay turnos verificados para esta fecha.'}</p>}
+            {pharmacyGroups.map(({ shift, title, Icon, style }) => {
+              const entries = day.shifts.filter(entry => entry.shift === shift);
+              if (!entries.length) return null;
+              return (
+                <section key={shift} className="space-y-2">
+                  <h4 className={`flex items-center gap-2 rounded-lg px-3 py-2 font-bold ${style}`}><Icon aria-hidden="true" size={21} />{title}</h4>
+                  {entries.map(entry => <PharmacyCard key={`${entry.startDate}-${entry.phone}-${entry.name}`} shift={entry} />)}
+                </section>
+              );
+            })}
+          </section>
+        ))}
+        <footer className="border-t border-emerald-100 pt-3">
+          <p className="text-sm text-slate-600">Calendario de guardias de UtrerApp</p>
+          <p className="mt-1 font-semibold text-emerald-900">¡Que haya mejoría! 💚</p>
+        </footer>
+      </div>
+    </section>
+  );
+}
 
 export default function Conso({ setPaginaActual }) {
   const previousTopic = useRef(undefined);
@@ -70,8 +158,11 @@ export default function Conso({ setPaginaActual }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: pregunta, context: queryContext }),
       });
-      const { answer, links = [], suggestions, examples = [], context } = await response.json();
+      const { answer, links = [], suggestions, examples = [], context, pharmacy } = await response.json();
       previousTopic.current = context === 'weather' || context === 'pharmacy' ? context : undefined;
+      if (context === 'pharmacy' && pharmacy?.days?.length) {
+        return { pharmacy: true, content: <PharmacyReply days={pharmacy.days} fallback={answer} /> };
+      }
       if (!answer) throw new Error();
       return (
         <div className="space-y-2">
@@ -109,7 +200,9 @@ export default function Conso({ setPaginaActual }) {
     setCargandoIA(true);
 
     const respuestaConso = await procesarRespuesta(textoEnvio);
-    setChat((prev) => [...prev, { origen: 'conso', texto: respuestaConso }]);
+    setChat((prev) => [...prev, respuestaConso?.pharmacy
+      ? { origen: 'conso', texto: respuestaConso.content, pharmacy: true }
+      : { origen: 'conso', texto: respuestaConso }]);
     setCargandoIA(false);
   };
 
@@ -136,7 +229,9 @@ export default function Conso({ setPaginaActual }) {
       </div>
 
       <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full space-y-3 overflow-y-auto">
-        {chat.map((msg, index) => (
+        {chat.map((msg, index) => msg.pharmacy ? (
+          <div key={index} className="w-full">{msg.texto}</div>
+        ) : (
           <div
             key={index}
             className={`flex items-start gap-2.5 ${msg.origen === 'usuario' ? 'flex-row-reverse' : ''}`}
