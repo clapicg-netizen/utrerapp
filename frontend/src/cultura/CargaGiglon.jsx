@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { fuenteDisponible, leerFichaAutorizada } from './fuenteGiglon';
 import { carteleraGiglon, coincidenciasGiglon, ejemploGiglon, prepararGiglon } from './giglon';
 
-export default function CargaGiglon({ filas, crear, editar, mostrarEjemplo }) {
+export default function CargaGiglon({ filas, crear, editar, mostrarEjemplo, directorio = 'listo', reintentar }) {
   const intento = useRef(0);
   const [ocupado, setOcupado] = useState(false);
   const [texto, setTexto] = useState('');
@@ -22,6 +22,7 @@ export default function CargaGiglon({ filas, crear, editar, mostrarEjemplo }) {
   }
   async function revisar(evento) {
     evento.preventDefault();
+    if (directorio !== 'listo') return;
     const actual = ++intento.current;
     setOcupado(true);
     try {
@@ -48,9 +49,11 @@ export default function CargaGiglon({ filas, crear, editar, mostrarEjemplo }) {
     }
   }
   const coincidencias = propuesta ? coincidenciasGiglon(propuesta, filas) : [];
-  return <details>
+  return <details open>
     <summary>Carga asistida desde Giglon</summary>
     {!fuenteDisponible && <p>Lectura por URL pendiente de una fuente autorizada.</p>}
+    {directorio === 'error' && <p role="alert">No se pudo comprobar si ya existe el espectáculo. <button type="button" onClick={reintentar}>Reintentar</button></p>}
+    {directorio === 'cargando' && <p role="status">Comprobando el directorio de espectáculos…</p>}
     <form onSubmit={revisar}>
       <p>Pega el título y las líneas de recinto, dirección, fecha, hora, precio y enlace que aparezcan en la ficha. Puedes incluir varias funciones.</p>
       <div className="cultura-acciones">
@@ -62,10 +65,10 @@ export default function CargaGiglon({ filas, crear, editar, mostrarEjemplo }) {
         <label>Sinopsis facilitada<textarea rows={6} value={descripcion} onChange={e=>{setDescripcion(e.target.value);limpiarRevision();}}/></label>
         <label>Cartel autorizado<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{setArchivo(e.target.files[0] || null);limpiarRevision();}}/></label>
       </div>
-      <button type="submit" disabled={ocupado}>{ocupado ? 'Preparando ficha…' : 'Revisar datos'}</button>
+      <button type="submit" disabled={ocupado || directorio !== 'listo'}>{ocupado ? 'Preparando ficha…' : 'Revisar datos'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
-    {propuesta && <section aria-label="Datos para revisar">
+    {propuesta && directorio === 'listo' && <section aria-label="Datos para revisar">
       <h3>{propuesta.titulo || 'Título pendiente'}</h3>
       {propuesta.cartel && <img className="cultura-pos" src={propuesta.cartel} alt="Cartel aportado para revisión" style={{ maxWidth:'18rem' }}/>}
       {propuesta.descripcion && <p className="cultura-descripcion-publica">{propuesta.descripcion}</p>}

@@ -19,7 +19,8 @@ const credencialesEnlace = flujoTeatro ? {
 if (flujoTeatro) window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);
 
 export default function GestorCultural({ onDirty, onBusy }) {
-  const [directorioListo,setDirectorioListo] = useState(false);
+  const [directorio,setDirectorio] = useState('cargando');
+  const [reintento,setReintento] = useState(0);
   const [filas,setFilas] = useState(() => culturaDB ? [] : leerCultura());
   const [edicion,setEdicion] = useState(null);
   const [preview,setPreview] = useState(false);
@@ -35,7 +36,6 @@ export default function GestorCultural({ onDirty, onBusy }) {
   useEffect(() => {
     let activo = true;
     setEditor(false);
-    setDirectorioListo(false);
     if (culturaDB && sesion) culturaDB.rpc('es_editor_programacion_teatro').then(({data})=>{ if(activo)setEditor(data===true); });
     return ()=>{activo=false;};
   },[sesion]);
@@ -47,9 +47,10 @@ export default function GestorCultural({ onDirty, onBusy }) {
   useEffect(() => {
     if (!editor) return;
     let activo = true;
-    leerGestion().then(f => { if (activo) { setFilas(f); setDirectorioListo(true); } }, () => { if (activo) setAviso('No se pudo cargar la programación.'); });
+    setDirectorio('cargando');
+    leerGestion().then(f => { if (activo) { setFilas(f); setDirectorio('listo'); } }, () => { if (activo) setDirectorio('error'); });
     return () => { activo = false; };
-  }, [editor]);
+  }, [editor, sesion, reintento]);
 
   useEffect(() => {
     onBusy?.(ocupado);
@@ -190,7 +191,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
     {aviso && <p role="status">{aviso}</p>}
     {!edicion ? <>
       <button className="cultura-primario" onClick={()=>cambiar(nuevo())}>Crear espectáculo</button>
-      {directorioListo && <CargaGiglon filas={filas} mostrarEjemplo={culturaPruebas} editar={fila=>cambiar({...fila})}
+      {culturaDB && <CargaGiglon filas={filas} directorio={directorio} reintentar={()=>setReintento(n=>n+1)} mostrarEjemplo={culturaPruebas} editar={fila=>cambiar({...fila})}
         crear={({titulo,lugar,direccion,compra,pases,descripcion,archivo,cartel})=>cambiar({...nuevo(),titulo,lugar,direccion,descripcion:descripcion || '',archivo,cartel:cartel || '',cargaGiglon:true,
           funciones:pases.length ? pases.map(pase=>({...funcionNueva(),...pase})) : [{...funcionNueva(),compra}]
         })}/>}
