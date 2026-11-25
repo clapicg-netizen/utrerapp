@@ -6,7 +6,9 @@ import App from "@/App";
 import DashboardAdmin from "@/pages/DashboardAdmin";
 import { retornoRecuperacion } from "@/lib/supabaseClient";
 
-if (retornoRecuperacion && window.location.pathname === "/") {
+const esAgendaTeatro = new URLSearchParams(window.location.search).get('vista') === 'gestor-teatro';
+
+if (!esAgendaTeatro && retornoRecuperacion && window.location.pathname === "/") {
   const retorno = new URL(window.location.href);
   retorno.pathname = "/admin";
   retorno.searchParams.set("recuperar", "1");
@@ -28,7 +30,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      {esPanelAdmin ? <DashboardAdmin /> : <App />}
+      {esPanelAdmin || esAgendaTeatro ? <DashboardAdmin soloAgenda={esAgendaTeatro} /> : <App />}
     </QueryClientProvider>
   </React.StrictMode>,
 );

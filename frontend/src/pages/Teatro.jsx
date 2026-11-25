@@ -2,7 +2,16 @@
 import React, { useState } from "react";
 import { ArrowLeft, ExternalLink, CalendarDays } from "lucide-react";
 
+import Cartelera from '../cultura/Cartelera';
+import { culturaDB } from '../cultura/supabaseCultural';
+
 export default function Teatro({ setPaginaActual }) {
+  return culturaDB
+    ? <Cartelera volver={() => setPaginaActual('menu-agenda')} />
+    : <CarteleraGiglon setPaginaActual={setPaginaActual} />;
+}
+
+function CarteleraGiglon({ setPaginaActual }) {
   const [cargando, setCargando] = useState(true);
   const urlGiglon = "https://www.giglon.com/todos?city=Utrera";
 

@@ -70,7 +70,9 @@ export default function App() {
 
     const vistaParam = params.get('vista');
 
-    if (vistaParam === 'trenes' || vistaParam === 'cercanias') {
+    if (vistaParam === 'cultura' || vistaParam === 'teatro') {
+      setPaginaActual('teatro');
+    } else if (vistaParam === 'trenes' || vistaParam === 'cercanias') {
       setPaginaActual('cercanias');
     } else if (vistaParam === 'gasolineras') {
       setPaginaActual('gasolineras');

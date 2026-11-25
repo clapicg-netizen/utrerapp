@@ -15,23 +15,26 @@ import EditorComercio from './admin/EditorComercio';
 import { categoriasBase, leerFilas } from './admin/modelos';
 import ResumenAdmin from './admin/ResumenAdmin';
 import VistaFicha from './admin/VistaFicha';
+import GestorCultural from '../cultura/Gestor';
+import { culturaDB } from '../cultura/supabaseCultural';
 import './admin/dashboard.css';
 
 const modulos = [
   ['inicio', 'Inicio', LayoutDashboard], ['comercios', 'Comercios', Store], ['anuncios', 'Anuncios', Megaphone],
-  ['agenda', 'Agenda', Calendar, true], ['noticias', 'Noticias', Newspaper, true], ['sanidad', 'Sanidad', Activity, true],
+  ['agenda', 'Agenda', Calendar, !culturaDB], ['noticias', 'Noticias', Newspaper, true], ['sanidad', 'Sanidad', Activity, true],
   ['usuarios', 'Usuarios', Users, true], ['estadisticas', 'Estadísticas', BarChart3, true],
   ['configuracion', 'Configuración', Settings, true],
 ];
 
-export default function DashboardAdmin() {
+export default function DashboardAdmin({ soloAgenda = false }) {
+  if (soloAgenda && culturaDB) return <Panel soloAgenda />;
   return <AccesoAdministracion>
     {(salir, mensajeAcceso, adminId) => <Panel salir={salir} mensajeAcceso={mensajeAcceso} adminId={adminId} />}
   </AccesoAdministracion>;
 }
 
-function Panel({ salir, mensajeAcceso, adminId }) {
-  const [seccion, setSeccion] = useState('inicio');
+function Panel({ salir, mensajeAcceso, adminId, soloAgenda = false }) {
+  const [seccion, setSeccion] = useState(soloAgenda ? 'agenda' : 'inicio');
   const [menu, setMenu] = useState(false);
   const [editor, setEditor] = useState(null);
   const [pendiente, setPendiente] = useState(false);
@@ -41,8 +44,8 @@ function Panel({ salir, mensajeAcceso, adminId }) {
   const [confirmacion, setConfirmacion] = useState(null);
   const encabezado = useRef(null);
 
-  const comercios = useQuery({ queryKey: ['administracion', adminId, 'comercios'], queryFn: ({ signal }) => leerFilas('comercios_utrera', signal) });
-  const anuncios = useQuery({ queryKey: ['administracion', adminId, 'anuncios'], queryFn: ({ signal }) => leerFilas('anuncios', signal) });
+  const comercios = useQuery({ enabled: !soloAgenda, queryKey: ['administracion', adminId, 'comercios'], queryFn: ({ signal }) => leerFilas('comercios_utrera', signal) });
+  const anuncios = useQuery({ enabled: !soloAgenda, queryKey: ['administracion', adminId, 'anuncios'], queryFn: ({ signal }) => leerFilas('anuncios', signal) });
   const [, titulo, Icono, sinDesarrollar] = modulos.find(([id]) => id === seccion);
   const categorias = [...new Set([...categoriasBase, ...(comercios.data || []).map(fila => fila.categoria).filter(Boolean)])];
 
@@ -131,7 +134,7 @@ function Panel({ salir, mensajeAcceso, adminId }) {
         <button type="button" className="admin-icon admin-menu-close" aria-label="Cerrar menú" onClick={() => setMenu(false)}><X size={20} /></button>
       </div>
       <nav aria-label="Módulos de administración">
-        {modulos.map(([id, nombre, IconoModulo, pendienteModulo]) =>
+        {(soloAgenda ? modulos.filter(([id]) => id === 'agenda') : modulos).map(([id, nombre, IconoModulo, pendienteModulo]) =>
           <button type="button" key={id} aria-current={seccion === id ? 'page' : undefined}
             disabled={ocupado} onClick={() => navegar(id, null)}>
             <IconoModulo size={19} aria-hidden="true" /><span>{nombre}</span>
@@ -144,9 +147,9 @@ function Panel({ salir, mensajeAcceso, adminId }) {
         <button className="admin-icon admin-menu-button" type="button" aria-label="Abrir menú" aria-expanded={menu}
           aria-controls="admin-sidebar" onClick={() => setMenu(!menu)}><Menu size={23} /></button>
         <div className="admin-breadcrumb" aria-label="Ubicación"><span>UtrerApp</span><ChevronRight size={15} aria-hidden="true" /><strong>{titulo}</strong></div>
-        <button type="button" disabled={ocupado} className="admin-button admin-logout" onClick={() => { if (puedeSalir()) salir(); }}>
+        {!soloAgenda && <button type="button" disabled={ocupado} className="admin-button admin-logout" onClick={() => { if (puedeSalir()) salir(); }}>
           <LogOut size={17} /> Cerrar sesión
-        </button>
+        </button>}
       </header>
       <main className="admin-main">
         <div className="admin-page-heading"><span className="admin-section-icon"><Icono size={24} aria-hidden="true" /></span>
@@ -170,6 +173,7 @@ function Panel({ salir, mensajeAcceso, adminId }) {
               cancelar={() => navegar('anuncios', null)} guardado={guardado} />
           : anuncios.data && <DirectorioAnuncios filas={anuncios.data} crear={() => navegar('anuncios', { fila: null })} ocupado={ocupado}
               editar={fila => navegar('anuncios', { fila })} activar={activar} eliminar={fila => setConfirmacion({ tipo: 'anuncios', fila })} />)}
+        {seccion === 'agenda' && culturaDB && <GestorCultural onDirty={setPendiente} onBusy={setOcupado} />}
         {sinDesarrollar && <section className="admin-surface admin-empty admin-pending">
           <Icono size={30} aria-hidden="true" /><h2>Pendiente de desarrollo</h2>
           <p>La gestión de {titulo.toLowerCase()} todavía no está disponible en este panel.</p>
