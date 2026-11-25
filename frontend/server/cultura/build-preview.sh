@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+if [ "$VERCEL_ENV" = preview ] && [ "$VERCEL_GIT_COMMIT_REF" = codex/conso-fase-3 ]; then
+  node --test server/conso/tests/*.test.mjs
+  env -u CONSO_AI_MODEL node server/conso/tests/upstash-preview.mjs
+  node server/cultura/comprobar-preview.mjs
+fi
+npm run build
