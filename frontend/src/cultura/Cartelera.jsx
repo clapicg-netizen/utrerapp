@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, CalendarDays, MapPin, Ticket, Share2, Theater } from 'lucide-react';
 import { categorias, enlaceCompra, fechaCorta, fechaVisible, moneda, publicos } from './datos';
-import { leerPublicacion } from './supabaseCultural';
+import { culturaPruebas, leerPublicacion } from './supabaseCultural';
 import './cultura.css';
 
 export function Cartel({ evento }) {
@@ -84,7 +84,7 @@ export default function Cartelera({ volver }) {
     <header className="cultura-portada">
       <button onClick={id ? () => seleccionar(null) : volver}><ArrowLeft size={18}/> {id ? 'Cartelera' : 'Agenda'}</button>
       <div><p><Theater size={18}/> Teatro Enrique de la Cuadra</p><h1>{id && actual ? actual.titulo : 'Nos vemos en escena'}</h1>
-      <p>Vista previa con programación ficticia</p></div>
+      {culturaPruebas && <p>Vista previa con programación ficticia</p>}</div>
     </header>
     <div className="cultura-contenido">
       {error ? <p role="status">No se pudo consultar la cartelera. Inténtalo más tarde.</p> : !filas ? <p role="status">Cargando programación…</p> :
