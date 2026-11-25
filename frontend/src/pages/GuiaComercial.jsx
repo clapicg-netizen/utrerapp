@@ -1,12 +1,13 @@
 // src/pages/GuiaComercial.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { Phone, Search, MapPin, Image, ArrowUpRight, ArrowRight, Store, Utensils, BriefcaseBusiness, HeartPulse, Building2, GraduationCap, LayoutGrid, X } from "lucide-react";
+import { Search, MapPin, ArrowUpRight, ArrowRight, Store, Utensils, BriefcaseBusiness, HeartPulse, Building2, GraduationCap, LayoutGrid, X } from "lucide-react";
 import { obtenerComercios } from "../lib/comerciosService";
 import { supabase } from "../lib/supabaseClient";
 import FichaInmobiliaria from "./FichaInmobiliaria";
 import FichaComida from "./FichaComida";
 import EscaparateComercio, { ESCAPARATES } from "../components/EscaparateComercio";
 import LandingComercio from "../components/LandingComercio";
+import FichaComercialEstandar from "../components/FichaComercialEstandar";
 import logo from "./logo-utrera-portada.webp";
 import "./GuiaComercial.css";
 
@@ -117,13 +118,6 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
     return coincideCategoria && coincideBusqueda;
   });
 
-  const obtenerPortadaValida = (url) => {
-    if (url && typeof url === 'string' && url.trim() !== "" && url !== "EMPTY" && url !== "NULL") {
-      return url.trim();
-    }
-    return "https://images.unsplash.com/photo-1555396273-367ea4eb4db5";
-  };
-
   const escaparateSeleccionado = ESCAPARATES.some(({ id }) => id === String(comercioSel?.id));
   const categoryIcons = [LayoutGrid, Utensils, Store, BriefcaseBusiness, HeartPulse, Building2, GraduationCap];
   function abrirFicha(event, comercio) {
@@ -228,169 +222,7 @@ export default function GuiaComercial({ categoriaInicial = "Todos", busquedaInic
                     <LandingComercio comercio={comercioSel} />
                   </div>
                 ) : (
-                  /* VISTA ESTÁNDAR COMPLETA CON VÍDEO INTELIGENTE, GALERÍA, REDES Y BOTONES */
-                  <div>
-                    <div className="h-48 bg-slate-100 rounded-2xl overflow-hidden relative mb-4 border">
-                      <img src={obtenerPortadaValida(comercioSel.portada_url)} alt={comercioSel.nombre} className="w-full h-full object-cover" />
-                    </div>
-
-                    <div>
-                      <h2 className="text-2xl font-bold text-slate-800">{comercioSel.nombre}</h2>
-                      <p className="text-xs font-bold text-amber-600 uppercase tracking-wide mt-0.5">
-                        {comercioSel.subcategoria || comercioSel.categoria}
-                      </p>
-                    </div>
-
-                    {comercioSel.direccion && (
-                      <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
-                        <MapPin size={14} className="text-slate-400" /> {comercioSel.direccion}
-                      </p>
-                    )}
-
-                    {comercioSel.descripcion && (
-                      <p className="text-sm text-slate-600 mt-3 leading-relaxed bg-slate-50 p-3 rounded-xl border">
-                        {comercioSel.descripcion}
-                      </p>
-                    )}
-
-                    {/* VÍDEO PROMOCIONAL INTELIGENTE EN LA VISTA PÚBLICA */}
-                    {comercioSel.video_story_url && typeof comercioSel.video_story_url === 'string' && comercioSel.video_story_url.trim() !== '' && (
-                      <div className="mt-4">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                          🎬 Vídeo Promocional
-                        </p>
-                        {comercioSel.video_story_url.includes('youtube.com') || comercioSel.video_story_url.includes('youtu.be') ? (
-                          <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-sm border bg-black">
-                            <iframe
-                              className="absolute top-0 left-0 w-full h-full border-0"
-                              src={
-                                comercioSel.video_story_url.includes('watch?v=') 
-                                  ? comercioSel.video_story_url.replace('watch?v=', 'embed/') 
-                                  : comercioSel.video_story_url.includes('youtu.be/')
-                                  ? `https://www.youtube.com/embed/${comercioSel.video_story_url.split('youtu.be/')[1]?.split('?')[0]}`
-                                  : comercioSel.video_story_url
-                              }
-                              title={`Vídeo de ${comercioSel.nombre}`}
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                              allowFullScreen
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-full h-48 rounded-2xl overflow-hidden bg-black border shadow-sm">
-                            <video 
-                              src={comercioSel.video_story_url.trim()} 
-                              controls 
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* GALERÍA DE FOTOS EN LA VISTA */}
-                    {comercioSel.galeria_urls && Array.isArray(comercioSel.galeria_urls) && comercioSel.galeria_urls.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 flex items-center gap-1">
-                          <Image size={14} /> Galería de Fotos
-                        </p>
-                        <div className="flex gap-2 overflow-x-auto pb-1">
-                          {comercioSel.galeria_urls.map((url, i) => (
-                            url && (
-                              <div 
-                                key={i} 
-                                onClick={() => setFotoAmpliada(url.trim())}
-                                className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border cursor-pointer hover:opacity-90"
-                              >
-                                <img src={url.trim()} alt={`Foto ${i}`} className="w-full h-full object-cover" />
-                              </div>
-                            )
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* SITIO WEB Y TIENDA ONLINE EN LA VISTA PÚBLICA */}
-                    {(comercioSel.web_url || comercioSel.tienda_url) && (
-                      <div className="mt-4 pt-3 border-t flex gap-2">
-                        {comercioSel.web_url && (
-                          <a href={comercioSel.web_url.startsWith('http') ? comercioSel.web_url : `https://${comercioSel.web_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-slate-900 text-white py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
-                            🌐 Web Oficial
-                          </a>
-                        )}
-                        {comercioSel.tienda_url && (
-                          <a href={comercioSel.tienda_url.startsWith('http') ? comercioSel.tienda_url : `https://${comercioSel.tienda_url}`} target="_blank" rel="noreferrer" className="flex-1 bg-amber-500 text-slate-950 py-2 rounded-xl text-center text-xs font-bold shadow flex items-center justify-center gap-1">
-                            🛍️ Tienda Online
-                          </a>
-                        )}
-                      </div>
-                    )}
-
-                    {/* REDES SOCIALES EN LA VISTA PÚBLICA */}
-                    {(() => {
-                      const insta = comercioSel.instagram_url || comercioSel.instagram_username;
-                      const tiktok = comercioSel.tiktok_url;
-                      const facebook = comercioSel.facebook_url;
-
-                      if (!insta && !tiktok && !facebook) return null;
-
-                      return (
-                        <div className="mt-3 pt-2 flex gap-2">
-                          {insta && (
-                            <a 
-                              href={insta.startsWith('http') ? insta : `https://${insta}`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="flex-1 bg-pink-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
-                            >
-                              Instagram
-                            </a>
-                          )}
-                          {tiktok && (
-                            <a 
-                              href={tiktok.startsWith('http') ? tiktok : `https://${tiktok}`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="flex-1 bg-black text-white py-2 rounded-xl text-center text-xs font-bold shadow"
-                            >
-                              TikTok
-                            </a>
-                          )}
-                          {facebook && (
-                            <a 
-                              href={facebook.startsWith('http') ? facebook : `https://${facebook}`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-center text-xs font-bold shadow"
-                            >
-                              Facebook
-                            </a>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    {/* BOTONES DE CONTACTO */}
-                    <div className="grid grid-cols-2 gap-2 mt-4">
-                      {comercioSel.whatsapp && (
-                        <a
-                          href={"https://wa.me/" + comercioSel.whatsapp.replace("+", "").replace(/\s/g, "")}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow"
-                        >
-                          💬 WhatsApp
-                        </a>
-                      )}
-                      {comercioSel.telefono && (
-                        <a
-                          href={"tel:" + comercioSel.telefono}
-                          className="py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5"
-                        >
-                          <Phone size={14} className="text-emerald-600" /> Llamar
-                        </a>
-                      )}
-                    </div>
-                  </div>
+                  <FichaComercialEstandar comercio={comercioSel} ampliarFoto={setFotoAmpliada} />
                 )}
               </div>
 
