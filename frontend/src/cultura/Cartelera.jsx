@@ -11,7 +11,7 @@ export function Cartel({ evento }) {
     </div>;
 }
 
-function Funcion({ funcion, compacta, demo }) {
+function Funcion({ funcion, compacta, demo, previsualizar }) {
   const compra = enlaceCompra(funcion.compra);
   const disponible = !['agotado','cancelado'].includes(funcion.venta);
   return <div className="cultura-pase">
@@ -23,13 +23,14 @@ function Funcion({ funcion, compacta, demo }) {
     </p>
     <p className="cultura-precio">{funcion.precio === '' ? 'Precio sin confirmar' : Number(funcion.precio) === 0 ? 'Entrada gratuita' : moneda(funcion.precio)}</p>
     {funcion.venta !== 'normal' && <strong className="cultura-estado">{{agotado:'Entradas agotadas',cancelado:'Cancelado',cambio:'Cambio confirmado'}[funcion.venta]}</strong>}
-    {disponible && compra && !demo && <a className="cultura-primario" target="_blank" rel="noopener noreferrer" href={compra}><Ticket size={17} aria-hidden="true"/> Comprar entradas</a>}
+    {disponible && compra && !demo && !previsualizar && <a className="cultura-primario" target="_blank" rel="noopener noreferrer" href={compra}><Ticket size={17} aria-hidden="true"/> Comprar entradas</a>}
+    {disponible && compra && previsualizar && <span className="cultura-primario" role="link" aria-disabled="true"><Ticket size={17} aria-hidden="true"/> Comprar entradas</span>}
     {disponible && !compra && funcion.precio!=='0' && <span className="cultura-accion-inactiva"><Ticket size={17} aria-hidden="true"/> Compra sin enlace confirmado</span>}
-    {disponible && compra && demo && <span className="cultura-accion-inactiva"><Ticket size={17} aria-hidden="true"/> Comprar entradas · vista previa</span>}
+    {disponible && compra && demo && !previsualizar && <span className="cultura-accion-inactiva"><Ticket size={17} aria-hidden="true"/> Comprar entradas · vista previa</span>}
   </div>;
 }
 
-export function FichaCultural({ evento, funciones = [evento], compacta = false, resumida = false, abrir, demo = false }) {
+export function FichaCultural({ evento, funciones = [evento], compacta = false, resumida = false, abrir, demo = false, previsualizar = false }) {
   const detalle = new URL(window.location.origin);
   detalle.searchParams.set('vista','cultura');
   detalle.searchParams.set('evento',evento.id);
@@ -42,11 +43,15 @@ export function FichaCultural({ evento, funciones = [evento], compacta = false, 
       <h2>{evento.titulo}</h2>
       <p className="cultura-meta"><MapPin size={16} aria-hidden="true"/>{evento.lugar}</p>
       {!resumida && <p className="cultura-descripcion-publica">{evento.descripcion}</p>}
-      <div className="cultura-pases">{funciones.map(f=><Funcion key={f.funcionId || f.id} funcion={f} compacta={compacta} demo={demo}/>)}</div>
+      <div className="cultura-pases">{funciones.map(f=><Funcion key={f.funcionId || f.id} funcion={f} compacta={compacta} demo={demo} previsualizar={previsualizar}/>)}</div>
       <div className="cultura-acciones">
         {abrir && <button className="cultura-secundario" onClick={abrir}>Ver ficha <ArrowUpRight size={17}/></button>}
-        {!abrir && evento.direccion && <a className="cultura-secundario" href={mapa} target="_blank" rel="noopener noreferrer">Cómo llegar</a>}
-        {!abrir && <a className="cultura-secundario" aria-label="Compartir por WhatsApp" href={compartir} target="_blank" rel="noopener noreferrer"><Share2 size={17}/> WhatsApp</a>}
+        {!abrir && evento.direccion && (previsualizar
+          ? <span className="cultura-secundario" role="link" aria-disabled="true">Cómo llegar</span>
+          : <a className="cultura-secundario" href={mapa} target="_blank" rel="noopener noreferrer">Cómo llegar</a>)}
+        {!abrir && (previsualizar
+          ? <span className="cultura-secundario" role="link" aria-disabled="true" aria-label="Compartir por WhatsApp"><Share2 size={17}/> WhatsApp</span>
+          : <a className="cultura-secundario" aria-label="Compartir por WhatsApp" href={compartir} target="_blank" rel="noopener noreferrer"><Share2 size={17}/> WhatsApp</a>)}
       </div>
     </div>
   </article>;

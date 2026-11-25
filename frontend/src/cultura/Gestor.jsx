@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { categorias, enlaceCompra, fechaCorta, guardarCultura, leerCultura, ordenFuncion, teatro, vigente } from './datos';
+import { categorias, enlaceCompra, fechaCorta, guardarCultura, leerCultura, ordenFuncion, publicos, teatro, vigente } from './datos';
 import { Cartel, FichaCultural } from './Cartelera';
 import { culturaDB, culturaPruebas, guardarRemoto, leerGestion } from './supabaseCultural';
 
@@ -172,6 +172,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
   }
   const actualizar = (campo,valor) => setEdicion(e=>({...e,[campo]:valor}));
   const ajustarFuncion = (id,parcial) => setEdicion(e=>({...e,funciones:e.funciones.map(f=>f.id===id?{...f,...parcial}:f)}));
+  const funcionesPublicas = preview && edicion ? publicos([{ ...edicion, estado: 'publicado' }]) : [];
   const visibles = filas.filter(e=>{
     const grupo = e.estado==='borrador' ? 'borradores' : e.estado==='publicado' && e.funciones.some(f=>vigente(f)) ? 'proximos' : 'historico';
     return grupo===filtro && (!categoria || e.categoria===categoria) && normal(e.titulo+' '+e.lugar).includes(normal(busqueda));
@@ -246,7 +247,10 @@ export default function GestorCultural({ onDirty, onBusy }) {
         <button type="submit" value="publicado" className="cultura-primario" disabled={ocupado}>Publicar</button>
         <button type="button" onClick={()=>{if(window.confirm('¿Descartar los cambios de esta ficha?'))cambiar(null);}}>Descartar</button>
       </div>
-      {preview && <FichaCultural evento={edicion} funciones={edicion.funciones} demo/>}
+      {preview && <section className="cultura-contenido" aria-label="Vista previa de la ficha pública">
+        {!funcionesPublicas.length && <p role="status">La ficha aparecerá en la cartelera cuando tenga una función vigente con fecha.</p>}
+        <FichaCultural evento={funcionesPublicas[0] || edicion} funciones={funcionesPublicas} previsualizar/>
+      </section>}
     </form>}
   </section>;
 }
