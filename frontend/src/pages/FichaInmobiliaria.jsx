@@ -3,8 +3,9 @@ import React, { useState, useEffect } from "react";
 import { MapPin, Bed, Bath, Maximize, MessageCircle } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
-export default function FichaInmobiliaria({ negocioId }) {
-  const [negocio, setNegocio] = useState(null);
+export default function FichaInmobiliaria({ negocioId, borrador }) {
+  const [negocioGuardado, setNegocio] = useState(null);
+  const negocio = borrador ? { ...negocioGuardado, ...borrador } : negocioGuardado;
   const [propiedades, setPropiedades] = useState([]);
   const [filtroModalidad, setFiltroModalidad] = useState("Todos");
   const [cargando, setCargando] = useState(true);
@@ -46,7 +47,7 @@ export default function FichaInmobiliaria({ negocioId }) {
     return p.modalidad?.toLowerCase() === filtroModalidad.toLowerCase();
   });
 
-  if (cargando) {
+  if (cargando && (negocioId || !borrador)) {
     return <div className="text-center py-16 text-slate-500 font-bold text-sm">Cargando catálogo inmobiliario...</div>;
   }
 
@@ -60,6 +61,7 @@ export default function FichaInmobiliaria({ negocioId }) {
         
         {negocio?.mostrar_boton_captacion !== false && (
           <button 
+            disabled={Boolean(borrador)}
             onClick={() => window.open(`https://wa.me/${negocio?.whatsapp || "34600000000"}?text=${encodeURIComponent(negocio?.texto_boton_captacion || "Hola, quiero solicitar una valoración gratuita")}`, "_blank")}
             className="mt-4 w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-900 font-black text-xs rounded-2xl shadow transition cursor-pointer flex items-center justify-center gap-2"
           >

@@ -3,8 +3,9 @@ import React, { useState, useEffect } from "react";
 import { ShoppingBag, Plus, Minus, Send, Clock, Bike } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
-export default function FichaComida({ negocioId }) {
-  const [negocio, setNegocio] = useState(null);
+export default function FichaComida({ negocioId, borrador }) {
+  const [negocioGuardado, setNegocio] = useState(null);
+  const negocio = borrador ? { ...negocioGuardado, ...borrador } : negocioGuardado;
   const [productos, setProductos] = useState([]);
   const [categoriaSel, setCategoriaSel] = useState("Todos");
   const [carrito, setCarrito] = useState({});
@@ -81,6 +82,7 @@ export default function FichaComida({ negocioId }) {
   const totalGeneral = totalProductos + (totalProductos > 0 ? costeEnvio : 0);
 
   const enviarPedidoWhatsApp = () => {
+    if (borrador) return;
     if (!nombreCliente || !direccionCliente) {
       alert("Por favor, introduce tu nombre y dirección de entrega.");
       return;
@@ -106,7 +108,7 @@ export default function FichaComida({ negocioId }) {
     window.open(`https://wa.me/${whatsappNum}?text=${encodeURIComponent(mensaje)}`, "_blank");
   };
 
-  if (cargando) {
+  if (cargando && (negocioId || !borrador)) {
     return <div className="text-center py-16 text-slate-500 font-bold text-sm">Cargando carta digital...</div>;
   }
 
