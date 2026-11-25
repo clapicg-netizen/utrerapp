@@ -5,8 +5,8 @@ const dias = 'domingo lunes martes miercoles jueves viernes sabado'.split(' ');
 const tipos = [['Infantil', /\b(infantil(?:es)?|ninos|familias?)\b/], ['Música',/\b(conciertos?|musica)\b/], ['Humor',/\b(humor|monologos?)\b/], ['Danza',/\b(danza|ballet)\b/], ['Teatro',/\bobras?\b/]];
 export function consultaCultural(pregunta, previa, ahora = new Date(), filas = publicos(undefined, ahora)) {
   const frase = normal(pregunta);
-  const temaAjeno = /\b(farmacias?|guardia|lluvia|llover|tiempo|temperatura|paraguas|meteorologia|trenes?|parking|aparcamientos?|academias?|bares?|tramites?|capital)\b/.test(frase);
-  if (temaAjeno) return;
+  const temaAjeno = /\b(farmacias?|guardia|lluvia|llover|tiempo|temperatura|paraguas|meteorologia|trenes?|parking|aparcamientos?|academias?|bares?|tramites?|certificados?|empadronamiento|padron|gasolineras?|repostar|comer|cenar|restaurantes?|capital)\b/.test(frase);
+  if (temaAjeno || /\b(?:fiestas|feria|procesiones|agenda municipal|eventos culturales|actividades municipales)\b/.test(frase)) return;
   const categoria = tipos.find(([, patron]) => patron.test(frase))?.[0];
   const precio = /\b(cuanto[s]? cuesta[n]?|precios?|cuanto valen)\b/.test(frase);
   const gratis = /\b(gratis|gratuit[oa]s?)\b/.test(frase);
@@ -15,7 +15,11 @@ export function consultaCultural(pregunta, previa, ahora = new Date(), filas = p
   const dia = dias.findIndex(nombre => new RegExp('\\b' + nombre + '\\b').test(frase));
   const mes = meses.findIndex(nombre => new RegExp('\\b' + nombre + '\\b').test(frase));
   let rango;
-  if (/\bfin de semana\b|\bfinde\b/.test(frase)) {
+  if (/\b(?:mes (?:que viene|siguiente)|proximo mes|este mes)\b/.test(frase)) {
+    const salto = /\beste mes\b/.test(frase) ? 0 : 1;
+    const year = Number(hoy.slice(0,4)), month = Number(hoy.slice(5,7))-1+salto;
+    rango = [new Date(Date.UTC(year,month,1)).toISOString().slice(0,10),new Date(Date.UTC(year,month+1,0)).toISOString().slice(0,10)];
+  } else if (/\bfin de semana\b|\bfinde\b/.test(frase)) {
     const sabado = moverDia(hoy, semana === 0 ? -1 : (6-semana));
     rango = [sabado,moverDia(sabado,1)];
   } else if (/\b(?:pasado manana|manana|hoy)\b/.test(frase)) {

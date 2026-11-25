@@ -1,10 +1,12 @@
 const { createHmac, randomUUID } = require('node:crypto');
 const { isIP } = require('node:net');
+const { loadPrices } = require('./gasolineras.js');
 
 function createHandler({ env = process.env, namespace, generate } = {}) {
   return async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-store');
     const { VERCEL_ENV } = env;
+    const { localIntent, contextosLocales, consultaSensible, contestarLocal } = await import('../server/conso/intencion-local.mjs');
     const { answerQuestion, unavailable } = await import('../server/conso/engine.mjs');
     if (VERCEL_ENV !== 'preview') return res.status(404).end();
     if (req.method !== 'POST') {
@@ -23,7 +25,7 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
     if (!question || question.length > 500 || Buffer.byteLength(question) > 1600 ||
         Object.keys(req.body).some(key => key !== 'question' && key !== 'weatherFollowUp' && key !== 'context') ||
         (followUp !== undefined && typeof followUp !== 'boolean') ||
-        (context !== undefined && context !== 'weather' && context !== 'pharmacy') || /[\u0000-\u0008\u000b-\u001f]/.test(question)) {
+        (context !== undefined && !['weather','pharmacy',...contextosLocales].includes(context)) || /[\u0000-\u0008\u000b-\u001f]/.test(question)) {
       return res.status(400).json({ answer: 'Escribe una pregunta de hasta 500 caracteres.' });
     }
 
@@ -52,14 +54,11 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
       const { pharmacyIntent, pharmacyAnswer } = await import('../server/conso/pharmacy.mjs');
       const pharmacy = settings.pharmacies && pharmacyIntent(question, day, context === 'pharmacy');
       const weather = !pharmacy && app.weather && weatherIntent(question, { today: day, followUp: context === 'weather' });
-      const intent = !pharmacy && !weather && provider === 'openai' && previewIntent(question, app);
-      if (!pharmacy && !weather && provider === 'openai' && !intent) {
-        return res.status(422).json({
-          answer: 'No he entendido la consulta. En esta prueba puedo orientarte sobre comercios, visitas, trámites, trenes y el tiempo en Utrera.',
-          examples: app.previewIntents.slice(0, 5).map(({ question }) => question),
-        });
-      }
-      if (!pharmacy && !weather && !intent?.answer && (!billingReady(provider, env) || !apiKey)) {
+      const directa = !pharmacy && !weather && localIntent(question,context);
+      const puedeResolver = directa && (['education','food'].includes(directa.topic) ? settings.directory : settings.official);
+      const intent = !pharmacy && !weather && !puedeResolver && provider === 'openai' && previewIntent(question,app);
+      if (consultaSensible(question)) return res.status(422).json({answer:'Escribe la consulta sin incluir datos personales.'});
+      if (!pharmacy && !weather && !puedeResolver && !intent?.answer && (!billingReady(provider, env) || !apiKey)) {
         return res.status(503).json({ answer: unavailable });
       }
 
@@ -90,6 +89,12 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
         });
         await recordUsage({ topic_weather: 1, ...(available ? { direct: 1 } : { weatherUnavailable: 1 }) });
         return res.status(200).json({ ...data, context: 'weather' });
+      }
+      if (puedeResolver) {
+        const dato = await contestarLocal(directa,{app,settings,sources,loadFuel:loadPrices,
+          loadTrain:async()=> (await import('../server/renfe.mjs')).getBoard()});
+        await recordUsage({direct:1});
+        return res.status(200).json({...dato,context:directa.topic});
       }
       if (intent?.answer) {
         await recordUsage({ direct: 1 });

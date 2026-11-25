@@ -79,3 +79,5 @@ module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=120');
   return res.status(200).json(prices);
 };
+
+module.exports.loadPrices = loadPrices;

@@ -185,7 +185,7 @@ export default function Conso({ setPaginaActual }) {
         body: JSON.stringify({ question: pregunta, context: queryContext }),
       });
       const { answer, links = [], suggestions, examples = [], context, pharmacy } = await response.json();
-      previousTopic.current = context === 'weather' || context === 'pharmacy' ? context : undefined;
+      previousTopic.current = ['weather','pharmacy','education','food','municipal','transport','fuel','events'].includes(context) ? context : undefined;
       if (context === 'pharmacy' && pharmacy?.days?.length) {
         return { wide: true, content: <PharmacyReply days={pharmacy.days} fallback={answer} /> };
       }
