@@ -16,7 +16,7 @@ export const culturaDB = culturaProduccion ? supabase : culturaPruebas ? createC
 const lecturaPublica = configurado ? createClient(url, key, {
   auth: { storageKey: 'utrerapp-cultura-lectura', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 }) : null;
-const selects = 'id,titulo,categoria,descripcion,lugar,direccion,cartel_ruta,estado,revision,programacion_cultural_funciones(id,fecha,hora,fin_fecha,fin_hora,precio_centimos,compra_url,estado_venta,retirada_en,motivo_retirada)';
+const selects = 'id,titulo,categoria,descripcion,lugar,direccion,cartel_ruta,estado,revision,programacion_cultural_funciones(id,fecha,hora,fin_fecha,fin_hora,precio_centimos,precio_desde,compra_url,estado_venta,retirada_en,motivo_retirada)';
 async function leer(cliente, gestion) {
   if (!cliente) return leerCultura();
   let query = cliente.from('programacion_cultural').select(selects).eq('seccion','teatro');
@@ -27,7 +27,7 @@ async function leer(cliente, gestion) {
     const imagen = fila.cartel_ruta && (await cliente.storage.from(bucket).createSignedUrl(fila.cartel_ruta,300)).data?.signedUrl;
     return { ...fila, cartel: imagen || '', funciones: programacion_cultural_funciones.filter(f=>gestion || !f.retirada_en).map(f => ({
       id:f.id, fecha:f.fecha || '', hora:f.hora?.slice(0,5) || '', fin:f.fin_hora?.slice(0,5) || '', finFecha:f.fin_fecha || '',
-      precio:f.precio_centimos === null ? '' : String(f.precio_centimos/100), compra:f.compra_url || '', venta:f.estado_venta,
+      precio:f.precio_centimos === null ? '' : String(f.precio_centimos/100), tipoPrecio:f.precio_desde ? 'desde' : undefined, compra:f.compra_url || '', venta:f.estado_venta,
       retirada:f.retirada_en, motivo:f.motivo_retirada,
     })) };
   }));
@@ -46,7 +46,7 @@ export async function guardarRemoto(evento, { retirar = [], restaurar = [], edit
     lugar:evento.lugar, direccion:evento.direccion, cartel_ruta:ruta, estado:evento.estado };
   const funciones = editarFunciones ? evento.funciones.filter(f => !f.retirada).map(f => ({
     id:f.id, fecha:f.fecha || null, hora:f.hora || null, fin_fecha:f.fin ? f.finFecha || f.fecha : null, fin_hora:f.fin || null,
-    precio_centimos:f.precio === '' ? null : Math.round(Number(f.precio)*100), compra_url:f.compra || null, estado_venta:f.venta,
+    precio_centimos:f.precio === '' ? null : Math.round(Number(f.precio)*100), precio_desde:f.tipoPrecio === 'desde', compra_url:f.compra || null, estado_venta:f.venta,
   })) : [];
   const { error } = await culturaDB.rpc('guardar_programacion_teatro',{
     ficha, revision_esperada:evento.revision || 0, funciones, retirar, restaurar,

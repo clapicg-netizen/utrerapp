@@ -1,29 +1,42 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { fuenteDisponible, leerFichaAutorizada } from './fuenteGiglon';
 import { carteleraGiglon, coincidenciasGiglon, ejemploGiglon, prepararGiglon } from './giglon';
 
 export default function CargaGiglon({ filas, crear, editar }) {
+  const intento = useRef(0);
+  const [ocupado, setOcupado] = useState(false);
   const [texto, setTexto] = useState('');
   const [propuesta, setPropuesta] = useState(null);
   const [error, setError] = useState('');
   function actualizar(valor) {
+    intento.current++;
+    setOcupado(false);
     setTexto(valor);
     setPropuesta(null);
     setError('');
   }
-  function revisar(evento) {
+  async function revisar(evento) {
     evento.preventDefault();
+    const actual = ++intento.current;
     try {
-      setPropuesta(prepararGiglon(texto));
+      const enlace = /^https:\/\/[^\s]+$/.test(texto.trim());
+      if (enlace && fuenteDisponible) setOcupado(true);
+      const ficha = enlace && fuenteDisponible ? await leerFichaAutorizada(texto) : prepararGiglon(texto);
+      if (actual !== intento.current) return;
+      setPropuesta(ficha);
       setError('');
     } catch (fallo) {
+      if (actual !== intento.current) return;
       setPropuesta(null);
       setError(fallo.message);
+    } finally {
+      if (actual === intento.current) setOcupado(false);
     }
   }
   const coincidencias = propuesta ? coincidenciasGiglon(propuesta, filas) : [];
   return <details>
     <summary>Carga asistida desde Giglon</summary>
-    <p>Lectura por URL pendiente de una fuente autorizada.</p>
+    {!fuenteDisponible && <p>Lectura por URL pendiente de una fuente autorizada.</p>}
     <form onSubmit={revisar}>
       <p>Pega el título y las líneas de recinto, dirección, fecha, hora, precio y enlace que aparezcan en la ficha. Puedes incluir varias funciones.</p>
       <div className="cultura-acciones">
@@ -31,7 +44,7 @@ export default function CargaGiglon({ filas, crear, editar }) {
         <button type="button" onClick={()=>actualizar(ejemploGiglon)}>Cargar ejemplo verificado</button>
       </div>
       <div className="cultura-campos"><label>Información del espectáculo<textarea required rows={8} maxLength={12000} value={texto} onChange={e=>actualizar(e.target.value)}/></label></div>
-      <button type="submit">Revisar datos</button>
+      <button type="submit" disabled={ocupado}>{ocupado ? 'Consultando fuente…' : 'Revisar datos'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
     {propuesta && <section aria-label="Datos para revisar">

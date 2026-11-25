@@ -21,7 +21,7 @@ function Funcion({ funcion, compacta, demo, previsualizar }) {
         {' · '}{funcion.hora || 'Hora sin confirmar'}
         {funcion.fin && <> · hasta {funcion.fin}{funcion.finFecha && funcion.finFecha !== funcion.fecha && <> ({fechaCorta(funcion.finFecha)})</>}</>}</span>
     </p>
-    <p className="cultura-precio">{funcion.precio === '' ? 'Precio sin confirmar' : Number(funcion.precio) === 0 ? 'Entrada gratuita' : moneda(funcion.precio)}</p>
+    <p className="cultura-precio">{funcion.precio === '' ? 'Precio sin confirmar' : funcion.tipoPrecio === 'desde' ? 'Desde ' + moneda(funcion.precio) : Number(funcion.precio) === 0 ? 'Entrada gratuita' : moneda(funcion.precio)}</p>
     {funcion.venta !== 'normal' && <strong className="cultura-estado">{{agotado:'Entradas agotadas',cancelado:'Cancelado',cambio:'Cambio confirmado'}[funcion.venta]}</strong>}
     {disponible && compra && !demo && !previsualizar && <a className="cultura-primario" target="_blank" rel="noopener noreferrer" href={compra}><Ticket size={17} aria-hidden="true"/> Comprar entradas</a>}
     {disponible && compra && previsualizar && <span className="cultura-primario" role="link" aria-disabled="true"><Ticket size={17} aria-hidden="true"/> Comprar entradas</span>}

@@ -156,7 +156,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
     const titulo = edicion.titulo.trim();
     const lugar = edicion.lugar.trim();
     const funciones = edicion.funciones.filter(f=>!f.retirada).map(f=>({
-      ...f, compra:enlaceCompra(f.compra), precio:tipoPrecio(f)==='desde' ? '' : f.precio,
+      ...f, compra:enlaceCompra(f.compra), tipoPrecio:tipoPrecio(f),
     }));
     if (!titulo || !lugar) return setAviso('Indica el título y el recinto.');
     if (edicion.funciones.some(f=>!f.retirada && f.compra && !enlaceCompra(f.compra))) return setAviso('Usa un enlace HTTPS de la ficha concreta de Giglon.');
@@ -191,7 +191,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
     {!edicion ? <>
       <button className="cultura-primario" onClick={()=>cambiar(nuevo())}>Crear espectáculo</button>
       {culturaPruebas && directorioListo && <CargaGiglon filas={filas} editar={fila=>cambiar({...fila})}
-        crear={({titulo,lugar,direccion,compra,pases})=>cambiar({...nuevo(),titulo,lugar,direccion,cargaGiglon:true,
+        crear={({titulo,lugar,direccion,compra,pases,descripcion,archivo,cartel})=>cambiar({...nuevo(),titulo,lugar,direccion,descripcion:descripcion || '',archivo,cartel:cartel || '',cargaGiglon:true,
           funciones:pases.length ? pases.map(pase=>({...funcionNueva(),...pase})) : [{...funcionNueva(),compra}]
         })}/>}
       <div className="cultura-filtros" aria-label="Estado de publicación">
@@ -250,7 +250,6 @@ export default function GestorCultural({ onDirty, onBusy }) {
         </fieldset>)}
         <button type="button" onClick={()=>actualizar('funciones',[...edicion.funciones,funcionNueva()])}>Añadir función</button>
       </fieldset>
-      {edicion.funciones.some(f=>!f.retirada && tipoPrecio(f)==='desde') && <p>El importe «desde» se conserva en esta revisión. Al guardar quedará como precio sin confirmar, ya que el registro admite un importe único.</p>}
       {edicion.cargaGiglon && <p>Revisa los datos y guarda el borrador antes de publicarlo.</p>}
       <div className="cultura-acciones">
         <button type="submit" value="borrador" disabled={ocupado}>Guardar borrador</button>
