@@ -2,28 +2,42 @@ import React, { useRef, useState } from 'react';
 import { fuenteDisponible, leerFichaAutorizada } from './fuenteGiglon';
 import { carteleraGiglon, coincidenciasGiglon, ejemploGiglon, prepararGiglon } from './giglon';
 
-export default function CargaGiglon({ filas, crear, editar }) {
+export default function CargaGiglon({ filas, crear, editar, mostrarEjemplo }) {
   const intento = useRef(0);
   const [ocupado, setOcupado] = useState(false);
   const [texto, setTexto] = useState('');
+  const [descripcion, setDescripcion] = useState('');
+  const [archivo, setArchivo] = useState(null);
   const [propuesta, setPropuesta] = useState(null);
   const [error, setError] = useState('');
-  function actualizar(valor) {
+  function limpiarRevision() {
     intento.current++;
     setOcupado(false);
-    setTexto(valor);
     setPropuesta(null);
     setError('');
+  }
+  function actualizar(valor) {
+    setTexto(valor);
+    limpiarRevision();
   }
   async function revisar(evento) {
     evento.preventDefault();
     const actual = ++intento.current;
+    setOcupado(true);
     try {
       const enlace = /^https:\/\/[^\s]+$/.test(texto.trim());
-      if (enlace && fuenteDisponible) setOcupado(true);
       const ficha = enlace && fuenteDisponible ? await leerFichaAutorizada(texto) : prepararGiglon(texto);
+      if (archivo && (!['image/png','image/jpeg','image/webp'].includes(archivo.type) || archivo.size > 750000 || !archivo.size)) {
+        throw new Error('Elige un cartel PNG, JPEG o WebP de hasta 750 KB.');
+      }
+      const cartel = archivo ? await new Promise((resolver, rechazar) => {
+        const lector = new FileReader();
+        lector.onload = () => resolver(lector.result);
+        lector.onerror = () => rechazar(new Error('No se pudo leer el cartel.'));
+        lector.readAsDataURL(archivo);
+      }) : ficha.cartel;
       if (actual !== intento.current) return;
-      setPropuesta(ficha);
+      setPropuesta({ ...ficha, descripcion:descripcion.trim() || ficha.descripcion, cartel, archivo:archivo || ficha.archivo });
       setError('');
     } catch (fallo) {
       if (actual !== intento.current) return;
@@ -41,14 +55,20 @@ export default function CargaGiglon({ filas, crear, editar }) {
       <p>Pega el título y las líneas de recinto, dirección, fecha, hora, precio y enlace que aparezcan en la ficha. Puedes incluir varias funciones.</p>
       <div className="cultura-acciones">
         <a className="cultura-secundario" href={carteleraGiglon} target="_blank" rel="noopener noreferrer">Abrir cartelera de Giglon</a>
-        <button type="button" onClick={()=>actualizar(ejemploGiglon)}>Cargar ejemplo verificado</button>
+        {mostrarEjemplo && <button type="button" onClick={()=>actualizar(ejemploGiglon)}>Cargar ejemplo verificado</button>}
       </div>
       <div className="cultura-campos"><label>Información del espectáculo<textarea required rows={8} maxLength={12000} value={texto} onChange={e=>actualizar(e.target.value)}/></label></div>
-      <button type="submit" disabled={ocupado}>{ocupado ? 'Consultando fuente…' : 'Revisar datos'}</button>
+      <div className="cultura-campos">
+        <label>Sinopsis facilitada<textarea rows={6} value={descripcion} onChange={e=>{setDescripcion(e.target.value);limpiarRevision();}}/></label>
+        <label>Cartel autorizado<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>{setArchivo(e.target.files[0] || null);limpiarRevision();}}/></label>
+      </div>
+      <button type="submit" disabled={ocupado}>{ocupado ? 'Preparando ficha…' : 'Revisar datos'}</button>
     </form>
     {error && <p role="alert">{error}</p>}
     {propuesta && <section aria-label="Datos para revisar">
       <h3>{propuesta.titulo || 'Título pendiente'}</h3>
+      {propuesta.cartel && <img className="cultura-pos" src={propuesta.cartel} alt="Cartel aportado para revisión" style={{ maxWidth:'18rem' }}/>}
+      {propuesta.descripcion && <p className="cultura-descripcion-publica">{propuesta.descripcion}</p>}
       <p>{propuesta.lugar || 'Recinto pendiente'} · {propuesta.direccion || 'Dirección pendiente'}</p>
       {propuesta.compra && <a href={propuesta.compra} target="_blank" rel="noopener noreferrer">Comprobar ficha en Giglon</a>}
       {propuesta.avisos.map((aviso,i)=><p key={i} role="status">{aviso}</p>)}

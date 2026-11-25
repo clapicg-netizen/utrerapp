@@ -190,7 +190,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
     {aviso && <p role="status">{aviso}</p>}
     {!edicion ? <>
       <button className="cultura-primario" onClick={()=>cambiar(nuevo())}>Crear espectáculo</button>
-      {culturaPruebas && directorioListo && <CargaGiglon filas={filas} editar={fila=>cambiar({...fila})}
+      {directorioListo && <CargaGiglon filas={filas} mostrarEjemplo={culturaPruebas} editar={fila=>cambiar({...fila})}
         crear={({titulo,lugar,direccion,compra,pases,descripcion,archivo,cartel})=>cambiar({...nuevo(),titulo,lugar,direccion,descripcion:descripcion || '',archivo,cartel:cartel || '',cargaGiglon:true,
           funciones:pases.length ? pases.map(pase=>({...funcionNueva(),...pase})) : [{...funcionNueva(),compra}]
         })}/>}
