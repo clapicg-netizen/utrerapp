@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, CalendarDays, MapPin, Ticket, Share2, Theater } from 'lucide-react';
-import { categorias, enlaceCompra, fechaVisible, moneda, publicos } from './datos';
+import { categorias, enlaceCompra, fechaCorta, fechaVisible, moneda, publicos } from './datos';
+import { leerPublicacion } from './supabaseCultural';
 import './cultura.css';
 
 export function Cartel({ evento }) {
@@ -10,29 +11,39 @@ export function Cartel({ evento }) {
     </div>;
 }
 
-export function FichaCultural({ evento, resumida = false, abrir, demo = true }) {
-  const compra = enlaceCompra(evento.compra);
-  const activo = !['agotado','cancelado'].includes(evento.venta);
+function Funcion({ funcion, compacta, demo }) {
+  const compra = enlaceCompra(funcion.compra);
+  const disponible = !['agotado','cancelado'].includes(funcion.venta);
+  return <div className="cultura-pase">
+    <p className="cultura-meta">
+      <CalendarDays size={16} aria-hidden="true"/>
+      <span>{funcion.fecha ? <time dateTime={funcion.fecha}>{compacta ? fechaCorta(funcion.fecha) : fechaVisible(funcion.fecha)}</time> : 'Fecha pendiente'}
+        {' · '}{funcion.hora || 'Hora sin confirmar'}</span>
+    </p>
+    <p className="cultura-precio">{funcion.precio === '' ? 'Precio sin confirmar' : Number(funcion.precio) === 0 ? 'Entrada gratuita' : moneda(funcion.precio)}</p>
+    {funcion.venta !== 'normal' && <strong className="cultura-estado">{{agotado:'Entradas agotadas',cancelado:'Cancelado',cambio:'Cambio confirmado'}[funcion.venta]}</strong>}
+    {disponible && compra && !demo && <a className="cultura-primario" target="_blank" rel="noopener noreferrer" href={compra}><Ticket size={17} aria-hidden="true"/> Comprar entradas</a>}
+    {disponible && !compra && funcion.precio!=='0' && <span className="cultura-accion-inactiva"><Ticket size={17} aria-hidden="true"/> Compra sin enlace confirmado</span>}
+    {disponible && compra && demo && <span className="cultura-accion-inactiva"><Ticket size={17} aria-hidden="true"/> Comprar entradas · vista previa</span>}
+  </div>;
+}
+
+export function FichaCultural({ evento, funciones = [evento], compacta = false, resumida = false, abrir, demo = false }) {
   const detalle = new URL(window.location.origin);
   detalle.searchParams.set('vista','cultura');
   detalle.searchParams.set('evento',evento.id);
-  const compartir = 'https://wa.me/?text=' + encodeURIComponent(`${evento.titulo} · ${fechaVisible(evento.fecha)} a las ${evento.hora}\n${detalle.href}`);
+  const compartir = 'https://wa.me/?text=' + encodeURIComponent(`${evento.titulo} · ${evento.lugar}\n${detalle.href}`);
   const mapa = 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(evento.direccion || evento.lugar);
-  return <article className={`cultura-ficha ${resumida ? 'cultura-resumen' : ''}`}>
+  return <article className={`cultura-ficha ${compacta ? 'cultura-compacta' : ''}`}>
     <Cartel evento={evento}/>
     <div className="cultura-ficha-cuerpo">
-      <div className="cultura-etiquetas"><span>{evento.categoria}</span>
-        {evento.venta !== 'normal' && <strong>{{agotado:'Entradas agotadas',cancelado:'Cancelado',cambio:'Cambio confirmado'}[evento.venta]}</strong>}
-      </div>
+      {!compacta && <div className="cultura-etiquetas"><span>{evento.categoria}</span></div>}
       <h2>{evento.titulo}</h2>
-      <p className="cultura-meta"><CalendarDays size={18}/><span><time dateTime={evento.fecha}>{fechaVisible(evento.fecha)}</time> · {evento.hora}</span></p>
-      <p className="cultura-meta"><MapPin size={18}/>{evento.lugar}</p>
-      <p className="cultura-precio">{evento.precio === '' ? 'Precio sin confirmar' : Number(evento.precio) === 0 ? 'Entrada gratuita' : moneda(evento.precio)}</p>
-      {!resumida && <p>{evento.descripcion}</p>}
+      <p className="cultura-meta"><MapPin size={16} aria-hidden="true"/>{evento.lugar}</p>
+      {!resumida && <p className="cultura-descripcion-publica">{evento.descripcion}</p>}
+      <div className="cultura-pases">{funciones.map(f=><Funcion key={f.funcionId || f.id} funcion={f} compacta={compacta} demo={demo}/>)}</div>
       <div className="cultura-acciones">
         {abrir && <button className="cultura-secundario" onClick={abrir}>Ver ficha <ArrowUpRight size={17}/></button>}
-        {activo && compra && !demo && <a className="cultura-primario" target="_blank" rel="noopener noreferrer" href={compra}><Ticket size={17}/> Comprar entradas</a>}
-        {activo && demo && Number(evento.precio) !== 0 && <span className="cultura-accion-inactiva"><Ticket size={17}/> Comprar entradas · demo</span>}
         {!abrir && evento.direccion && <a className="cultura-secundario" href={mapa} target="_blank" rel="noopener noreferrer">Cómo llegar</a>}
         {!abrir && <a className="cultura-secundario" aria-label="Compartir por WhatsApp" href={compartir} target="_blank" rel="noopener noreferrer"><Share2 size={17}/> WhatsApp</a>}
       </div>
@@ -43,8 +54,18 @@ export function FichaCultural({ evento, resumida = false, abrir, demo = true }) 
 export default function Cartelera({ volver }) {
   const [categoria, setCategoria] = useState('');
   const [id, setId] = useState(() => new URLSearchParams(location.search).get('evento'));
-  const eventos = publicos();
-  const actual = eventos.find(e=>e.id===id);
+  const [filas,setFilas] = useState(null);
+  const [error,setError] = useState(false);
+  useEffect(()=>{
+    let activa = true;
+    leerPublicacion().then(datos=>{if(activa)setFilas(datos);},()=>{if(activa)setError(true);});
+    return ()=>{activa=false;};
+  },[]);
+  const eventos = publicos(filas || []);
+  const primeras = new Map();
+  for (const evento of eventos) if (!primeras.has(evento.id)) primeras.set(evento.id, evento);
+  const cartelera = [...primeras.values()];
+  const actual = cartelera.find(e=>e.id===id);
   function seleccionar(valor) {
     setId(valor);
     const url = new URL(location.href);
@@ -53,21 +74,22 @@ export default function Cartelera({ volver }) {
     history.replaceState(null,'',url);
     window.scrollTo(0,0);
   }
-  return <main className="cultura">
-    <div className="cultura-portada">
-      <button onClick={actual || id ? () => seleccionar(null) : volver}><ArrowLeft size={18}/> {actual || id ? 'Cartelera' : 'Agenda'}</button>
-      <div><p><Theater size={18}/> Cultura en Utrera</p><h1>{actual ? 'El espectáculo' : 'Nos vemos en escena'}</h1>
-      <p>Programación cultural · Vista previa con datos ficticios</p></div>
-    </div>
+  return <section className="cultura" aria-label="Cartelera cultural">
+    <header className="cultura-portada">
+      <button onClick={id ? () => seleccionar(null) : volver}><ArrowLeft size={18}/> {id ? 'Cartelera' : 'Agenda'}</button>
+      <div><p><Theater size={18}/> Teatro Enrique de la Cuadra</p><h1>{id && actual ? actual.titulo : 'Nos vemos en escena'}</h1>
+      <p>Vista previa con programación ficticia</p></div>
+    </header>
     <div className="cultura-contenido">
-      {id ? (actual ? <FichaCultural evento={actual}/> : <p>Este espectáculo ya no está en la cartelera.</p>) : <>
+      {error ? <p role="status">No se pudo consultar la cartelera. Inténtalo más tarde.</p> : !filas ? <p role="status">Cargando programación…</p> :
+      id ? (actual ? <FichaCultural evento={actual} funciones={eventos.filter(e=>e.id===id)}/> : <p>Este espectáculo ya no está en la cartelera.</p>) : <>
         <div className="cultura-filtros" aria-label="Filtrar por categoría">
           {['',...categorias].map(tipo=><button key={tipo} aria-pressed={categoria===tipo} onClick={()=>setCategoria(tipo)}>{tipo || 'Todos'}</button>)}
         </div>
         <h2>Próximos espectáculos</h2>
-        <div className="cultura-grid">{eventos.filter(e=>!categoria || e.categoria===categoria).map(e=><FichaCultural key={e.id} evento={e} resumida abrir={()=>seleccionar(e.id)}/>)}</div>
-        {!eventos.some(e=>!categoria || e.categoria===categoria) && <p>No hay espectáculos publicados para esta categoría.</p>}
+        <div className="cultura-grid">{cartelera.filter(e=>!categoria || e.categoria===categoria).map(e=><FichaCultural key={e.id} evento={e} resumida abrir={()=>seleccionar(e.id)}/>)}</div>
+        {!cartelera.some(e=>!categoria || e.categoria===categoria) && <p>No hay espectáculos publicados para esta categoría.</p>}
       </>}
     </div>
-  </main>;
+  </section>;
 }

@@ -1,31 +1,103 @@
-import React, { useState } from 'react';
-import { categorias, diaLocal, enlaceCompra, guardarCultura, leerCultura } from './datos';
-import { FichaCultural } from './Cartelera';
+import React, { useEffect, useState } from 'react';
+import { categorias, enlaceCompra, fechaCorta, guardarCultura, leerCultura, ordenFuncion, teatro, vigente } from './datos';
+import { Cartel, FichaCultural } from './Cartelera';
+import { borrarRemoto, culturaDB, guardarRemoto, leerGestion } from './supabaseCultural';
 
-const nuevo = () => ({ id: crypto.randomUUID(), titulo:'', categoria:categorias[0], fecha:diaLocal(), hora:'20:30', fin:'', lugar:'', direccion:'', precio:'', descripcion:'', compra:'', cartel:'', estado:'borrador', venta:'normal' });
-const campos = [
-  ['titulo','Título'], ['fecha','Fecha','date'], ['hora','Hora de inicio','time'], ['fin','Hora de fin','time'],
-  ['lugar','Recinto'], ['direccion','Dirección completa'], ['precio','Precio (€)','number'], ['compra','Enlace directo a Giglon','url'],
-];
+const funcionNueva = () => ({ id:crypto.randomUUID(), fecha:'', hora:'', fin:'', precio:'', compra:'', venta:'normal' });
+const nuevo = () => ({ id:crypto.randomUUID(), titulo:'', categoria:categorias[0], ...teatro, descripcion:'', cartel:'', estado:'borrador', funciones:[funcionNueva()] });
+const estados = { normal:'Venta normal', agotado:'Agotado', cancelado:'Cancelado', cambio:'Cambio confirmado' };
+const tipoPrecio = f => f.precio === '' ? 'desconocido' : Number(f.precio) === 0 ? 'gratis' : 'pago';
+const normal = texto => texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
 export default function GestorCultural({ onDirty }) {
-  const [filas,setFilas] = useState(leerCultura);
+  const [filas,setFilas] = useState(() => culturaDB ? [] : leerCultura());
   const [edicion,setEdicion] = useState(null);
   const [preview,setPreview] = useState(false);
   const [aviso,setAviso] = useState('');
+  const [filtro,setFiltro] = useState('proximos');
+  const [busqueda,setBusqueda] = useState('');
+  const [categoria,setCategoria] = useState('');
+  const [sesion,setSesion] = useState(null);
+  const [ocupado,setOcupado] = useState(false);
+  const editor = sesion?.user?.app_metadata?.cultural_editor === true;
+  useEffect(() => {
+    if (!culturaDB) return;
+    const { data } = culturaDB.auth.onAuthStateChange((_, actual) => setSesion(actual));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  useEffect(() => {
+    if (!editor) return;
+    let activo = true;
+    leerGestion().then(f => { if (activo) setFilas(f); }, () => { if (activo) setAviso('No se pudo cargar la programación.'); });
+    return () => { activo = false; };
+  }, [editor]);
+
   function cambiar(fila) { setEdicion(fila); setPreview(false); setAviso(''); onDirty?.(Boolean(fila)); }
-  function persistir(lista, mensaje) {
+  async function guardar(fila) {
+    if (ocupado) return;
+    setOcupado(true);
     try {
-      guardarCultura(lista); setFilas(lista); cambiar(null); setAviso(mensaje);
-    } catch { setAviso('No se pudo guardar. Comprueba el espacio disponible del navegador.'); }
+      if (culturaDB) {
+        await guardarRemoto(fila);
+        setFilas(await leerGestion());
+      } else {
+        const { archivo, ...local } = fila;
+        const lista = [...filas.filter(e=>e.id!==fila.id),local];
+        guardarCultura(lista); setFilas(lista);
+      }
+      cambiar(null);
+      setFiltro(fila.estado==='publicado' ? 'proximos' : fila.estado==='borrador' ? 'borradores' : 'historico');
+      setAviso(fila.estado==='publicado' ? 'Espectáculo publicado.' : 'Espectáculo guardado.');
+    } catch { setAviso('No se pudo guardar el espectáculo. Comprueba los campos o el acceso.'); }
+    finally { setOcupado(false); }
   }
-  function guardar(event) {
+  async function eliminar(fila) {
+    if (ocupado || !window.confirm(`¿Eliminar «${fila.titulo}» y todas sus funciones?`)) return;
+    setOcupado(true);
+    try {
+      if (culturaDB) await borrarRemoto(fila);
+      const lista=filas.filter(e=>e.id!==fila.id);
+      if (!culturaDB) guardarCultura(lista);
+      setFilas(lista);
+      setAviso('Espectáculo eliminado.');
+    } catch { setAviso('No se pudo eliminar el espectáculo.'); }
+    finally { setOcupado(false); }
+  }
+  async function entrar(event) {
     event.preventDefault();
-    if (edicion.compra && !enlaceCompra(edicion.compra)) return setAviso('Usa un enlace HTTPS de la ficha concreta de Giglon.');
-    if (edicion.fin && edicion.fin <= edicion.hora) return setAviso('La hora de fin debe ser posterior al inicio.');
-    if (![edicion.titulo,edicion.lugar].every(s=>s.trim())) return setAviso('Indica el título y el recinto.');
-    const fila = { ...edicion, titulo: edicion.titulo.trim(), lugar: edicion.lugar.trim(), compra: enlaceCompra(edicion.compra) };
-    persistir([...filas.filter(e=>e.id!==fila.id),fila], 'Espectáculo guardado en este navegador.');
+    const formulario = new FormData(event.currentTarget);
+    setOcupado(true); setAviso('');
+    try {
+      const { error } = await culturaDB.auth.signInWithPassword({ email:formulario.get('correo'),password:formulario.get('contrasena') });
+      if (error) setAviso('No se pudo iniciar sesión en el entorno de pruebas.');
+    } catch { setAviso('No se pudo conectar con el entorno de pruebas.'); }
+    finally { setOcupado(false); }
+  }
+  if (culturaDB && !editor) return <section className="cultura cultura-gestor">
+    <h2>Edición en el entorno aislado</h2>
+    <p>Accede con una cuenta autorizada como editora cultural en UtrerApp Pruebas.</p>
+    {aviso && <p role="status">{aviso}</p>}
+    {sesion ? <><p>Esta cuenta carece del permiso de edición cultural.</p><button onClick={()=>culturaDB.auth.signOut()}>Cambiar cuenta</button></> :
+    <form onSubmit={entrar} className="cultura-campos">
+      <label>Correo de pruebas<input type="email" name="correo" autoComplete="username" required/></label>
+      <label>Contraseña de pruebas<input type="password" name="contrasena" autoComplete="current-password" required/></label>
+      <div><button className="cultura-primario" disabled={ocupado}>Entrar al gestor</button></div>
+    </form>}
+  </section>;
+
+  function guardarEdicion(event) {
+    event.preventDefault();
+    const estado = event.nativeEvent.submitter?.value === 'publicado' ? 'publicado' : 'borrador';
+    const titulo = edicion.titulo.trim();
+    const lugar = edicion.lugar.trim();
+    const funciones = edicion.funciones.map(f=>({...f, compra:enlaceCompra(f.compra)}));
+    if (!titulo || !lugar) return setAviso('Indica el título y el recinto.');
+    if (edicion.funciones.some((f,i)=>f.compra && !funciones[i].compra)) return setAviso('Usa un enlace HTTPS de la ficha concreta de Giglon.');
+    if (funciones.some(f=>f.fin && (!f.hora || f.fin<=f.hora))) return setAviso('Indica una hora de inicio anterior a la hora de fin.');
+    if (estado==='publicado' && !funciones.every(f=>f.fecha)) return setAviso('Confirma la fecha de cada función antes de publicar.');
+    const claves = funciones.filter(f=>f.fecha).map(f=>f.fecha+' '+f.hora);
+    if (new Set(claves).size!==claves.length) return setAviso('Hay funciones duplicadas para la misma fecha y hora.');
+    guardar({...edicion,titulo,lugar,funciones,estado});
   }
   function imagen(event) {
     const archivo = event.target.files[0];
@@ -33,37 +105,78 @@ export default function GestorCultural({ onDirty }) {
     if (!['image/png','image/jpeg','image/webp'].includes(archivo.type) || archivo.size > 750000) return setAviso('Elige un cartel PNG, JPEG o WebP de hasta 750 KB.');
     const lector = new FileReader();
     const id = edicion.id;
-    lector.onload = () => setEdicion(actual => actual?.id === id ? { ...actual, cartel:lector.result } : actual);
+    lector.onload = () => setEdicion(actual => actual?.id === id ? { ...actual, cartel:lector.result, archivo } : actual);
     lector.onerror = () => setAviso('No se pudo leer el cartel.');
     lector.readAsDataURL(archivo);
   }
+  const actualizar = (campo,valor) => setEdicion(e=>({...e,[campo]:valor}));
+  const ajustarFuncion = (id,parcial) => setEdicion(e=>({...e,funciones:e.funciones.map(f=>f.id===id?{...f,...parcial}:f)}));
+  const visibles = filas.filter(e=>{
+    const grupo = e.estado==='borrador' ? 'borradores' : e.estado==='publicado' && e.funciones.some(f=>vigente(f)) ? 'proximos' : 'historico';
+    return grupo===filtro && (!categoria || e.categoria===categoria) && normal(e.titulo+' '+e.lugar).includes(normal(busqueda));
+  }).sort((a,b)=>ordenFuncion([...a.funciones].sort(ordenFuncion).find(f=>f.fecha)||{fecha:''},[...b.funciones].sort(ordenFuncion).find(f=>f.fecha)||{fecha:''}));
+
   return <section className="cultura cultura-gestor">
-    <p>Prototipo con datos ficticios. Los cambios se guardan en este navegador.</p>
+    <p>Programación del Teatro Enrique de la Cuadra · {culturaDB ? 'Supabase de pruebas' : 'datos de este navegador'}</p>
     {aviso && <p role="status">{aviso}</p>}
     {!edicion ? <>
       <button className="cultura-primario" onClick={()=>cambiar(nuevo())}>Crear espectáculo</button>
-      <ul className="cultura-admin-lista">{filas.map(e=><li key={e.id}>
-        <div><strong>{e.titulo}</strong><p>{e.fecha} · {e.estado}</p></div>
+      <div className="cultura-filtros" aria-label="Estado de publicación">
+        {[['proximos','Próximos espectáculos'],['borradores','Borradores'],['historico','Histórico y retirados']].map(([id,titulo])=><button key={id} aria-pressed={filtro===id} onClick={()=>setFiltro(id)}>{titulo}</button>)}
+      </div>
+      <div className="cultura-campos"><label>Buscar espectáculo<input type="search" value={busqueda} onChange={e=>setBusqueda(e.target.value)}/></label>
+        <label>Categoría<select value={categoria} onChange={e=>setCategoria(e.target.value)}><option value="">Todas</option>{categorias.map(c=><option key={c}>{c}</option>)}</select></label></div>
+      {!visibles.length && <p>No hay espectáculos con estos filtros.</p>}
+      <ul className="cultura-admin-lista">{visibles.map(e=><li key={e.id}>
+        <div className="cultura-admin-resumen"><Cartel evento={e}/><div><strong>{e.titulo}</strong>
+          <p>{[...e.funciones].sort(ordenFuncion).filter(f=>f.fecha).map(f=>fechaCorta(f.fecha)).join(' · ') || 'Fecha pendiente'}</p>
+          <small>{e.categoria} · {e.estado}</small></div></div>
         <div className="cultura-acciones">
-          <button onClick={()=>cambiar({...e})}>Editar</button>
-          <button onClick={()=>cambiar({...e,id:crypto.randomUUID(),titulo:e.titulo+' (copia)',estado:'borrador'})}>Duplicar</button>
-          <button onClick={()=>persistir(filas.map(f=>f.id===e.id?{...f,estado:e.estado==='publicado'?'retirado':'publicado'}:f),'Estado actualizado.')}>{e.estado==='publicado'?'Retirar':'Publicar'}</button>
-          <button onClick={()=>{if(window.confirm(`¿Eliminar «${e.titulo}» de este navegador?`))persistir(filas.filter(f=>f.id!==e.id),'Espectáculo eliminado.');}}>Eliminar</button>
+          <button disabled={ocupado} onClick={()=>cambiar({...e})}>Editar</button>
+          <button disabled={ocupado} onClick={()=>cambiar({...e,id:crypto.randomUUID(),titulo:e.titulo+' (copia)',estado:'borrador',
+            cartel:e.cartel_ruta?'':e.cartel,cartel_ruta:null,funciones:e.funciones.map(f=>({...f,id:crypto.randomUUID()}))})}>Duplicar</button>
+          {e.estado==='publicado' && <button disabled={ocupado} onClick={()=>guardar({...e,estado:'retirado'})}>Retirar</button>}
+          <button disabled={ocupado} onClick={()=>eliminar(e)}>Eliminar</button>
         </div>
       </li>)}</ul>
-    </> : <form onSubmit={guardar}>
-      <div className="cultura-campos">{campos.map(([id,label,tipo])=><label key={id}>{label}
-        <input type={tipo || 'text'} min={tipo==='number'?'0':undefined} step={tipo==='number'?'0.01':undefined}
-          required={['titulo','fecha','hora','lugar'].includes(id)} value={edicion[id]} onChange={e=>setEdicion({...edicion,[id]:e.target.value})}/>
-      </label>)}
-      {[['categoria','Categoría',categorias],['estado','Publicación',['borrador','publicado','retirado']],['venta','Estado de venta',['normal','agotado','cancelado','cambio']]].map(([id,label,opciones])=><label key={id}>{label}<select value={edicion[id]} onChange={e=>setEdicion({...edicion,[id]:e.target.value})}>{opciones.map(opcion=><option key={opcion}>{opcion}</option>)}</select></label>)}
-      <label>Cartel autorizado<input type="file" accept="image/png,image/jpeg,image/webp" onChange={imagen}/></label>
-      <label>Descripción<textarea value={edicion.descripcion} rows={4} onChange={e=>setEdicion({...edicion,descripcion:e.target.value})}/></label>
+    </> : <form onSubmit={guardarEdicion}>
+      <fieldset><legend>Datos del espectáculo</legend>
+        <div className="cultura-editor-identidad">
+          <div className="cultura-editor-cartel"><Cartel evento={edicion}/><label>Cartel autorizado<input type="file" accept="image/png,image/jpeg,image/webp" onChange={imagen}/></label></div>
+          <div className="cultura-campos">
+            <label>Título<input required maxLength={200} value={edicion.titulo} onChange={e=>actualizar('titulo',e.target.value)}/></label>
+            <label>Categoría<select value={edicion.categoria} onChange={e=>actualizar('categoria',e.target.value)}>{categorias.map(c=><option key={c}>{c}</option>)}</select></label>
+            <label>Recinto<input required value={edicion.lugar} onChange={e=>actualizar('lugar',e.target.value)}/></label>
+            <label>Dirección completa<input value={edicion.direccion} onChange={e=>actualizar('direccion',e.target.value)}/></label>
+            <label className="cultura-descripcion">Descripción<textarea value={edicion.descripcion} rows={8} onChange={e=>actualizar('descripcion',e.target.value)}/></label>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset><legend>Funciones y entradas</legend>
+        {edicion.funciones.map((f,i)=><fieldset key={f.id} className="cultura-funcion"><legend>Función {i+1}</legend>
+          <div className="cultura-campos">
+            <label>Fecha<input type="date" value={f.fecha} onChange={e=>ajustarFuncion(f.id,{fecha:e.target.value})}/></label>
+            <label>Hora de inicio<input type="time" value={f.hora} onChange={e=>ajustarFuncion(f.id,{hora:e.target.value})}/></label>
+            <label>Hora de fin<input type="time" value={f.fin} onChange={e=>ajustarFuncion(f.id,{fin:e.target.value})}/></label>
+            <label>Tipo de entrada<select value={f.tipoPrecio || tipoPrecio(f)} onChange={e=>ajustarFuncion(f.id,{tipoPrecio:e.target.value,precio:e.target.value==='gratis'?'0':''})}>
+              <option value="desconocido">Precio sin confirmar</option><option value="gratis">Gratuita</option><option value="pago">De pago</option>
+            </select></label>
+            {(f.tipoPrecio || tipoPrecio(f))==='pago' && <label>Precio (€)<input type="number" min="0.01" step="0.01" required value={f.precio} onChange={e=>ajustarFuncion(f.id,{precio:e.target.value})}/></label>}
+            <label>Estado de venta<select value={f.venta} onChange={e=>ajustarFuncion(f.id,{venta:e.target.value})}>{Object.entries(estados).map(([v,t])=><option value={v} key={v}>{t}</option>)}</select></label>
+            <label>Enlace directo a Giglon<input type="url" value={f.compra} onChange={e=>ajustarFuncion(f.id,{compra:e.target.value})}/></label>
+          </div>
+          <button type="button" disabled={edicion.funciones.length===1} onClick={()=>actualizar('funciones',edicion.funciones.filter(x=>x.id!==f.id))}>Quitar función</button>
+        </fieldset>)}
+        <button type="button" onClick={()=>actualizar('funciones',[...edicion.funciones,funcionNueva()])}>Añadir función</button>
+      </fieldset>
+      <fieldset disabled><legend>Importación desde Giglon</legend><label>URL del espectáculo<input type="url"/></label><p>Disponible cuando exista una fuente autorizada.</p></fieldset>
+      <div className="cultura-acciones">
+        <button type="submit" value="borrador" disabled={ocupado}>Guardar borrador</button>
+        <button type="button" onClick={()=>setPreview(!preview)}>{preview?'Cerrar vista previa':'Previsualizar'}</button>
+        <button type="submit" value="publicado" className="cultura-primario" disabled={ocupado}>Publicar</button>
+        <button type="button" onClick={()=>{if(window.confirm('¿Descartar los cambios de esta ficha?'))cambiar(null);}}>Descartar</button>
       </div>
-      <div className="cultura-acciones"><button type="submit" className="cultura-primario">Guardar</button>
-        <button type="button" disabled={!edicion.titulo || !edicion.fecha} onClick={()=>setPreview(!preview)}>{preview?'Cerrar vista previa':'Previsualizar ficha'}</button>
-        <button type="button" onClick={()=>{if(window.confirm('¿Descartar los cambios de esta ficha?'))cambiar(null);}}>Descartar</button></div>
-      {preview && <FichaCultural evento={edicion}/>}
+      {preview && <FichaCultural evento={edicion} funciones={edicion.funciones} demo/>}
     </form>}
   </section>;
 }

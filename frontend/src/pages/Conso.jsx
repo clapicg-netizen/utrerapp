@@ -1,4 +1,5 @@
-import { demoCultural } from '../cultura/datos';
+import { leerPublicacion } from '../cultura/supabaseCultural';
+import { demoCultural, publicos } from '../cultura/datos';
 import { consultaCultural } from '../cultura/consulta';
 import { FichaCultural } from '../cultura/Cartelera';
 import { PARKING_URL } from '../lib/parking';
@@ -111,20 +112,27 @@ export default function Conso({ setPaginaActual }) {
     const queryContext = previousTopic.current;
     previousTopic.current = undefined;
     const texto = pregunta.toLowerCase();
-    const cultura = demoCultural && consultaCultural(pregunta, contextoCultural.current);
-    contextoCultural.current = cultura ? cultura.contexto : undefined;
-    if (cultura) {
-      return { wide: true, content: <section className="cultura cultura-chat" aria-label="Programación cultural">
-        <h2 className="text-lg font-bold">Programación cultural</h2>
+    const consulta = demoCultural && consultaCultural(pregunta, contextoCultural.current, new Date(), []);
+    if (consulta) {
+      const anterior = contextoCultural.current;
+      contextoCultural.current = consulta.contexto;
+      let resultado;
+      try {
+        resultado = consultaCultural(pregunta, anterior, new Date(), publicos(await leerPublicacion()));
+      } catch {
+        return 'Ahora mismo no puedo consultar la programación del teatro.';
+      }
+      return { wide: true, content: <section className="cultura cultura-chat" aria-label="Programación del Teatro Enrique de la Cuadra">
+        <h2 className="text-lg font-bold">Programación del Teatro Enrique de la Cuadra</h2>
         <p>Vista previa con espectáculos ficticios.</p>
-        {cultura.resultados.length ? <>
-          {cultura.resultados.slice(0,6).map(evento => <FichaCultural key={evento.id} evento={evento} resumida
+        {resultado.resultados.length ? <>
+          {resultado.resultados.slice(0,6).map(evento => <FichaCultural key={evento.funcionId} evento={evento} resumida compacta
             abrir={() => { window.location.href = '/?vista=cultura&evento=' + encodeURIComponent(evento.id); }}/>)}
           <p>¡Nos vemos en escena! 🎭</p>
         </> : <p>No encuentro espectáculos para esa consulta. ¿Buscamos otro día?</p>}
       </section> };
     }
-
+    contextoCultural.current = undefined;
 
     if (texto.trim() === 'horario de trenes') {
       return (

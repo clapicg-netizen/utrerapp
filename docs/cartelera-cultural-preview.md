@@ -12,3 +12,6 @@ Si solo se dispone de enlaces oficiales, introducirlos manualmente y ofrecer nav
 
 ## Operación y costes
 El Preview no llama a OpenAI para resolver consultas culturales ni usa nuevos servicios. La futura sincronización leerá únicamente la fuente autorizada desde el servidor, con caché, fecha de verificación y límites adecuados a su plan. Los datos se compartirán con Conso mediante lectura pública de Supabase y resolución determinista. Precios o disponibilidad que no se puedan verificar se omiten o se identifican como pendientes. Antes de la activación falta confirmar cuotas de almacenamiento y transferencia de carteles, coste de Giglon, permisos de reutilización y capacidad de mantener la agenda actualizada.
+
+## Revisión del teatro
+El formulario permite varias funciones y distingue gratuidad, importe confirmado y precio desconocido. Las horas opcionales se muestran como pendientes. El Preview permanece en modo navegador. El adaptador solo admite el proyecto aislado utrerapp-pruebas y requiere configuración explícita. La ejecución de la migración se ha pausado. El archivo SQL se conserva para revisión y no pertenece al directorio de migraciones automáticas.

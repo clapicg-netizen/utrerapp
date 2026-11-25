@@ -1,5 +1,6 @@
 export const categorias = ['Teatro', 'Música', 'Humor', 'Infantil', 'Danza', 'Otras'];
 export const demoCultural = /^(?:localhost|127\.0\.0\.1|utrerapp-[\w-]+-juan-ra1\.vercel\.app)$/.test(window.location.hostname);
+export const teatro = { lugar: 'Teatro Enrique de la Cuadra', direccion: 'Calle Sevilla, s/n, 41710 Utrera, Sevilla' };
 const clave = 'utrerapp-cultural-preview-v1';
 export const diaLocal = (fecha = new Date()) => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' }).format(fecha);
 export function moverDia(dia, dias) {
@@ -7,7 +8,7 @@ export function moverDia(dia, dias) {
   fecha.setUTCDate(fecha.getUTCDate() + dias);
   return fecha.toISOString().slice(0, 10);
 }
-const base = { lugar: 'Teatro Enrique de la Cuadra', direccion: 'Calle Sevilla, s/n, Utrera, Sevilla', estado: 'publicado', venta: 'normal', compra: '', cartel: '', fin: '' };
+const base = { ...teatro, estado: 'publicado', venta: 'normal', compra: '', cartel: '', fin: '' };
 function ejemplos() {
   const hoy = diaLocal();
   return [
@@ -20,18 +21,27 @@ let copia;
 export function leerCultura() {
   if (!demoCultural) return [];
   if (copia) return copia;
-  try { return JSON.parse(localStorage.getItem(clave)) ?? ejemplos(); } catch { return ejemplos(); }
+  try { return (JSON.parse(localStorage.getItem(clave)) ?? ejemplos()).map(normalizar); } catch { return ejemplos().map(normalizar); }
 }
 export function guardarCultura(filas) {
   if (!demoCultural) return;
   localStorage.setItem(clave, JSON.stringify(filas));
   copia = filas;
 }
-export function publicos(filas = leerCultura(), ahora = new Date()) {
+export function normalizar(evento) {
+  if (evento.funciones) return evento;
+  const { fecha, hora, fin, precio, venta, compra, ...ficha } = evento;
+  return { ...ficha, funciones: [{ id: ficha.id, fecha, hora, fin, precio, venta, compra }] };
+}
+export function vigente(funcion, ahora = new Date()) {
   const hoy = diaLocal(ahora);
   const hora = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(ahora);
-  return filas.filter(e => e.estado === 'publicado' && (e.fecha > hoy || (e.fecha === hoy && (e.fin || '24:00') > hora)))
-    .sort((a,b) => (a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+  return Boolean(funcion.fecha && (funcion.fecha > hoy || (funcion.fecha === hoy && (funcion.fin || '24:00') > hora)));
+}
+export const ordenFuncion = (a,b) => (a.fecha+(a.hora || '24:00')).localeCompare(b.fecha+(b.hora || '24:00'));
+export function publicos(filas = leerCultura(), ahora = new Date()) {
+  return filas.map(normalizar).filter(e => e.estado === 'publicado').flatMap(e =>
+    e.funciones.filter(f => vigente(f, ahora)).map(f => ({ ...e, ...f, id: e.id, funcionId: f.id }))).sort(ordenFuncion);
 }
 export function enlaceCompra(valor) {
   try {
@@ -43,3 +53,5 @@ export function enlaceCompra(valor) {
 }
 export const moneda = valor => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(Number(valor));
 export const fechaVisible = fecha => new Intl.DateTimeFormat('es-ES', { dateStyle: 'full', timeZone: 'Europe/Madrid' }).format(new Date(fecha + 'T12:00:00Z'));
+
+export const fechaCorta = fecha => fecha ? new Intl.DateTimeFormat('es-ES', { dateStyle: 'medium', timeZone: 'Europe/Madrid' }).format(new Date(fecha + 'T12:00:00Z')) : 'Fecha pendiente';
