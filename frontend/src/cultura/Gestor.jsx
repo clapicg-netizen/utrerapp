@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { categorias, enlaceCompra, fechaCorta, guardarCultura, leerCultura, ordenFuncion, teatro, vigente } from './datos';
 import { Cartel, FichaCultural } from './Cartelera';
-import { culturaDB, guardarRemoto, leerGestion } from './supabaseCultural';
+import { culturaDB, culturaPruebas, guardarRemoto, leerGestion } from './supabaseCultural';
 
 const funcionNueva = () => ({ id:crypto.randomUUID(), fecha:'', hora:'', fin:'', finFecha:'', precio:'', compra:'', venta:'normal' });
 const nuevo = () => ({ id:crypto.randomUUID(), titulo:'', categoria:categorias[0], ...teatro, descripcion:'', cartel:'', estado:'borrador', funciones:[funcionNueva()] });
@@ -10,7 +10,7 @@ const tipoPrecio = f => f.precio === '' ? 'desconocido' : Number(f.precio) === 0
 const normal = texto => texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
 const enlace = new URLSearchParams(window.location.hash.slice(1));
-const flujoTeatro = culturaDB && new URLSearchParams(window.location.search).get('vista') === 'gestor-teatro'
+const flujoTeatro = culturaPruebas && new URLSearchParams(window.location.search).get('vista') === 'gestor-teatro'
   && ['invite','recovery'].includes(enlace.get('type'));
 const credencialesEnlace = flujoTeatro ? {
   access_token: enlace.get('access_token'), refresh_token: enlace.get('refresh_token'),
@@ -137,7 +137,7 @@ export default function GestorCultural({ onDirty, onBusy }) {
     <h2>Edición en el entorno aislado</h2>
     <p>Accede con una cuenta autorizada como editora cultural en UtrerApp Pruebas.</p>
     {aviso && <p role="status">{aviso}</p>}
-    {sesion ? <><p>Esta cuenta carece del permiso de edición cultural.</p><button onClick={()=>culturaDB.auth.signOut()}>Cambiar cuenta</button></> :
+    {sesion ? <><p>Esta cuenta carece del permiso de edición cultural.</p>{culturaPruebas && <button onClick={()=>culturaDB.auth.signOut()}>Cambiar cuenta</button>}</> :
     <form onSubmit={recuperar ? enviarRecuperacion : entrar} className="cultura-campos">
       <label>Correo de pruebas<input type="email" name="correo" autoComplete="username" required/></label>
       {!recuperar && <label>Contraseña de pruebas<input type="password" name="contrasena" autoComplete="current-password" required/></label>}
@@ -178,8 +178,8 @@ export default function GestorCultural({ onDirty, onBusy }) {
   }).sort((a,b)=>ordenFuncion([...a.funciones].sort(ordenFuncion).find(f=>f.fecha)||{fecha:''},[...b.funciones].sort(ordenFuncion).find(f=>f.fecha)||{fecha:''}));
 
   return <section className="cultura cultura-gestor">
-    {culturaDB && <button type="button" disabled={ocupado} onClick={() => { if (!edicion || window.confirm('¿Descartar los cambios sin guardar?')) { cambiar(null); culturaDB.auth.signOut(); } }}>Cerrar sesión del Teatro</button>}
-    <p>Programación del Teatro Enrique de la Cuadra · {culturaDB ? 'Supabase de pruebas' : 'datos de este navegador'}</p>
+    {culturaPruebas && <button type="button" disabled={ocupado} onClick={() => { if (!edicion || window.confirm('¿Descartar los cambios sin guardar?')) { cambiar(null); culturaDB.auth.signOut(); } }}>Cerrar sesión del Teatro</button>}
+    <p>Programación del Teatro Enrique de la Cuadra · {culturaPruebas ? 'Supabase de pruebas' : 'Programación cultural'}</p>
     {aviso && <p role="status">{aviso}</p>}
     {!edicion ? <>
       <button className="cultura-primario" onClick={()=>cambiar(nuevo())}>Crear espectáculo</button>

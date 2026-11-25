@@ -1,11 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { demoCultural, leerCultura } from './datos';
+import { supabase } from '../lib/supabaseClient';
 
 const url = process.env.REACT_APP_CULTURA_SUPABASE_URL;
 const key = process.env.REACT_APP_CULTURA_SUPABASE_ANON_KEY;
-const configurado = demoCultural && url === 'https://bkpusgqsatyymqbisjcv.supabase.co' && key;
+export const culturaPruebas = Boolean(demoCultural && url === 'https://bkpusgqsatyymqbisjcv.supabase.co' && key);
+const culturaProduccion = process.env.REACT_APP_TEATRO_PUBLICADO === 'true'
+  && /^(?:www\.)?utrerapp\.com$/.test(window.location.hostname)
+  && url === 'https://gzvybwvrkplbipkzkjwg.supabase.co' && key;
+const configurado = culturaPruebas || culturaProduccion;
 const bucket = 'carteles-cultura';
-export const culturaDB = configurado ? createClient(url, key, {
+export const culturaDB = culturaProduccion ? supabase : culturaPruebas ? createClient(url, key, {
   auth: { storageKey: 'utrerapp-cultura-pruebas-auth', detectSessionInUrl: false },
 }) : null;
 const lecturaPublica = configurado ? createClient(url, key, {

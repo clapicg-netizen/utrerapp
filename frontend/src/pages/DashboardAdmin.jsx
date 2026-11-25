@@ -16,7 +16,7 @@ import { categoriasBase, leerFilas } from './admin/modelos';
 import ResumenAdmin from './admin/ResumenAdmin';
 import VistaFicha from './admin/VistaFicha';
 import GestorCultural from '../cultura/Gestor';
-import { culturaDB } from '../cultura/supabaseCultural';
+import { culturaDB, culturaPruebas } from '../cultura/supabaseCultural';
 import './admin/dashboard.css';
 
 const modulos = [
@@ -27,7 +27,7 @@ const modulos = [
 ];
 
 export default function DashboardAdmin({ soloAgenda = false }) {
-  if (soloAgenda && culturaDB) return <Panel soloAgenda />;
+  if (soloAgenda && culturaPruebas) return <Panel soloAgenda />;
   return <AccesoAdministracion>
     {(salir, mensajeAcceso, adminId) => <Panel salir={salir} mensajeAcceso={mensajeAcceso} adminId={adminId} />}
   </AccesoAdministracion>;
