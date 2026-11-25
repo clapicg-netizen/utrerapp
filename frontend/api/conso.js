@@ -19,9 +19,11 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
     }
     const question = typeof req.body?.question === 'string' ? req.body.question.trim() : '';
     const followUp = req.body?.weatherFollowUp;
+    const context = req.body?.context ?? (followUp ? 'weather' : undefined);
     if (!question || question.length > 500 || Buffer.byteLength(question) > 1600 ||
-        Object.keys(req.body).some(key => key !== 'question' && key !== 'weatherFollowUp') ||
-        (followUp !== undefined && typeof followUp !== 'boolean') || /[\u0000-\u0008\u000b-\u001f]/.test(question)) {
+        Object.keys(req.body).some(key => key !== 'question' && key !== 'weatherFollowUp' && key !== 'context') ||
+        (followUp !== undefined && typeof followUp !== 'boolean') ||
+        (context !== undefined && context !== 'weather' && context !== 'pharmacy') || /[\u0000-\u0008\u000b-\u001f]/.test(question)) {
       return res.status(400).json({ answer: 'Escribe una pregunta de hasta 500 caracteres.' });
     }
 
@@ -48,8 +50,8 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
 
       const { previewIntent, weatherIntent } = await import('../server/conso/preview.mjs');
       const { pharmacyIntent, pharmacyAnswer } = await import('../server/conso/pharmacy.mjs');
-      const pharmacy = settings.pharmacies && app.pharmacySource && pharmacyIntent(question, day);
-      const weather = !pharmacy && app.weather && weatherIntent(question, { today: day, followUp });
+      const pharmacy = settings.pharmacies && pharmacyIntent(question, day, context === 'pharmacy');
+      const weather = !pharmacy && app.weather && weatherIntent(question, { today: day, followUp: context === 'weather' });
       const intent = !pharmacy && !weather && provider === 'openai' && previewIntent(question, app);
       if (!pharmacy && !weather && provider === 'openai' && !intent) {
         return res.status(422).json({
@@ -79,7 +81,7 @@ function createHandler({ env = process.env, namespace, generate } = {}) {
           request: pharmacy, today: day, timeZone: app.timeZone, now, app, readPublic: sources.readPublic,
         });
         await recordUsage({ topic_pharmacy: 1, ...(available ? { direct: 1 } : {}) });
-        return res.status(200).json(data);
+        return res.status(200).json({ ...data, context: 'pharmacy' });
       }
       if (weather) {
         const { weatherAnswer } = await import('../server/conso/weather.mjs');

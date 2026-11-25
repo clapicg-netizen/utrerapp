@@ -107,7 +107,6 @@ export default function Farmacias({ setPaginaActual }) {
             <div className="text-2xl">⚠️</div>
             <p className="font-bold text-slate-800 text-sm">Sin registros disponibles</p>
             <p className="text-xs text-slate-500">No hay registros verificados para esta fecha.</p>
-            <a className="underline text-sm" href="https://www.utrera.org/farmacia-de-guardia-en-utrera/">Consultar el buscador oficial</a>
           </div>
         ) : (
           <div className="space-y-6">

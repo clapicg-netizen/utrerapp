@@ -18,10 +18,6 @@ export const app = {
     },
     { question: '¿Cuál es la capital de Canadá?' },
   ],
-  pharmacySource: {
-    label: 'Buscador oficial de farmacias de guardia',
-    url: 'https://www.utrera.org/farmacia-de-guardia-en-utrera/',
-  },
   weather: {
     code: '41095', name: 'Utrera',
     url: 'https://www.aemet.es/es/eltiempo/prediccion/municipios/utrera-id41095',

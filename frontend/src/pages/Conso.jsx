@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
 import { Send, Bot, User, Sparkles, Pill, Train, Car } from 'lucide-react';
 
 export default function Conso({ setPaginaActual }) {
-  const weatherContext = useRef(false);
+  const previousTopic = useRef(undefined);
   const [mensaje, setMensaje] = useState('');
   const [cargandoIA, setCargandoIA] = useState(false);
   
@@ -16,8 +16,8 @@ export default function Conso({ setPaginaActual }) {
   ]);
 
   const procesarRespuesta = async (pregunta) => {
-    const weatherFollowUp = weatherContext.current;
-    weatherContext.current = false;
+    const queryContext = previousTopic.current;
+    previousTopic.current = undefined;
     const texto = pregunta.toLowerCase();
 
     if (texto.trim() === 'horario de trenes') {
@@ -68,10 +68,10 @@ export default function Conso({ setPaginaActual }) {
       const response = await fetch('/api/conso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: pregunta, weatherFollowUp }),
+        body: JSON.stringify({ question: pregunta, context: queryContext }),
       });
       const { answer, links = [], suggestions, examples = [], context } = await response.json();
-      weatherContext.current = context === 'weather';
+      previousTopic.current = context === 'weather' || context === 'pharmacy' ? context : undefined;
       if (!answer) throw new Error();
       return (
         <div className="space-y-2">

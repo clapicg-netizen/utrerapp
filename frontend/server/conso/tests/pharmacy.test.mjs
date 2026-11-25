@@ -26,7 +26,7 @@ test('reconoce preguntas de farmacia y no las confunde con un seguimiento del ti
     assert.ok(pharmacyIntent(text, today), text);
     assert.equal(weatherIntent(text, { today, followUp: true }), undefined);
   }
-  assert.equal(pharmacyIntent('¿Qué farmacia hay de guardia mañana?', today).date, '2026-11-26');
+  assert.equal(pharmacyIntent('¿Qué farmacia hay de guardia mañana?', today).dates[0], '2026-11-26');
   assert.equal(pharmacyIntent('¿Farmacia de guardia en Sevilla?', today), undefined);
   assert.equal(localDay(timeZone, defaultNow), today);
 });
@@ -52,11 +52,22 @@ test('la guardia vigente cruza medianoche y no incluye el turno siguiente', asyn
   assert.doesNotMatch(day.answer, /anterior|Turno nocturno de hoy/);
 });
 
-test('sin registro o si Supabase falla, muestra solo el estado y la fuente oficial', async () => {
+test('sin registro o si Supabase falla, no devuelve datos de otra fecha ni enlaces externos', async () => {
   for (const source of [async () => [fixture[4]], async () => { throw new Error('Temporalmente sin acceso'); }]) {
     const result = await check('¿Qué farmacia hay de guardia mañana?', source);
     assert.match(result.answer, /No tengo una farmacia de guardia verificada.*26 de noviembre/);
     assert.doesNotMatch(result.answer, /Turno/);
-    assert.equal(result.links[0].url, app.pharmacySource.url);
+    assert.equal(result.links, undefined);
   }
+});
+
+test('las repreguntas mantienen el tema y el turno que corresponde', async () => {
+  assert.equal(pharmacyIntent('¿Y mañana?', today), undefined);
+  assert.deepEqual(pharmacyIntent('¿Y mañana?', today, true).dates, ['2026-11-26']);
+  assert.equal(pharmacyIntent('¿Y el domingo, qué tiempo hará?', today, true), undefined);
+  assert.deepEqual(weatherIntent('¿Y mañana?', { today, followUp: true }).dates, ['2026-11-26']);
+  const request = pharmacyIntent('¿Y esta noche?', today, true);
+  const result = await pharmacyAnswer({ request, today, timeZone, now: defaultNow, app, readPublic: async () => fixture });
+  assert.match(result.answer, /Turno nocturno de hoy/);
+  assert.doesNotMatch(result.answer, /Turno diurno|Turno nocturno anterior/);
 });

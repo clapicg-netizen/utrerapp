@@ -12,14 +12,14 @@ import { redisStore } from '../storage.mjs';
 const [phase, prefix, day, minute] = process.argv.slice(2);
 const env = process.env;
 
-async function requestResult(fn, address, question = 'Prueba del contador', weatherFollowUp = false) {
+async function requestResult(fn, address, question = 'Prueba del contador', context) {
   const request = {
     method: 'POST',
     headers: {
       host: 'preview.example', origin: 'https://preview.example',
       'content-type': 'application/json', 'x-vercel-forwarded-for': address,
     },
-    body: { question, weatherFollowUp },
+    body: { question, context },
   };
   const response = {
     setHeader() {},
@@ -179,10 +179,17 @@ async function run() {
     assert.equal(await request(disabled, '203.0.113.10', approved), 503);
     assert.equal(openaiRequests, 1);
     const pharmacy = handler.createHandler({ env: openaiEnv, namespace: prefix + ':pharmacy' });
-    const guard = await requestResult(pharmacy, '203.0.113.14', '¿Qué farmacia hay de guardia hoy?', true);
+    const guard = await requestResult(pharmacy, '203.0.113.14', '¿Qué farmacia hay de guardia hoy?', 'weather');
     assert.equal(guard.code, 200);
     assert.match(guard.body.answer, /Turno de prueba/);
-    assert.equal(guard.body.context, undefined);
+    assert.equal(guard.body.context, 'pharmacy');
+    const pharmacyFollowUp = await requestResult(pharmacy, '203.0.113.15', '¿Y hoy?', guard.body.context);
+    assert.equal(pharmacyFollowUp.body.context, 'pharmacy');
+    assert.match(pharmacyFollowUp.body.answer, /Turno de prueba/);
+    const weatherAfterPharmacy = await requestResult(pharmacy, '203.0.113.16', '¿Qué tiempo hará mañana?', guard.body.context);
+    assert.equal(weatherAfterPharmacy.body.context, 'weather');
+    const weatherFollowUp = await requestResult(pharmacy, '203.0.113.17', '¿Y pasado mañana?', weatherAfterPharmacy.body.context);
+    assert.equal(weatherFollowUp.body.context, 'weather');
     assert.equal(openaiRequests, 1);
     console.log('CONSO FARMACIAS OK: fecha exacta, cambio de tema y cero llamadas de IA.');
     console.log('CONSO OPENAI OK: Responses simulada, preguntas aprobadas y presupuesto compartido entre proveedores.');

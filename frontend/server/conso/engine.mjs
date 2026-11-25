@@ -67,8 +67,8 @@ export async function answerQuestion({ question, app, settings, generate, source
   }
 
   const section = app.sections[topic];
-  if (topic === 'pharmacy' && app.pharmacySource) {
-    return { answer: 'No puedo confirmar un turno para esa consulta. Indícame la fecha o consulta el buscador oficial.', links: [app.pharmacySource] };
+  if (topic === 'pharmacy') {
+    return { answer: 'No puedo confirmar un turno para esa consulta. Indícame la fecha de la guardia que buscas.' };
   }
   const official = settings.official ? app.official : [];
   const links = [section, ...official].filter(Boolean);
