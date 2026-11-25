@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "@/index.css";
 import App from "@/App";
+import AvisoInstalacion from "@/components/AvisoInstalacion";
 import DashboardAdmin from "@/pages/DashboardAdmin";
 import { retornoRecuperacion } from "@/lib/supabaseClient";
 
@@ -28,7 +29,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      {esPanelAdmin ? <DashboardAdmin /> : <App />}
+      {esPanelAdmin ? <DashboardAdmin /> : <><App /><AvisoInstalacion /></>}
     </QueryClientProvider>
   </React.StrictMode>,
 );
