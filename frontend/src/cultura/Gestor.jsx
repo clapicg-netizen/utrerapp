@@ -9,6 +9,14 @@ const estados = { normal:'Venta normal', agotado:'Agotado', cancelado:'Cancelado
 const tipoPrecio = f => f.precio === '' ? 'desconocido' : Number(f.precio) === 0 ? 'gratis' : 'pago';
 const normal = texto => texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
+const enlace = new URLSearchParams(window.location.hash.slice(1));
+const flujoTeatro = culturaDB && new URLSearchParams(window.location.search).get('vista') === 'gestor-teatro'
+  && ['invite','recovery'].includes(enlace.get('type'));
+const credencialesEnlace = flujoTeatro ? {
+  access_token: enlace.get('access_token'), refresh_token: enlace.get('refresh_token'),
+} : null;
+if (flujoTeatro) window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search);
+
 export default function GestorCultural({ onDirty }) {
   const [filas,setFilas] = useState(() => culturaDB ? [] : leerCultura());
   const [edicion,setEdicion] = useState(null);
@@ -19,6 +27,8 @@ export default function GestorCultural({ onDirty }) {
   const [categoria,setCategoria] = useState('');
   const [sesion,setSesion] = useState(null);
   const [ocupado,setOcupado] = useState(false);
+  const [modoClave,setModoClave] = useState(Boolean(credencialesEnlace));
+  const [recuperar,setRecuperar] = useState(false);
   const [editor,setEditor] = useState(false);
   useEffect(() => {
     let activo = true;
@@ -78,15 +88,56 @@ export default function GestorCultural({ onDirty }) {
     } catch { setAviso('No se pudo conectar con el entorno de pruebas.'); }
     finally { setOcupado(false); }
   }
+  async function establecerClave(event) {
+    event.preventDefault();
+    const datos = new FormData(event.currentTarget);
+    const password = datos.get('contrasena');
+    if (password !== datos.get('repetir')) return setAviso('Las contraseñas no coinciden.');
+    if (!credencialesEnlace?.access_token || !credencialesEnlace.refresh_token) return setAviso('El enlace no es válido. Solicita uno nuevo.');
+    setOcupado(true); setAviso('');
+    try {
+      const comprobacion = await culturaDB.auth.setSession(credencialesEnlace);
+      if (comprobacion.error) { setAviso('El enlace ha caducado o no es válido.'); return; }
+      const resultado = await culturaDB.auth.updateUser({ password });
+      if (resultado.error) { setAviso('No se pudo guardar la contraseña. Elige otra y vuelve a intentarlo.'); return; }
+      credencialesEnlace.access_token = null;
+      credencialesEnlace.refresh_token = null;
+      setModoClave(false);
+      setAviso('Contraseña guardada.');
+    } catch { setAviso('No se pudo conectar con Supabase de pruebas.'); }
+    finally { setOcupado(false); }
+  }
+  async function enviarRecuperacion(event) {
+    event.preventDefault();
+    const correo = new FormData(event.currentTarget).get('correo');
+    const destino = new URL('/?vista=gestor-teatro',window.location.origin);
+    setOcupado(true); setAviso('');
+    try {
+      const { error } = await culturaDB.auth.resetPasswordForEmail(correo,{redirectTo:destino.href});
+      setAviso(error ? 'No se pudo solicitar la recuperación. Comprueba el correo e inténtalo más tarde.'
+        : 'Si la cuenta puede recibir el enlace, llegará un correo para restablecer la contraseña.');
+    } catch { setAviso('No se pudo conectar con Supabase de pruebas.'); }
+    finally { setOcupado(false); }
+  }
+  if (modoClave) return <section className="cultura cultura-gestor">
+    <h2>Establecer contraseña del Teatro</h2>
+    {aviso && <p role="status">{aviso}</p>}
+    <form onSubmit={establecerClave} className="cultura-campos">
+      <label>Nueva contraseña<input type="password" name="contrasena" autoComplete="new-password" minLength={12} required/></label>
+      <label>Repetir contraseña<input type="password" name="repetir" autoComplete="new-password" minLength={12} required/></label>
+      <div><button className="cultura-primario" disabled={ocupado}>Guardar contraseña</button></div>
+    </form>
+  </section>;
   if (culturaDB && !editor) return <section className="cultura cultura-gestor">
     <h2>Edición en el entorno aislado</h2>
     <p>Accede con una cuenta autorizada como editora cultural en UtrerApp Pruebas.</p>
     {aviso && <p role="status">{aviso}</p>}
     {sesion ? <><p>Esta cuenta carece del permiso de edición cultural.</p><button onClick={()=>culturaDB.auth.signOut()}>Cambiar cuenta</button></> :
-    <form onSubmit={entrar} className="cultura-campos">
+    <form onSubmit={recuperar ? enviarRecuperacion : entrar} className="cultura-campos">
       <label>Correo de pruebas<input type="email" name="correo" autoComplete="username" required/></label>
-      <label>Contraseña de pruebas<input type="password" name="contrasena" autoComplete="current-password" required/></label>
-      <div><button className="cultura-primario" disabled={ocupado}>Entrar al gestor</button></div>
+      {!recuperar && <label>Contraseña de pruebas<input type="password" name="contrasena" autoComplete="current-password" required/></label>}
+      <div><button className="cultura-primario" disabled={ocupado}>{recuperar ? 'Enviar enlace' : 'Entrar al gestor'}</button>
+        <button type="button" onClick={()=>{setRecuperar(!recuperar);setAviso('');}}>{recuperar ? 'Volver al inicio de sesión' : 'Olvidé mi contraseña'}</button></div>
     </form>}
   </section>;
 
