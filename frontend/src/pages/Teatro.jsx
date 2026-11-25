@@ -7,9 +7,9 @@ export default function Teatro({ setPaginaActual }) {
   const urlGiglon = "https://www.giglon.com/todos?city=Utrera";
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col">
+    <div className="flex flex-col bg-slate-50 font-sans text-slate-800 max-lg:min-h-[calc(100vh-5.5rem-env(safe-area-inset-bottom,0px))] max-lg:supports-[height:100dvh]:min-h-[calc(100dvh-5.5rem-env(safe-area-inset-bottom,0px))] lg:min-h-screen lg:pb-28">
       {/* CABECERA */}
-      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative flex-shrink-0">
+      <div className="bg-slate-900 text-white p-5 rounded-b-3xl shadow-lg relative flex-shrink-0 max-lg:pt-[max(1.25rem,env(safe-area-inset-top,0px))] max-lg:pl-[max(1.25rem,env(safe-area-inset-left,0px))] max-lg:pr-[max(1.25rem,env(safe-area-inset-right,0px))]">
         <div className="flex items-center justify-between max-w-md mx-auto">
           <div className="flex items-center gap-3">
             <button
@@ -38,8 +38,8 @@ export default function Teatro({ setPaginaActual }) {
       </div>
 
       {/* CONTENEDOR DEL IFRAME DE GIGLON */}
-      <div className="px-4 mt-4 max-w-md mx-auto w-full flex-1 flex flex-col">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden relative flex-1 min-h-[70vh] w-full">
+      <div className="mx-auto flex w-full flex-1 flex-col max-lg:pl-[env(safe-area-inset-left,0px)] max-lg:pr-[env(safe-area-inset-right,0px)] lg:mt-4 lg:max-w-md lg:px-4">
+        <div className="relative w-full flex-1 bg-white max-lg:min-h-[16rem] lg:min-h-[70vh] lg:overflow-hidden lg:rounded-3xl lg:border lg:border-slate-200 lg:shadow-sm">
           {cargando && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 text-slate-500 gap-2 z-10">
               <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
