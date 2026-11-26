@@ -12,6 +12,8 @@ import AgendaGestiones from './pages/AgendaGestiones';
 import QueVer from './pages/QueVer';
 import MenuAgenda from './pages/MenuAgenda';
 import Conso from './pages/Conso';
+import ConsoPreviewRoute from './conso/ConsoPreviewRoute';
+import { persistentMarket } from './market/config';
 import PanelComercio from './pages/PanelComercio';
 import Admin from './pages/Admin';
 import Tablon from './pages/Tablon';
@@ -188,6 +190,8 @@ export default function App() {
         );
     }
   };
+
+  if (persistentMarket && paginaActual === 'conso') return <ConsoPreviewRoute view="conso" />;
 
   if (paginaActual === 'home' && isDesktop) {
     return <DesktopHome onNavigate={setPaginaActual} />;

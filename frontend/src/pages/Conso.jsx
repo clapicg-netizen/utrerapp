@@ -1,10 +1,11 @@
+import ConsoQuickLinks from '../conso/ConsoQuickLinks';
 import { PARKING_URL } from '../lib/parking';
 // src/pages/Conso.jsx
 import React, { useState } from 'react';
-import { Send, Bot, User, Sparkles, HeartPulse, Pill, Train, MapPin, Car } from 'lucide-react';
+import { ArrowLeft, Send, Bot, User, Sparkles, HeartPulse, Pill, Train, MapPin, Car } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
-export default function Conso({ setPaginaActual }) {
+export default function Conso({ setPaginaActual, serviceLinks, homeHref, chatDisabled = false }) {
   const [mensaje, setMensaje] = useState('');
   const [cargandoIA, setCargandoIA] = useState(false);
   
@@ -18,7 +19,9 @@ export default function Conso({ setPaginaActual }) {
   const [chat, setChat] = useState([
     {
       origen: 'conso',
-      texto: `¡¡Hola, soy Conso, y en breve seré tu asistente para todo lo que necesites en Utrera. Por ahora, te ofrezco las farmacias de guardia, los horarios de los trenes y los estacionamientos que el ayuntamiento nos facilita a toos. Estoy de mudanza para venirme a Utrera, en breve estoy al 100% con todos!`
+      texto: serviceLinks
+        ? '¡Hola, soy Conso! Me estoy mudando a Utrera… Mientras termino con las cajas, aquí tienes las farmacias de guardia, los horarios de trenes, los aparcamientos y los precios de las gasolineras.'
+        : `¡¡Hola, soy Conso, y en breve seré tu asistente para todo lo que necesites en Utrera. Por ahora, te ofrezco las farmacias de guardia, los horarios de los trenes y los estacionamientos que el ayuntamiento nos facilita a toos. Estoy de mudanza para venirme a Utrera, en breve estoy al 100% con todos!`
     }
   ]);
 
@@ -215,12 +218,19 @@ export default function Conso({ setPaginaActual }) {
 
   const manejarSubmit = (e) => {
     e.preventDefault();
+    if (chatDisabled) {
+      if (mensaje.trim()) setChat(previous => [...previous, {
+        origen: 'conso', texto: 'En este preview puedes probar los accesos a los servicios. El chat estará disponible en la versión habitual.',
+      }]);
+      setMensaje('');
+      return;
+    }
     enviarMensaje(mensaje);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col justify-between">
-      <div className="bg-gradient-to-r from-rose-950 to-red-900 text-white p-5 shadow-lg">
+    <div className="conso-chat-root min-h-screen bg-slate-50 pb-28 text-slate-800 font-sans flex flex-col justify-between">
+      <div className="conso-chat-header bg-gradient-to-r from-rose-950 to-red-900 text-white p-5 shadow-lg">
         <div className="flex items-center gap-3 max-w-md mx-auto">
           <div className="w-10 h-10 rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-amber-300">
             <Bot size={22} />
@@ -228,17 +238,20 @@ export default function Conso({ setPaginaActual }) {
           <div>
             <div className="flex items-center gap-1.5">
               <h1 className="text-lg font-bold">Conso IA</h1>
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              {!serviceLinks && <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" /> }
             </div>
-            <p className="text-[11px] text-rose-200">Asistente Oficial de Utrera</p>
+            <p className="text-[11px] text-rose-200">{homeHref ? 'Tu asistente de Utrera' : 'Asistente Oficial de Utrera'}</p>
           </div>
+          {homeHref && <a className="conso-chat-return" href={homeHref}>
+            <ArrowLeft size={16} aria-hidden="true" /> Volver a UtrerApp
+          </a>}
         </div>
       </div>
 
-      <div className="flex-1 px-4 py-4 max-w-md mx-auto w-full space-y-3 overflow-y-auto">
+      <div className="conso-chat-body flex-1 px-4 py-4 max-w-md mx-auto w-full space-y-3 overflow-y-auto">
         {chat.map((msg, index) => (
+          <React.Fragment key={index}>
           <div
-            key={index}
             className={`flex items-start gap-2.5 ${msg.origen === 'usuario' ? 'flex-row-reverse' : ''}`}
           >
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs shadow-sm ${
@@ -247,7 +260,7 @@ export default function Conso({ setPaginaActual }) {
               {msg.origen === 'usuario' ? <User size={16} /> : <Sparkles size={16} />}
             </div>
 
-            <div className={`p-3.5 rounded-2xl text-xs leading-relaxed shadow-sm max-w-[85%] ${
+            <div data-role={msg.origen} className={`p-3.5 rounded-2xl text-xs leading-relaxed shadow-sm max-w-[85%] ${
               msg.origen === 'usuario' 
                 ? 'bg-rose-900 text-white rounded-tr-none' 
                 : 'bg-white text-slate-800 border border-slate-200 rounded-tl-none'
@@ -255,6 +268,8 @@ export default function Conso({ setPaginaActual }) {
               {typeof msg.texto === 'string' ? <p className="whitespace-pre-line">{msg.texto}</p> : msg.texto}
             </div>
           </div>
+          {serviceLinks && index === 0 && <ConsoQuickLinks hrefFor={serviceLinks} />}
+          </React.Fragment>
         ))}
 
         {cargandoIA && (
@@ -265,6 +280,7 @@ export default function Conso({ setPaginaActual }) {
         )}
       </div>
 
+      {!serviceLinks && (
       <div className="px-4 py-2 max-w-md mx-auto w-full grid grid-cols-3 gap-1.5">
         <button
           type="button"
@@ -291,12 +307,14 @@ export default function Conso({ setPaginaActual }) {
           <span>Aparcar</span>
         </button>
       </div>
+      )}
 
-      <div className="p-3 bg-white border-t border-slate-200 sticky bottom-0 z-15 max-w-md mx-auto w-full">
+      <div className={`conso-chat-compose p-3 bg-white border-t border-slate-200 max-w-md mx-auto w-full ${serviceLinks ? '' : 'sticky bottom-0 z-15'}`}>
         <form onSubmit={manejarSubmit} className="flex gap-2">
           <input
             type="text"
-            placeholder="Pregúntale a Conso sobre Utrera, el tiempo, trenes..."
+            aria-label="Mensaje para Conso"
+            placeholder={serviceLinks ? "Pregúntale a Conso sobre Utrera…" : "Pregúntale a Conso sobre Utrera, el tiempo, trenes..."}
             value={mensaje}
             onChange={(e) => setMensaje(e.target.value)}
             className="flex-1 bg-slate-100 text-slate-900 placeholder-slate-400 px-4 py-3 rounded-2xl text-xs border border-slate-200 focus:outline-none focus:border-rose-900 transition-colors"

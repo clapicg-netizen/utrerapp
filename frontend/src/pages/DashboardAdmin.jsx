@@ -1,3 +1,5 @@
+import MarketAdmin from '../market/MarketAdmin';
+import { marketEnabled } from '../market/config';
 import React, { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -23,6 +25,7 @@ const modulos = [
   ['inicio', 'Inicio', LayoutDashboard], ['comercios', 'Comercios', Store], ['anuncios', 'Anuncios', Megaphone],
   ['agenda', 'Agenda', Calendar, !culturaDB], ['noticias', 'Noticias', Newspaper, true], ['sanidad', 'Sanidad', Activity, true],
   ['usuarios', 'Usuarios', Users, true], ['estadisticas', 'Estadísticas', BarChart3, true],
+  ...(marketEnabled ? [['utreramarket', 'UtreraMarket', Store]] : []),
   ['configuracion', 'Configuración', Settings, true],
 ];
 
@@ -123,7 +126,7 @@ function Panel({ salir, mensajeAcceso, adminId, soloAgenda = false }) {
   }
 
   const consultas = seccion === 'inicio' ? [[comercios, 'comercios'], [anuncios, 'anuncios']]
-    : seccion === 'comercios' ? [[comercios, 'comercios']]
+    : ['comercios','utreramarket'].includes(seccion) ? [[comercios, 'comercios']]
     : seccion === 'anuncios' ? [[anuncios, 'anuncios']] : [];
 
   return <div className="admin-layout">
@@ -163,6 +166,7 @@ function Panel({ salir, mensajeAcceso, adminId, soloAgenda = false }) {
           </div> : null)}
         {seccion === 'inicio' && <ResumenAdmin comercios={comercios.data} anuncios={anuncios.data}
           crearComercio={() => navegar('comercios', { fila: null })} crearAnuncio={() => navegar('anuncios', { fila: null })} />}
+        {seccion === 'utreramarket' && comercios.data && <MarketAdmin rows={comercios.data} />}
         {seccion === 'comercios' && (editor
           ? <EditorComercio ficha={editor.fila} categorias={categorias} adminId={adminId} pendiente={setPendiente}
               ocupado={setOcupado} cancelar={() => navegar('comercios', null)} guardado={guardado} />

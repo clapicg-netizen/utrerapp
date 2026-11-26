@@ -1,3 +1,6 @@
+import ConsoHomeCard from '../conso/ConsoHomeCard';
+import { MarketBanner } from '../market/MarketEntry';
+import { consoRedesign, marketEnabled } from '../market/config';
 import React, { useEffect, useState } from 'react';
 import {
   ArrowRight, ArrowUpRight, Building2, CalendarDays, Fuel, HeartPulse,
@@ -99,6 +102,7 @@ export default function Home({ setPaginaActual }) {
             <h1>¡Hola, <span>Utrera!</span></h1>
           </div>
         </div>
+        {consoRedesign ? <ConsoHomeCard onOpen={() => setPaginaActual('conso')} onSearch={value => setPaginaActual('market', value)} /> : (
         <form className="mobile-home__search" role="search" aria-label="Guía Comercial" onSubmit={submitSearch}>
           <label htmlFor="mobile-home-search">Buscar comercios</label>
           <div>
@@ -106,7 +110,9 @@ export default function Home({ setPaginaActual }) {
             <button type="submit" aria-label="Buscar en la Guía Comercial"><Search size={22} aria-hidden="true" /></button>
           </div>
         </form>
+        )}
       </header>
+        {marketEnabled && <MarketBanner />}
 
       <section aria-labelledby="mobile-home-priorities">
         <h2 id="mobile-home-priorities">Servicios prioritarios</h2>
@@ -117,11 +123,13 @@ export default function Home({ setPaginaActual }) {
         </ul>
       </section>
 
+      {!consoRedesign && (
       <button className="mobile-home__conso" type="button" onClick={() => setPaginaActual('conso')}>
         <span className="mobile-home__icon" data-tone="rose"><MessageCircle size={23} aria-hidden="true" /></span>
         <span><strong>Habla con Conso IA</strong><small>Tu asistente utrerana, gratis</small></span>
         <ArrowRight size={19} aria-hidden="true" />
       </button>
+      )}
 
       <CarruselAvisos />
 

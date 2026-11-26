@@ -1,3 +1,6 @@
+import ConsoHomeCard from '../conso/ConsoHomeCard';
+import { MarketBanner } from '../market/MarketEntry';
+import { consoRedesign, marketEnabled } from '../market/config';
 import React, { useState } from 'react';
 import {
   ArrowRight, ArrowUpRight, CalendarDays, ClipboardList, Fuel, HeartPulse, Landmark,
@@ -63,12 +66,14 @@ export default function DesktopHome({ onNavigate }) {
           <p className="desktop-home-location"><MapPin size={17} aria-hidden="true" /> Utrera, Sevilla</p>
           <h1 id="desktop-home-title">Utrera,<br /><em>a tu alcance.</em></h1>
           <p>Encuentra comercios, consulta servicios y descubre qué hacer en la ciudad.</p>
+        {!consoRedesign && (
           <form className="desktop-home-search" onSubmit={searchGuide} role="search" aria-label="Guía comercial">
             <Search size={20} aria-hidden="true" />
             <input type="search" value={query} onChange={event => setQuery(event.target.value)}
               placeholder="Busca un comercio o servicio" aria-label="Comercio o servicio que buscas" />
             <button type="submit">Buscar</button>
           </form>
+        )}
         </div>
         <div className="desktop-home-photo-label">Utrera desde la Plaza de España</div>
       </div>
@@ -79,6 +84,8 @@ export default function DesktopHome({ onNavigate }) {
           <img src={sanctuaryPhoto} alt="" loading="lazy" />
         </div>
         <main className="desktop-home-shell desktop-home-body">
+          {consoRedesign && <ConsoHomeCard searchExpanded onOpen={() => open('conso')} onSearch={value => open('market', value)} />}
+          {marketEnabled && <MarketBanner />}
           <section className="desktop-home-section" aria-labelledby="desktop-home-featured">
             <h2 id="desktop-home-featured">Accesos directos</h2>
             <div className="desktop-home-featured">

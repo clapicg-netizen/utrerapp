@@ -1,0 +1,11 @@
+.utreramarket-banner{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:110px;margin:18px 0;padding:16px 21px;overflow:hidden;border-radius:12px;background:#192c24;color:#fff;text-decoration:none}
+.utreramarket-banner::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#102218e8 15%,#10221888)}
+.utreramarket-banner img{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover}
+.utreramarket-banner strong{display:block;color:#e4c28a;font:500 clamp(26px,4vw,36px)/1.1 Georgia,serif}
+.utreramarket-banner small{display:block;margin-top:8px;font-size:14px}
+.utreramarket-banner-action{flex:none;padding:9px 13px;border-radius:5px;background:#e4c28a;color:#102218;text-align:center;font-size:14px;font-weight:650}
+.utreramarket-frame{position:fixed;inset:0;display:block;width:100%;height:100dvh;border:0;background:#f8f6ef}
+@media(max-width:480px){.utreramarket-banner{align-items:flex-start;flex-direction:column;gap:12px;padding:14px 16px}}
+.utreramarket-preview-tools{width:min(1120px,calc(100% - 32px));margin:16px auto;padding:10px 0;color:#192c24}
+.utreramarket-preview-tools a{text-decoration:underline}
+.utreramarket-preview-tools p[role="status"]{position:fixed;z-index:10;bottom:16px;inset-inline:16px;width:fit-content;max-width:calc(100% - 32px);margin:auto;padding:12px 16px;border:1px solid #e4c28a;border-radius:8px;background:#102218;color:#fff}
