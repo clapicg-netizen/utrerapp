@@ -89,9 +89,10 @@ export default function Home({ setPaginaActual }) {
         <p className="mobile-home__brand"><img src={logo} width="32" height="32" alt="" /> UtrerApp</p>
         <div className="mobile-home__welcome" data-daylight={photo.isDay || undefined}>
           <img
+            key={photo.isDay ? 'day' : 'night'}
             src={photo.mobileSrc || photo.src}
             srcSet={photo.mobileSrc ? `${photo.mobileSrc} 640w, ${photo.src} 1000w` : undefined}
-            sizes="(max-width: 588px) calc(100vw - 28px), 560px"
+            sizes={photo.mobileSrc ? "(max-width: 588px) calc(100vw - 28px), 560px" : undefined}
             width="1000"
             height="349"
             fetchPriority="high"

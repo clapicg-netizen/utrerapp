@@ -81,10 +81,15 @@
   content: '';
 }
 
+.mobile-home__welcome[data-daylight] img {
+  object-position: center 38%;
+  filter: none;
+}
+
 .mobile-home__welcome[data-daylight]::after {
   background:
-    linear-gradient(0deg, rgb(13 25 42 / 91%), rgb(13 25 42 / 53%) 43%, transparent 78%),
-    linear-gradient(90deg, #122036 0%, rgb(18 32 54 / 86%) 37%, rgb(18 32 54 / 29%) 62%, transparent 85%);
+    linear-gradient(0deg, rgb(29 19 18 / 88%), rgb(29 19 18 / 32%) 42%, transparent 76%),
+    linear-gradient(90deg, rgb(33 18 19 / 67%), rgb(33 18 19 / 38%) 39%, transparent 74%);
 }
 
 .mobile-home__welcome > div {
