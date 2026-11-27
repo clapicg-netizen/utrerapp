@@ -45,7 +45,7 @@ export default function DesktopHome({ onNavigate }) {
 
   return (
     <div className="desktop-home">
-      <div className="desktop-home-hero">
+      <div className="desktop-home-hero" data-daylight={photo.isDay || undefined}>
         <img className="desktop-home-panorama" src={photo.src} alt="" fetchPriority="high" />
         <header className="desktop-home-header">
           <div className="desktop-home-shell desktop-home-header-inner">

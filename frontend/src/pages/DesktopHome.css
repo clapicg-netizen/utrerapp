@@ -15,6 +15,11 @@
 .desktop-home-panorama, .desktop-home-hero::after { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
 .desktop-home-panorama { object-fit: cover; object-position: center 68%; }
 .desktop-home-hero::after { content: ""; background: linear-gradient(90deg, #211213f5 0%, #241719d4 28%, #2417194d 57%, transparent 78%), linear-gradient(180deg, #19111288, transparent 40%, #1c111452); }
+.desktop-home-hero[data-daylight]::after {
+  background:
+    linear-gradient(90deg, #211213f5 0%, #241719d4 28%, #2417194d 50%, #24171926 60%, transparent 76%),
+    linear-gradient(180deg, #19111288, transparent 40%, #1c111452);
+}
 .desktop-home-header { border-bottom: 1px solid #ffefd233; }
 .desktop-home-header-inner { min-height: 4.4rem; display: flex; align-items: center; justify-content: space-between; gap: 1.2rem; }
 .desktop-home-brand { display: flex; align-items: center; gap: .68rem; font-size: 1.53rem; font-weight: 790; letter-spacing: -.06em; }

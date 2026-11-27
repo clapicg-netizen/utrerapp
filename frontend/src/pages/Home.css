@@ -81,6 +81,12 @@
   content: '';
 }
 
+.mobile-home__welcome[data-daylight]::after {
+  background:
+    linear-gradient(0deg, rgb(13 25 42 / 91%), rgb(13 25 42 / 53%) 43%, transparent 78%),
+    linear-gradient(90deg, #122036 0%, rgb(18 32 54 / 86%) 37%, rgb(18 32 54 / 29%) 62%, transparent 85%);
+}
+
 .mobile-home__welcome > div {
   padding: 0.75rem 0.9375rem;
 }
