@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import './DesktopHome.css';
 import sanctuaryPhoto from './santuario-utrera-portada.webp';
-import panorama from './panorama-utrera-portada.webp';
+import useHomePhoto from './useHomePhoto';
 import logo from './logo-utrera-portada.webp';
 
 const featured = [
@@ -31,6 +31,7 @@ const services = [
 
 export default function DesktopHome({ onNavigate }) {
   const [query, setQuery] = useState('');
+  const photo = useHomePhoto();
 
   function open(section, search = '') {
     window.scrollTo(0, 0);
@@ -45,7 +46,7 @@ export default function DesktopHome({ onNavigate }) {
   return (
     <div className="desktop-home">
       <div className="desktop-home-hero">
-        <img className="desktop-home-panorama" src={panorama} alt="" fetchPriority="high" />
+        <img className="desktop-home-panorama" src={photo.src} alt="" fetchPriority="high" />
         <header className="desktop-home-header">
           <div className="desktop-home-shell desktop-home-header-inner">
             <div className="desktop-home-brand">
@@ -75,7 +76,7 @@ export default function DesktopHome({ onNavigate }) {
           </form>
         )}
         </div>
-        <div className="desktop-home-photo-label">Utrera desde la Plaza de España</div>
+        <div className="desktop-home-photo-label">{photo.isDay ? 'Santuario de Consolación' : 'Utrera desde la Plaza de España'}</div>
       </div>
 
       <div className="desktop-home-content">
@@ -134,8 +135,8 @@ export default function DesktopHome({ onNavigate }) {
         </main>
 
         <footer className="desktop-home-footer desktop-home-shell">
-          <span>Foto panorámica de <a href="https://commons.wikimedia.org/wiki/File:Panoramicautreranoche.jpg" target="_blank" rel="noreferrer">Salvador Moreno Rivas</a>
-            {' · '}<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a>{' · Adaptada para la cabecera'}</span>
+          {photo.isDay ? <span>Foto del Santuario de Consolación</span> : <span>Foto panorámica de <a href="https://commons.wikimedia.org/wiki/File:Panoramicautreranoche.jpg" target="_blank" rel="noreferrer">Salvador Moreno Rivas</a>
+            {' · '}<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noreferrer">CC BY-SA 3.0</a>{' · Adaptada para la cabecera'}</span>}
           <button type="button" onClick={() => open('admin')}>Administración</button>
         </footer>
       </div>

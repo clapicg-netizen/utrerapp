@@ -11,8 +11,7 @@ import { supabase } from '../lib/supabaseClient';
 import CarruselAvisos from '../components/CarruselAvisos';
 import { PARKING_URL } from '../lib/parking';
 import logo from './logo-utrera-portada.webp';
-import panorama from './panorama-utrera-portada.webp';
-import panoramaMobile from './panorama-utrera-portada-640.webp';
+import useHomePhoto from './useHomePhoto';
 import './Home.css';
 
 const priorityServices = [
@@ -54,6 +53,7 @@ function ServiceCard({ service, onNavigate }) {
 
 export default function Home({ setPaginaActual }) {
   const [search, setSearch] = useState('');
+  const photo = useHomePhoto();
   const [ads, setAds] = useState([]);
 
   useEffect(() => {
@@ -89,8 +89,8 @@ export default function Home({ setPaginaActual }) {
         <p className="mobile-home__brand"><img src={logo} width="32" height="32" alt="" /> UtrerApp</p>
         <div className="mobile-home__welcome">
           <img
-            src={panoramaMobile}
-            srcSet={`${panoramaMobile} 640w, ${panorama} 1000w`}
+            src={photo.mobileSrc || photo.src}
+            srcSet={photo.mobileSrc ? `${photo.mobileSrc} 640w, ${photo.src} 1000w` : undefined}
             sizes="(max-width: 588px) calc(100vw - 28px), 560px"
             width="1000"
             height="349"
@@ -166,9 +166,9 @@ export default function Home({ setPaginaActual }) {
       </section>
 
       <footer className="mobile-home__footer">
-        <p>Foto de <a href="https://commons.wikimedia.org/wiki/File:Panoramicautreranoche.jpg">Salvador Moreno Rivas</a>
+        {photo.isDay ? <p>Foto del Santuario de Consolación</p> : <p>Foto de <a href="https://commons.wikimedia.org/wiki/File:Panoramicautreranoche.jpg">Salvador Moreno Rivas</a>
           {' · '}<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a>{' · Adaptada para la cabecera'}
-        </p>
+        </p>}
         <button type="button" onClick={() => setPaginaActual('admin')}>Administración</button>
       </footer>
     </div>
